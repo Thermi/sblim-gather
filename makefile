@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2004/10/18 11:34:38 heidineu Exp $
+# $Id: makefile,v 1.5 2004/10/19 12:06:56 mihajlov Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
@@ -8,7 +8,8 @@ LDLIBS=-lpthread -ldl
 SUBDIRS=comms samples # plugin  provider
 SOURCES=mlist.c mretr.c mplugmgr.c mreg.c mrwlock.c mreposl.c mreposp.c \
 	gather.c gatherctl.c rgather.c gatherd.c commheap.c \
-	rrepos.c repos.c reposctl.c rplugmgr.c rreg.c reposd.c gatherutil.c
+	rrepos.c repos.c reposctl.c rplugmgr.c rreg.c reposd.c gatherutil.c \
+	mcfg.c mcfgtest.c
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 LIBRARIES=libgatherutil.so librrepos.so librepos.so libgather.so librgather.so
@@ -18,9 +19,9 @@ include rules
 
 .PHONY: all clean distclean install uninstall $(SUBDIRS) 
 
-all: $(SUBDIRS) $(LIBRARIES) $(EXECUTABLES)
+all: $(SUBDIRS) $(LIBRARIES) $(EXECUTABLES) mcfgtest
 
-libgatherutil.so: gatherutil.o commheap.o mrwlock.o 
+libgatherutil.so: gatherutil.o commheap.o mrwlock.o mcfg.o
 
 libgather.so: LDFLAGS=-L .
 libgather.so: LOADLIBES=-lrrepos -lgatherutil
@@ -54,8 +55,10 @@ reposctl: LOADLIBES=-lrrepos -lmcserv -lgatherutil
 reposctl: LDFLAGS=-L . -L comms
 reposctl: reposctl.o
 
+mcfgtest: mcfgtest.o mcfg.o
+
 clean: $(SUBDIRS)
-	$(RM) $(OBJECTS) $(LIBRARIES) $(EXECUTABLES) 
+	$(RM) $(OBJECTS) $(LIBRARIES) $(EXECUTABLES) mcfgtest
 
 distclean: clean
 	rcsclean
