@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.2 2003/11/05 15:53:00 heidineu Exp $
+ * $Id: metricUnixProcess.c,v 1.3 2003/12/05 13:50:04 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -22,6 +22,8 @@
  * UserModeTime
  * TotalCPUTime
  * ResidentSetSize
+ * PageInCounter
+ * PageInRate
  *
  */
 
@@ -690,14 +692,18 @@ int enum_all_pid( char ** list ) {
 	_enum_pid  = calloc(_enum_size,64);
 	strcpy(_enum_pid,entry->d_name);
 	while( ( entry = readdir(dir)) != NULL ) {
-	  if( i==_enum_size ) {
-	    _enum_size++;
-	    _enum_pid = realloc(_enum_pid,_enum_size*64);
-	    memset((_enum_pid + (i*64)), 0, 64);
+	  if( strncmp(entry->d_name,".",1) != 0 ) {
+	    if( i==_enum_size ) {
+	      _enum_size++;
+	      _enum_pid = realloc(_enum_pid,_enum_size*64);
+	      memset((_enum_pid + (i*64)), 0, 64);
+	    }
+	    strcpy(_enum_pid + (i*64),entry->d_name);
+#ifdef DEBUG
+	    //fprintf(stderr,"_enum_pid : %s\n",_enum_pid + (i*64));
+#endif
+	    i++;
 	  }
-	  strcpy(_enum_pid + (i*64),entry->d_name);
-	  //fprintf(stderr,"_enum_pid : %s\n",_enum_pid + (i*64));
-	  i++;
 	}
       }
     }
