@@ -1,6 +1,6 @@
 
 /*
- * $Id: OSBase_MetricIndicationProvider.c,v 1.1 2004/12/13 14:00:53 mihajlov Exp $
+ * $Id: OSBase_MetricIndicationProvider.c,v 1.2 2004/12/15 07:27:25 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -47,12 +47,15 @@ static char  _true=1;
 static char  _false=0;
 
 static pthread_mutex_t listenMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_key_t   listen_key;
+static pthread_once_t  listen_once = PTHREAD_ONCE_INIT;
+static CMPIContext   * listenContext = NULL;
 
 static int enabled = 0;
 static int runningCorrelator = 100;
 
 static int responsible(CMPISelectExp * filter,CMPIObjectPath * op, SubscriptionRequest * sr);
-static int addListenFilter(CMPISelectExp * filter, SubscriptionRequest *sr);
+static int addListenFilter(CMPISelectExp * filter, CMPIObjectPath * op, SubscriptionRequest *sr);
 static int removeListenFilter(CMPISelectExp * filter);
 static void enableFilters();
 static void disableFilters();
@@ -61,6 +64,7 @@ typedef struct _ListenFilter {
   int                    lf_enabled;
   CMPISelectExp *        lf_filter;
   SubscriptionRequest  * lf_subs;
+  char                 * lf_namespace;
   struct _ListenFilter * lf_next;
 } ListenFilter;
 static ListenFilter * listenFilters = NULL;
@@ -68,6 +72,11 @@ static ListenFilter * listenFilters = NULL;
 static int subscribeFilter(ListenFilter *lf);
 static int unsubscribeFilter(ListenFilter *lf);
 static void metricIndicationCB(int corrid, ValueRequest *vr);
+
+static void listen_term(void *voidctx);
+static void listen_init();
+static CMPIContext * attachListenContext();
+
 
 /* ---------------------------------------------------------------------------*/
 
@@ -116,16 +125,25 @@ CMPIStatus OSBase_MetricIndicationProviderActivateFilter
  const char * evtype, CMPIObjectPath * co, CMPIBoolean first)
 {
   SubscriptionRequest * sr = calloc(1,sizeof(SubscriptionRequest));
-  if (responsible(filter,co,sr) && addListenFilter(filter,sr)== 0) {
-    if( _debug )
-      fprintf(stderr,"*** successfully activated filter for %s\n", _ClassName);
-    CMReturn(CMPI_RC_OK);
-  } else {
-    free(sr);
-    if( _debug )
-      fprintf(stderr,"*** could not activate filter for %s\n", _ClassName);
-    CMReturn(CMPI_RC_ERR_FAILED);
+  if (responsible(filter,co,sr)) {
+    /* Prepare attachment of secondary threads */
+    if (listenContext == NULL) {
+      if( _debug )
+	fprintf(stderr,"*** preparing seondary thread attach\n");
+      listenContext = CBPrepareAttachThread(_broker,ctx);
+    }
+    if (addListenFilter(filter,co,sr)== 0) {
+      if( _debug )
+	fprintf(stderr,"*** successfully activated filter for %s\n", _ClassName);
+      CMReturn(CMPI_RC_OK);
+    } else {
+      /* was not freed in addListenFilter */
+      free(sr);
+    }
   }
+  if( _debug )
+    fprintf(stderr,"*** could not activate filter for %s\n", _ClassName);
+  CMReturn(CMPI_RC_ERR_FAILED);
 }
 
 CMPIStatus OSBase_MetricIndicationProviderDeActivateFilter
@@ -238,7 +256,7 @@ static int responsible(CMPISelectExp * filter, CMPIObjectPath *op, SubscriptionR
   return 0;
 }
 
-static int addListenFilter(CMPISelectExp * filter, SubscriptionRequest *sr)
+static int addListenFilter(CMPISelectExp * filter, CMPIObjectPath * op, SubscriptionRequest *sr)
 {
   ListenFilter *lf;
   pthread_mutex_lock(&listenMutex);
@@ -255,6 +273,7 @@ static int addListenFilter(CMPISelectExp * filter, SubscriptionRequest *sr)
   }
   lf->lf_filter = filter;
   lf->lf_subs = sr;
+  lf->lf_namespace = strdup(CMGetCharPtr(CMGetNameSpace(op,NULL)));
   if (enabled) {
     subscribeFilter(lf);
   }
@@ -283,6 +302,9 @@ static int removeListenFilter(CMPISelectExp * filter)
       }
       if (lf->lf_subs) {
 	free (lf->lf_subs);
+      }
+      if (lf->lf_namespace) {
+	free (lf->lf_namespace);
       }
       free(lf);
       state=0;
@@ -352,8 +374,96 @@ static int unsubscribeFilter(ListenFilter *lf)
 
 static void metricIndicationCB(int corrid, ValueRequest *vr)
 {
+  CMPIObjectPath * co;
+  CMPIInstance   * ci;
+  CMPIContext    * ctx;
+  ListenFilter   * lf;
+  CMPIDateTime   * datetime;
+  CMPIString     * metricvalue;
+  char             mvalId[1000];
+  char             mdefId[1000];
   if (_debug)
-    fprintf (stderr,"*** boo :-)\n");
+    fprintf (stderr,"*** metric indication callback triggered\n");
+
+  ctx = attachListenContext();
+  if (ctx==NULL) {
+    if (_debug)
+      fprintf (stderr,"*** failed to get thread context \n");
+    return;
+  }
+  
+  lf = listenFilters;
+  while (lf) {
+    if (lf->lf_enabled && lf->lf_subs && lf->lf_subs->srCorrelatorId==corrid) {
+      break;
+    }
+    lf = lf->lf_next;
+  }
+
+  if (lf) {
+    co = CMNewObjectPath(_broker,lf->lf_namespace,_ClassName,NULL);
+    if (co &&  makeMetricValueIdFromCache(_broker, ctx, lf->lf_namespace,
+					  mvalId,vr->vsId,
+					  vr->vsValues->viResource,
+					  vr->vsValues->viSystemId,
+					  vr->vsValues->viCaptureTime)) {
+      ci = CMNewInstance(_broker,co,NULL);
+      if (ci) {
+	makeMetricDefIdFromCache(_broker,ctx,lf->lf_namespace,mdefId,vr->vsId);
+	CMSetProperty(ci,"IndicationIdentifier",mvalId,CMPI_chars);
+	CMSetProperty(ci,"MetricId",mdefId,CMPI_chars);
+	metricvalue = val2string(_broker,vr->vsValues,vr->vsDataType);
+	if (metricvalue)
+	  CMSetProperty(ci,"MetricValue",&metricvalue,CMPI_string);
+	datetime = 
+	  CMNewDateTimeFromBinary(_broker,
+				  (long long)vr->vsValues->viCaptureTime*1000000,
+				  0, NULL);
+	if (datetime)
+	  CMSetProperty(ci,"IndicationTime",&datetime,CMPI_dateTime);
+	if (_debug)
+	  fprintf (stderr,"*** delivering metric indication\n");
+	CBDeliverIndication(_broker,ctx,lf->lf_namespace,ci);
+      }      
+    } else { 
+      if (_debug)
+	fprintf (stderr,"*** failed to construct indication\n");
+    }
+  } else {
+    if (_debug)
+      fprintf (stderr,"*** received uncorrelated event\n");
+  }
+}
+
+static void listen_term(void *voidctx)
+{
+  /* detach thread */
+  CMPIContext *ctx;
+  if (_debug)
+    fprintf (stderr,"*** detaching thread from CMPI\n");
+  ctx = (CMPIContext*)voidctx;
+  CBDetachThread(_broker,ctx);
+}
+
+static void listen_init()
+{
+  pthread_key_create(&listen_key,listen_term);
+}
+
+static CMPIContext* attachListenContext()
+{
+  /* attach CMPI to current thread if required */
+  CMPIContext *ctx;
+  pthread_once(&listen_once,listen_init);
+  ctx = (CMPIContext*)pthread_getspecific(listen_key);
+  if (ctx == NULL && listenContext) {
+    if (_debug)
+      fprintf (stderr,"*** attaching thread to CMPI\n");
+    CBAttachThread(_broker,listenContext);
+    ctx = listenContext;
+    pthread_setspecific(listen_key,ctx); 
+  }
+  return ctx;
 }
 
 /* ---------------------------------------------------------------------------*/

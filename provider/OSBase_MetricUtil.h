@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.h,v 1.6 2004/11/05 08:33:19 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.h,v 1.7 2004/12/15 07:27:25 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -42,6 +42,12 @@ int metricPluginName(CMPIBroker *broker, CMPIContext *ctx,
 		     const char *name, int id);
 
 /* metric id to CIM key mappings */
+char * makeMetricDefIdFromCache(CMPIBroker *broker, CMPIContext *ctx,
+				const char * namesp, char * defid, int id);
+char * makeMetricValueIdFromCache(CMPIBroker *broker, CMPIContext *ctx,
+				  const char * namesp, char * valid, int id,
+				  const char * resource, const char * systemid,
+				  time_t timestamp);
 char * makeMetricDefId(char * defid, const char * name, int id);
 int parseMetricDefId(const char * defid,
 		     char * name, int * id);
@@ -72,6 +78,8 @@ void releaseMetricIds(char **metricnames, int *mids, char **resourceids,
 		      char **systemids); 
 
 /* support for instance and object path construction */
+CMPIString * val2string(CMPIBroker * broker, const ValueItem *val,
+			unsigned   datatype);
 CMPIInstance * makeMetricValueInst(CMPIBroker * broker, 
 				   CMPIContext * ctx,
 				   const char * defname,

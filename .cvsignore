@@ -1,0 +1,5 @@
+*.d
+reposctl
+reposd
+gatherctl
+gatherd

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.7 2004/11/05 08:33:19 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.8 2004/12/15 07:27:25 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -312,6 +312,52 @@ int metricValueClassName(CMPIBroker *broker, CMPIContext *ctx,
   }
   MReadUnlock(&MdefLock);
   return -1;
+}
+
+char * makeMetricDefIdFromCache(CMPIBroker *broker, CMPIContext *ctx,
+				const char *namesp, char * defid, int id)
+{
+  int i=0;
+  char name[1000];
+  if (metricDefinitionList==NULL) {
+    refreshMetricDefClasses(broker,ctx,namesp);
+  }
+
+  MReadLock(&MdefLock);
+  while(metricDefinitionList && metricDefinitionList[i].mdef_metricname) {
+    if (metricDefinitionList[i].mdef_metricid==id) {
+      strcpy(name,metricDefinitionList[i].mdef_metricname);
+      MReadUnlock(&MdefLock);
+      return makeMetricDefId(defid,name,id);
+    }
+    i++;
+  }
+  MReadUnlock(&MdefLock);
+  return NULL;
+}
+
+char * makeMetricValueIdFromCache(CMPIBroker *broker, CMPIContext *ctx,
+				  const char * namesp, char * valid, int id,
+				  const char * resource, const char * systemid,
+				  time_t timestamp)
+{
+  int i=0;
+  char name[1000];
+  if (metricDefinitionList==NULL) {
+    refreshMetricDefClasses(broker,ctx,namesp);
+  }
+
+  MReadLock(&MdefLock);
+  while(metricDefinitionList && metricDefinitionList[i].mdef_metricname) {
+    if (metricDefinitionList[i].mdef_metricid==id) {
+      strcpy(name,metricDefinitionList[i].mdef_metricname);
+      MReadUnlock(&MdefLock);
+      return makeMetricValueId(valid,name,id,resource,systemid,timestamp);
+    }
+    i++;
+  }
+  MReadUnlock(&MdefLock);
+  return NULL;
 }
 
 char * makeMetricDefId(char * defid, const char * name, int id)
@@ -735,6 +781,55 @@ void releaseMetricIds(char **metricnames,int *mids, char **resourceids,
 {
 }
 
+CMPIString * val2string(CMPIBroker * broker, const ValueItem *val,
+			unsigned   datatype)
+{
+  char valbuf[1000];
+  switch (datatype) {
+  case MD_BOOL:
+    sprintf(valbuf,"%s", *val->viValue ? "true" : "false" );
+    break;
+  case MD_UINT8:
+    sprintf(valbuf,"%hhu",*(unsigned short*)val->viValue);
+    break;
+  case MD_SINT8:
+    sprintf(valbuf,"%hhd",*(short*)val->viValue);
+    break;
+  case MD_UINT16:
+  case MD_CHAR16:
+    sprintf(valbuf,"%hu",*(unsigned short*)val->viValue);
+    break;
+  case MD_SINT16:
+    sprintf(valbuf,"%hd",*(short*)val->viValue);
+    break;
+  case MD_UINT32:
+    sprintf(valbuf,"%lu",*(unsigned long*)val->viValue);
+    break;
+  case MD_SINT32:
+    sprintf(valbuf,"%ld",*(long*)val->viValue);
+    break;
+  case MD_UINT64:
+    sprintf(valbuf,"%llu",*(unsigned long long*)val->viValue);
+    break;
+  case MD_SINT64:
+    sprintf(valbuf,"%lld",*(long long*)val->viValue);
+    break;
+  case MD_FLOAT32:
+    sprintf(valbuf,"%f",*(float*)val->viValue);
+    break;
+  case MD_FLOAT64:
+    sprintf(valbuf,"%f",*(double*)val->viValue);
+    break;
+  case MD_STRING:
+    strcpy(valbuf,val->viValue);
+    break;
+  default:
+    sprintf(valbuf,"datatype %0x not supported",datatype);
+    break;
+  }
+  return CMNewString(broker,valbuf,NULL);
+}
+
 CMPIInstance * makeMetricValueInst(CMPIBroker * broker, 
 				   CMPIContext * ctx,
 				   const char * defname,
@@ -747,10 +842,10 @@ CMPIInstance * makeMetricValueInst(CMPIBroker * broker,
   CMPIObjectPath * co;
   CMPIInstance   * ci = NULL;
   char             instid[1000];
-  char             valbuf[1000];
   char             valclsname[1000];
   char           * namesp;
   CMPIDateTime   * datetime;
+  CMPIString     * valstring;
 
   namesp=CMGetCharPtr(CMGetNameSpace(cop,NULL));
   if (metricValueClassName(broker,ctx,namesp,valclsname,defname,defid)) {
@@ -778,51 +873,9 @@ CMPIInstance * makeMetricValueInst(CMPIBroker * broker,
 	CMNewDateTimeFromBinary(broker,
 				(long long)val->viDuration*1000000,
 				1, NULL);
-      if (datetime)
-	CMSetProperty(ci,"Duration",&datetime,CMPI_dateTime);
-      switch (datatype) {
-      case MD_BOOL:
-	sprintf(valbuf,"%s", *val->viValue ? "true" : "false" );
-	break;
-      case MD_UINT8:
-	sprintf(valbuf,"%hhu",*(unsigned short*)val->viValue);
-	break;
-      case MD_SINT8:
-	sprintf(valbuf,"%hhd",*(short*)val->viValue);
-	break;
-      case MD_UINT16:
-      case MD_CHAR16:
-	sprintf(valbuf,"%hu",*(unsigned short*)val->viValue);
-	break;
-      case MD_SINT16:
-	sprintf(valbuf,"%hd",*(short*)val->viValue);
-	break;
-      case MD_UINT32:
-	sprintf(valbuf,"%lu",*(unsigned long*)val->viValue);
-	break;
-      case MD_SINT32:
-	sprintf(valbuf,"%ld",*(long*)val->viValue);
-	break;
-      case MD_UINT64:
-	sprintf(valbuf,"%llu",*(unsigned long long*)val->viValue);
-	break;
-      case MD_SINT64:
-	sprintf(valbuf,"%lld",*(long long*)val->viValue);
-	break;
-      case MD_FLOAT32:
-	sprintf(valbuf,"%f",*(float*)val->viValue);
-	break;
-      case MD_FLOAT64:
-	sprintf(valbuf,"%f",*(double*)val->viValue);
-	break;
-      case MD_STRING:
-	strcpy(valbuf,val->viValue);
-	break;
-      default:
-	sprintf(valbuf,"datatype %0x not supported",datatype);
-	break;
-      }
-      CMSetProperty(ci,"MetricValue",valbuf,CMPI_chars);
+      valstring = val2string(broker,val,datatype);
+      if (valstring)
+	CMSetProperty(ci,"MetricValue",&valstring,CMPI_string);
     }
   }
   return ci;

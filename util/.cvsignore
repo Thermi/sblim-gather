@@ -1,0 +1,4 @@
+*.d
+mcfgtest
+merrnotest
+mtracetest
