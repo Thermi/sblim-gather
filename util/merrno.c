@@ -1,5 +1,5 @@
 /*
- * $Id: merrno.c,v 1.1 2004/10/21 15:51:18 mihajlov Exp $
+ * $Id: merrno.c,v 1.2 2004/11/10 09:40:54 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -30,7 +30,6 @@ static pthread_once_t m_errno_once = PTHREAD_ONCE_INIT;
 
 static void m_errno_term(void *m_errno)
 {
-  fprintf (stderr,"~~~ m_errno_term %p in TID: %ld\n",m_errno,pthread_self());
   if (m_errno) {
     free(m_errno);
   }
@@ -38,7 +37,6 @@ static void m_errno_term(void *m_errno)
 
 static void m_errno_init()
 {
-  fprintf (stderr,"~~~ errno_init in TID: %ld\n",pthread_self());
   pthread_key_create(&m_errno_key,m_errno_term);
   pthread_key_create(&m_errnostr_key,m_errno_term);
 }

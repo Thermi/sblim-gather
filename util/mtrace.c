@@ -47,7 +47,6 @@ static pthread_once_t vsbuf_once = PTHREAD_ONCE_INIT;
 
 static void vsbuf_term(void *vsbuf)
 {
-  fprintf (stderr,"~~~ vsbuf_term %p in TID: %ld\n",vsbuf,pthread_self());
   if (vsbuf) {
     free(vsbuf);
   }
@@ -55,7 +54,6 @@ static void vsbuf_term(void *vsbuf)
 
 static void vsbuf_init()
 {
-  fprintf (stderr,"~~~ vsbuf_init in TID: %ld\n",pthread_self());
   pthread_key_create(&vsbuf_key,vsbuf_term);
 }
 
@@ -66,7 +64,6 @@ static char* get_vsbuf(size_t len)
   pthread_once(&vsbuf_once,vsbuf_init);
   vsbuf = (char*)pthread_getspecific(vsbuf_key);
   if (vsbuf == NULL) {
-    fprintf (stderr,"~~~ get_vsbuf: setspecific in TID: %ld\n",pthread_self());
     vsbuf = malloc(len);
     pthread_setspecific(vsbuf_key,vsbuf); 
   }
@@ -163,7 +160,7 @@ void m_trace(int level, unsigned component, const char * filename,
 
 void m_trace_setfile(const char * tracefile)
 {
-  mtrace_file = tracefile;
+  mtrace_file = strdup(tracefile);
 }
 
 void m_trace_setlevel(int level)
