@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.12 2004/10/20 14:43:31 heidineu Exp $
+ * $Id: reposd.c,v 1.13 2004/10/21 07:20:43 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -24,8 +24,9 @@
 #include "repos.h"
 #include "gatherc.h"
 #include "commheap.h"
-#include "mlog.h"
 #include "reposcfg.h"
+#include <mtrace.h>
+#include <mlog.h>
 #include <mcserv.h>
 #include <rcserv.h>
 #include <stdio.h>
@@ -33,6 +34,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <netinet/in.h>
+#include <errno.h>
 
 #define CHECKBUFFER(comm,buffer,sz) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=sizeof(buffer))
 
@@ -45,6 +47,9 @@ static int  rmaxconn         = 0;
 static int  connects         = 0;
 static pthread_mutex_t connect_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t  connect_cond  = PTHREAD_COND_INITIALIZER;
+
+static void * repos_remote();
+static void * rrepos_getrequest(void * hdl);
 
 #define RINITCHECK() \
 pthread_mutex_lock(&connect_mutex); \
@@ -62,108 +67,6 @@ if (rreposport==0) { \
   rcs_init(&rreposport); \
 } \
 pthread_mutex_unlock(&connect_mutex); 
-
-
-static void * rrepos_getrequest(void * hdl)
-{
-  GATHERCOMM   *comm;
-  char          buffer[GATHERVALBUFLEN];
-  size_t        bufferlen;
-  char         *pluginname, *metricname;
-  MetricValue  *mv;
-
-  if (pthread_detach(pthread_self()) != 0) {
-    perror("detaching thread");
-  }
-
-  //  fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
-  while (1) {
-    memset(buffer, 0, sizeof(buffer));
-    bufferlen=sizeof(buffer);
-    pthread_mutex_lock(&connect_mutex);
-    if (rcs_getrequest((int)hdl,buffer,&bufferlen) == -1) {
-      //      fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
-      connects--;
-      pthread_cond_signal(&connect_cond);
-      pthread_mutex_unlock(&connect_mutex);
-      break;
-    }
-    //    fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buffer);
-    pthread_mutex_unlock(&connect_mutex);
-
-    /* write data to repository */
-    comm=(GATHERCOMM*)buffer;    
-    comm->gc_cmd     = ntohs(comm->gc_cmd);
-    comm->gc_datalen = ntohl(comm->gc_datalen);
-    comm->gc_result  = ntohs(comm->gc_result);
-        
-    /* perform sanity check */
-    if (bufferlen != sizeof(GATHERCOMM) + comm->gc_datalen) {
-      fprintf(stderr,"--- invalid length received: expected %d got %d\n",
-	      sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
-      continue;
-    }
-    /* the transmitted parameters are
-     * 1: pluginname
-     * 2: metricname
-     * 3: metricvalue
-     */
-    pluginname=buffer+sizeof(GATHERCOMM);
-    metricname=pluginname+strlen(pluginname)+1;
-    mv=(MetricValue*)(metricname+strlen(metricname)+1);
-    /* fixups */
-    if (mv->mvResource) {
-      mv->mvResource=(char*)(mv + 1);
-      mv->mvData=mv->mvResource + strlen(mv->mvResource) + 1;
-    } else {
-      mv->mvData=(char*)(mv + 1);
-    }
-    /* convert from host byte order into network byte order */
-    mv->mvId         = ntohl((int)mv->mvId);
-    mv->mvTimeStamp  = ntohl((time_t)mv->mvTimeStamp);
-    mv->mvDataType   = ntohl((unsigned)mv->mvDataType);
-    mv->mvDataLength = ntohl((size_t)mv->mvDataLength);
-    mv->mvSystemId=mv->mvData+mv->mvDataLength;
-    //    fprintf(stderr,"socket %i : %s %s\n",(int)hdl,mv->mvSystemId,metricname);
-    if ((comm->gc_result=reposvalue_put(pluginname,metricname,mv)) != 0) {
-      fprintf(stderr,"write %s to repository failed\n",metricname);
-    }
-  }
-  //  fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
-  return NULL;
-}
-
-static void * repos_remote()
-{
-  pthread_t thread;
-  int       hdl = -1;
-
-  while (1) {
-    if (hdl == -1) {
-      if (rcs_accept(&hdl) == -1) { 
-	perror("_reposd_remote() rcs_accept"); 
-	return 0; 
-      }
-    }
-    pthread_mutex_lock(&connect_mutex);
-    connects++;
-    pthread_mutex_unlock(&connect_mutex);
-    if (pthread_create(&thread,NULL,rrepos_getrequest,(void*)hdl) != 0) {
-      perror("_reposd_remote create thread");
-      return 0;
-    }   
-    pthread_mutex_lock(&connect_mutex);
-    if(connects==rmaxconn) {
-      /* wait for at least one finished thread */
-      pthread_cond_wait(&connect_cond,&connect_mutex);
-    }
-    pthread_mutex_unlock(&connect_mutex);
-    hdl = -1;
-  }
-  rcs_term();
-  return 0;
-}
-
 
 /* ---------------------------------------------------------------------------*/
 
@@ -184,42 +87,78 @@ int main(int argc, char * argv[])
   char         *pluginname, *metricname;
   MetricValue  *mv;
   pthread_t     rcomm;
+  char          cfgbuf[1000];
+  char         *cfgidx1, *cfgidx2;
+
+  m_start_logging("reposd");
+  m_log(M_INFO,M_QUIET,"Reposd is starting up.\n");
 
   if (argc == 1) {
     /* daemonize if no arguments are given */
     if (daemon(0,0)) {
-      perror("reposd");
+      m_log(M_ERROR,M_SHOW,"Couldn't daemonize: %s - exiting\n",
+	    strerror(errno));
       exit(-1);
     }
   }
   
-  /* start remote reposd in separate thread */
-  RINITCHECK();
-  if (pthread_create(&rcomm,NULL,repos_remote,NULL) != 0) {
-    perror("Could not create thread for remote reposd");
-  }
-
-  if (mcs_init(REPOS_COMMID)) {
-    fprintf(stderr,"Could not open reposd socket.\n");
-    return -1;
+  if (reposcfg_init()) {
+    m_log(M_ERROR,M_SHOW,"Could not open reposd config file.\n");
   }
   
+  /* init tracing from config */
+#ifndef NOTRACE
+  if (reposcfg_getitem("TraceLevel",cfgbuf,sizeof(cfgbuf))==0) {
+    m_trace_setlevel(atoi(cfgbuf));
+  }
+  if (reposcfg_getitem("TraceFile",cfgbuf,sizeof(cfgbuf)) ==0) {
+	m_trace_setfile(cfgbuf);
+  }
+  if (reposcfg_getitem("TraceComponents",cfgbuf,sizeof(cfgbuf)) ==0) {
+    cfgidx1 = cfgbuf;
+    while (cfgidx1) {
+      cfgidx2 = strchr(cfgidx1,':');
+      if (cfgidx2) {
+	*cfgidx2++=0;
+      }
+      m_trace_enable(m_trace_compid(cfgidx1));
+      cfgidx1=cfgidx2;
+    }
+  }
+#endif
+  
+  M_TRACE(MTRACE_DETAILED,MTRACE_REPOS,("Reposd tracing initialized."));
+
+  if (mcs_init(REPOS_COMMID)) {
+    m_log(M_ERROR,M_SHOW,"Could not open reposd socket.\n");
+    return -1;
+  }
+
+  /* start remote reposd in a separate thread */
+  RINITCHECK();
+  if (pthread_create(&rcomm,NULL,repos_remote,NULL) != 0) {
+    m_log(M_ERROR,M_SHOW,"Could not create remote reposd thread: %s.\n",
+	  strerror(errno));
+  }
+
   memset(buffer, 0, sizeof(buffer));
  
   while (!quit && mcs_accept(&hdr)==0) {
     while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
+      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Received message type=%d",hdr.mc_type));
       if (hdr.mc_type != GATHERMC_REQ) {
 	/* ignore unknown message types */
-	fprintf(stderr,"--- invalid request type  received %c\n",hdr.mc_type);
+	m_log(M_ERROR,M_QUIET,"Invalid request type  received %c\n",hdr.mc_type);
 	continue;
       }
       comm=(GATHERCOMM*)buffer;
       /* perform sanity check */
       if (bufferlen != sizeof(GATHERCOMM) + comm->gc_datalen) {
-	fprintf(stderr,"--- invalid length received: expected %d got %d\n",
-		sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
+	m_log(M_ERROR,M_QUIET,"Invalid length received: expected %d got %d\n",
+	      sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
 	continue;
       }
+      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Received command id=%d",comm->gc_cmd));
       switch (comm->gc_cmd) {
       case GCMD_STATUS:
 	repos_status((RepositoryStatus*)(buffer+sizeof(GATHERCOMM)));
@@ -344,12 +283,11 @@ int main(int argc, char * argv[])
 	    memcpy(vi,vr->vsValues,sizeof(ValueItem)*vr->vsNumValues);
 	    vp = (void*)vi + sizeof(ValueItem) * vr->vsNumValues;
 	    for (i=0;i<vr->vsNumValues;i++) {
-#ifdef DEBUG
-	      fprintf(stderr,"returning value for mid=%d, resource %s: %d\n",
-		      vr->vsId,
-		      vr->vsValues[i].viResource,
-		      *(int*)vr->vsValues[i].viValue);
-#endif
+	      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+		      ("Returning value for mid=%d, resource %s: %d",
+		       vr->vsId,
+		       vr->vsValues[i].viResource,
+		       *(int*)vr->vsValues[i].viValue));
 	      if (vp + vr->vsValues[i].viValueLen < vpmax) {
 		memcpy(vp,vr->vsValues[i].viValue,vr->vsValues[i].viValueLen);
 		vi[i].viValue = vp;
@@ -398,12 +336,121 @@ int main(int argc, char * argv[])
       }
       hdr.mc_type=GATHERMC_RESP;
       if (sizeof(GATHERCOMM) + comm->gc_datalen > sizeof(buffer)) {
-	fprintf(stderr,"Error: Available data size is exceeding buffer.\n");
+	m_log(M_ERROR,M_QUIET,
+	      "Error: Available data size is exceeding buffer.\n");
       }
       mcs_sendresponse(&hdr,buffer,sizeof(GATHERCOMM)+comm->gc_datalen);
       bufferlen=sizeof(buffer);
     }
   }
   mcs_term();
+  m_log(M_INFO,M_QUIET,"Reposd is shutting down.\n");
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Reposd is shutting down.\n"));
   return 0;
+}
+
+static void * repos_remote()
+{
+  pthread_t thread;
+  int       hdl = -1;
+
+  m_log(M_INFO,M_QUIET,"Remote reposd thread - starting.\n");
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Remote reposd thread - starting.\n"));
+
+  while (1) {
+    if (hdl == -1) {
+      if (rcs_accept(&hdl) == -1) {
+	m_log(M_ERROR,M_SHOW,"Could not accept: %s.\n",
+	      strerror(errno));
+	return 0; 
+      }
+    }
+    pthread_mutex_lock(&connect_mutex);
+    connects++;
+    pthread_mutex_unlock(&connect_mutex);
+    if (pthread_create(&thread,NULL,rrepos_getrequest,(void*)hdl) != 0) {
+      perror("_reposd_remote create thread");
+      return 0;
+    }   
+    pthread_mutex_lock(&connect_mutex);
+    if(connects==rmaxconn) {
+      /* wait for at least one finished thread */
+      pthread_cond_wait(&connect_cond,&connect_mutex);
+    }
+    pthread_mutex_unlock(&connect_mutex);
+    hdl = -1;
+  }
+  rcs_term();
+  m_log(M_INFO,M_QUIET,"Remote reposd thread - exiting.\n");
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Remote reposd thread - exiting.\n"));
+  return 0;
+}
+
+static void * rrepos_getrequest(void * hdl)
+{
+  GATHERCOMM   *comm;
+  char          buffer[GATHERVALBUFLEN];
+  size_t        bufferlen;
+  char         *pluginname, *metricname;
+  MetricValue  *mv;
+
+  if (pthread_detach(pthread_self()) != 0) {
+    perror("detaching thread");
+  }
+
+  //  fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
+  while (1) {
+    memset(buffer, 0, sizeof(buffer));
+    bufferlen=sizeof(buffer);
+    pthread_mutex_lock(&connect_mutex);
+    if (rcs_getrequest((int)hdl,buffer,&bufferlen) == -1) {
+      //      fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
+      connects--;
+      pthread_cond_signal(&connect_cond);
+      pthread_mutex_unlock(&connect_mutex);
+      break;
+    }
+    //    fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buffer);
+    pthread_mutex_unlock(&connect_mutex);
+
+    /* write data to repository */
+    comm=(GATHERCOMM*)buffer;    
+    comm->gc_cmd     = ntohs(comm->gc_cmd);
+    comm->gc_datalen = ntohl(comm->gc_datalen);
+    comm->gc_result  = ntohs(comm->gc_result);
+        
+    /* perform sanity check */
+    if (bufferlen != sizeof(GATHERCOMM) + comm->gc_datalen) {
+      fprintf(stderr,"--- invalid length received: expected %d got %d\n",
+	      sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
+      continue;
+    }
+    /* the transmitted parameters are
+     * 1: pluginname
+     * 2: metricname
+     * 3: metricvalue
+     */
+    pluginname=buffer+sizeof(GATHERCOMM);
+    metricname=pluginname+strlen(pluginname)+1;
+    mv=(MetricValue*)(metricname+strlen(metricname)+1);
+    /* fixups */
+    if (mv->mvResource) {
+      mv->mvResource=(char*)(mv + 1);
+      mv->mvData=mv->mvResource + strlen(mv->mvResource) + 1;
+    } else {
+      mv->mvData=(char*)(mv + 1);
+    }
+    /* convert from host byte order into network byte order */
+    mv->mvId         = ntohl((int)mv->mvId);
+    mv->mvTimeStamp  = ntohl((time_t)mv->mvTimeStamp);
+    mv->mvDataType   = ntohl((unsigned)mv->mvDataType);
+    mv->mvDataLength = ntohl((size_t)mv->mvDataLength);
+    mv->mvSystemId=mv->mvData+mv->mvDataLength;
+    //    fprintf(stderr,"socket %i : %s %s\n",(int)hdl,mv->mvSystemId,metricname);
+    if ((comm->gc_result=reposvalue_put(pluginname,metricname,mv)) != 0) {
+      fprintf(stderr,"write %s to repository failed\n",metricname);
+    }
+  }
+  //  fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
+  return NULL;
 }
