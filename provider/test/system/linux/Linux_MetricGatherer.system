@@ -7,7 +7,7 @@ Linux_MetricGatherer : -eq 1
 --------------------------------------------------------------------------------
 SystemCreationClassName : -eq Linux_ComputerSystem
 SystemName : -eq -cmd gather-systemname.sh
-CreationClassName: -eq LinuxMetricGatherer
+CreationClassName: -eq Linux_MetricGatherer
 Name : -eq gatherd
 
 EnabledState: -eq 2

@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: gatherd.c,v 1.2 2004/05/14 12:11:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -44,6 +44,11 @@ int main(int argc, char * argv[])
   int           i, j;
   size_t        valreslen;
   PluginDefinition *pdef;
+  
+  if (argc == 1) {
+    /* daemonize if no arguments are given */
+    daemon(0,0);
+  }
   
   if (mcs_init()) {
     return -1;

@@ -76,6 +76,9 @@ then
     exit -1
 fi
 
+# Wait 30 seconds to make sure that enough samples are generated
+sleep 30
+
 declare -a CLASSNAMES[];
 CLASSNAMES=([0]=Linux_MetricGatherer \
     [1]=Linux_NetworkPortMetric \

@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: rgather.c,v 1.2 2004/05/14 12:11:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -31,7 +31,7 @@ int rgather_load()
   int pid;
   if (system("ps -C gatherd")) {
     /* No gatherd around */
-    signal(SIGCHLD,SIG_IGN);
+    /*signal(SIGCHLD,SIG_IGN);*/
     pid=fork();
     switch(pid) {
     case 0:
