@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.9 2004/10/19 16:22:22 heidineu Exp $
+ * $Id: reposd.c,v 1.10 2004/10/20 09:07:12 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -43,6 +43,7 @@ static int       clthdl[MAXCONN] = {0};
 static pthread_t thread_id[MAXCONN];
 static int       connects = 0;
 static pthread_mutex_t connect_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t  connect_cond  = PTHREAD_COND_INITIALIZER;
 
 static void * _get_request(void * hdl)
 {
@@ -53,6 +54,7 @@ static void * _get_request(void * hdl)
   MetricValue  *mv;
   int           i;
 
+  //  fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
   while (1) {
     memset(buffer, 0, sizeof(buffer));
     bufferlen=sizeof(buffer);
@@ -108,11 +110,11 @@ static void * _get_request(void * hdl)
       break;
     }
   }
+  pthread_cond_signal(&connect_cond);
   pthread_mutex_unlock(&connect_mutex);
   //  fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
   return NULL;
 }
-
 
 static void * _reposd_remote()
 {
@@ -126,8 +128,18 @@ static void * _reposd_remote()
   memset(thread_id,0,sizeof(thread_id));
    
   while (1) {
+    pthread_mutex_lock(&connect_mutex);
+    if(connects==MAXCONN) { 
+      /* wait for at least one finished thread */
+      pthread_cond_wait(&connect_cond,&connect_mutex);
+      fprintf(stderr,"at least one thread finished\n");
+    }
+    pthread_mutex_unlock(&connect_mutex);
     if (hdl == -1) {
       if (rcs_accept(&hdl) == -1) { return 0; }
+      pthread_mutex_lock(&connect_mutex);
+      connects++;
+      pthread_mutex_unlock(&connect_mutex);
     }
     pthread_mutex_lock(&connect_mutex);
     for(i=0;i<MAXCONN;i++) {
@@ -142,21 +154,6 @@ static void * _reposd_remote()
       return 0;
     }
     hdl = -1;
-    pthread_mutex_lock(&connect_mutex);
-    if (connects<(MAXCONN-1)) { connects++; }
-    else {
-      pthread_mutex_unlock(&connect_mutex);
-      /* wait until at least one thread finished */
-      while (1) {
-	req.tv_sec = 0;
-	req.tv_nsec = 100;
-	nanosleep(&req,&rem);
-	pthread_mutex_lock(&connect_mutex);
-	if(connects<(MAXCONN-1)) { break; }
-	pthread_mutex_unlock(&connect_mutex);
-      }
-    }
-    pthread_mutex_unlock(&connect_mutex);
   }
   rcs_term();
   return 0;
