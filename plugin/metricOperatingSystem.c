@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.2 2003/11/05 15:52:06 heidineu Exp $
+ * $Id: metricOperatingSystem.c,v 1.3 2003/12/05 13:48:53 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -1152,7 +1152,7 @@ int metricRetrPageInCounter( int mid,
 #endif
     if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
       fscanf(fhd,
-	     "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lld",
+	     "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lld",
 	     &page);
       fclose(fhd);
     }
