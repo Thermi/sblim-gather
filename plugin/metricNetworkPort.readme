@@ -1,5 +1,5 @@
 /*
- * $Id: metricNetworkPort.readme,v 1.2 2004/08/04 09:04:02 heidineu Exp $
+ * $Id: metricNetworkPort.readme,v 1.3 2004/09/15 11:29:40 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -42,7 +42,9 @@ Units           : Byte; number of errors since start up
 Value Source    : the corresponding line of /proc/net/dev contains the values
                   of this network port
 
-Syntax          : <bytes received>:<bytes transmitted>:<errors received>:<errors transmitted>
+Syntax          : <bytes received>:<bytes transmitted>:
+		  <errors received>:<errors transmitted>::
+		  <packets received>:<packets transmitted>
 
 
 BytesTransmitted

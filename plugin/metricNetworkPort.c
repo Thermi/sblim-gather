@@ -1,5 +1,5 @@
 /*
- * $Id: metricNetworkPort.c,v 1.2 2004/08/04 09:00:04 heidineu Exp $
+ * $Id: metricNetworkPort.c,v 1.3 2004/09/15 11:29:40 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -130,16 +130,12 @@ int metricRetrBytesSubmitted( int mid,
 	ptr = strchr(ptr,'\n')+1;
 	  
 	while( (end = strchr(ptr,'\n')) != NULL ) {
-	  //	for(;i<_enum_size;i++) {
-	  //	    end = strchr(ptr,'\n');
 	  sscanf(ptr,
 		 "%s %lld %lld %lld %*s %*s %*s %*s %*s %lld %lld %lld",
 		 &port,
 		 &receive_byte,&receive_packets,&receive_error,
 		 &trans_byte,&trans_packets,&trans_error);
 	  
-	  //	  port = _enum_port + (i*64);
-	  //fprintf(stderr,"[%i] port: %s \n",i,port);
 	  col = strchr(port,':');
 	  *col = '\0';
 	  fprintf(stderr,"[%i] port: %s \n",i,port);
@@ -147,7 +143,6 @@ int metricRetrBytesSubmitted( int mid,
 	  memset(values,0,sizeof(values));
 	  sprintf(values,"%lld:%lld:%lld:%lld:%lld:%lld",
 		  receive_byte,trans_byte,receive_error,trans_error,receive_packets,trans_packets);
-	  //fprintf(stderr,"values : %s\n",values);
 	  
 	  mv = calloc(1, sizeof(MetricValue) + 
 		      (strlen(values)+1) + 
