@@ -1,5 +1,5 @@
 /*
- * $Id: metricSample4.c,v 1.5 2004/08/03 12:36:08 mihajlov Exp $
+ * $Id: metricSample4.c,v 1.6 2004/11/22 09:22:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Sample Code
  */
@@ -74,7 +74,7 @@ int metricRetriever(int mid, MetricReturner mret)
       mv->mvResource = "sample4res";
       mv->mvTimeStamp = time(NULL);
       mv->mvDataLength = sizeof(int);
-      mv->mvData = (void*)mv + sizeof(MetricValue);
+      mv->mvData = (char*)mv + sizeof(MetricValue);
       *(int*)mv->mvData = 42+mid;
       mret(mv);
       numvalues += 1;
@@ -85,7 +85,7 @@ int metricRetriever(int mid, MetricReturner mret)
       mv->mvResource = "sample4res2";
       mv->mvTimeStamp = time(NULL);
       mv->mvDataLength = sizeof(int);
-      mv->mvData = (void*)mv + sizeof(MetricValue);
+      mv->mvData = (char*)mv + sizeof(MetricValue);
       *(int*)mv->mvData = 4711+mid;
       mret(mv);
       numvalues += 1;

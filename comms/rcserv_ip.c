@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv_ip.c,v 1.4 2004/10/22 12:11:20 heidineu Exp $
+ * $Id: rcserv_ip.c,v 1.5 2004/11/22 09:22:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -12,6 +12,7 @@
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.com>
  * Contributors: Heidi Neumann <heidineu@de.ibm.com>
+ *               Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Gatherer Server-Side Communication APIs
  *              TCP/IP Socket version
@@ -244,7 +245,7 @@ int rcs_getrequest(int clthdl, void *reqdata, size_t *reqdatalen)
       if (*reqdatalen > 0) { maxlen=*reqdatalen; }
       do {
 	/* get length */
-	readlen=read(clthdl,(void*)reqdatalen+recvlen,sizeof(size_t)-recvlen);
+	readlen=read(clthdl,(char*)reqdatalen+recvlen,sizeof(size_t)-recvlen);
 	if (readlen <= 0) { break; }
 	recvlen += readlen;
       } while (recvlen != sizeof(size_t));
@@ -263,7 +264,7 @@ int rcs_getrequest(int clthdl, void *reqdata, size_t *reqdatalen)
 	recvlen=0;
 	do {
 	  /* get data */
-	  readlen=read(clthdl,reqdata+recvlen,*reqdatalen-recvlen);
+	  readlen=read(clthdl,(char*)reqdata+recvlen,*reqdatalen-recvlen);
 	  if (readlen <= 0) { break; }
 	  recvlen += readlen;
 	} while (recvlen != *reqdatalen);

@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv_unix.c,v 1.4 2004/10/20 09:08:16 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.5 2004/11/22 09:22:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Gatherer Server-Side Communication APIs
  * Implementation based on AF_UNIX sockets.
@@ -195,7 +195,7 @@ int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
 	  hdr->mc_handle=srvhandle;
 	  do {
 	    /* get data */
-	    readlen=read(srvhandle,reqdata+recvlen,*reqdatalen-recvlen);
+	    readlen=read(srvhandle,(char*)reqdata+recvlen,*reqdatalen-recvlen);
 	    if (readlen <= 0) break;
 	    recvlen += readlen;
 	  } while (recvlen != *reqdatalen);

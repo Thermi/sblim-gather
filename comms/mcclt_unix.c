@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.7 2004/10/22 12:11:20 heidineu Exp $
+ * $Id: mcclt_unix.c,v 1.8 2004/11/22 09:22:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com> 
  *
  * Description:  Gatherer Client-Side Communication APIs
  * AF_UNIX version.
@@ -318,7 +318,7 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
   do {
     /* get data */
     M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_response reading data chunk"));
-    readlen=read(cltsock,respdata+recvlen,*respdatalen-recvlen);
+    readlen=read(cltsock,(char*)respdata+recvlen,*respdatalen-recvlen);
     if (readlen <= 0) break;
     recvlen+=readlen;
   } while (recvlen != *respdatalen);

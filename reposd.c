@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.18 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: reposd.c,v 1.19 2004/11/22 09:22:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Repository Daemon
  *
@@ -84,7 +84,8 @@ int main(int argc, char * argv[])
   SubscriptionRequest *sr;
   ValueRequest *vr;
   ValueItem    *vi;
-  void         *vp, *vpmax;
+  void         *vp;
+  char         *vpmax;
   int           i,j;
   size_t        valreslen;
   size_t        valsyslen;
@@ -332,55 +333,55 @@ int main(int argc, char * argv[])
 	 */
 	vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
 	vp=vr;
-	vpmax=(void*)buffer+sizeof(buffer);
+	vpmax=(char*)buffer+sizeof(buffer);
 	if (vr->vsResource) {
 	  /* adjust pointer to resource name */
-	  vr->vsResource = (void*)vr + sizeof(ValueRequest);
+	  vr->vsResource = (char*)vr + sizeof(ValueRequest);
 	  valreslen= strlen(vr->vsResource) + 1;
 	} else {
 	  valreslen = 0;
 	}
 	if (vr->vsSystemId) {
 	  /* adjust pointer to system id */
-	  vr->vsSystemId = (void*)vr + sizeof(ValueRequest) + valreslen;
+	  vr->vsSystemId = (char*)vr + sizeof(ValueRequest) + valreslen;
 	  valsyslen = strlen(vr->vsSystemId) + 1;
 	} else {
 	  valsyslen = 0;
 	}
-	vi=(void*)vr+sizeof(ValueRequest)+valreslen+valsyslen;
+	vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen);
 	vr->vsValues=NULL;
 	ch=ch_init();
 	comm->gc_result=reposvalue_get(vr,ch);
 	/* copy value data into transfer buffer and compute total length */
 	if (comm->gc_result != -1) {
-	  if ((void*)vi+sizeof(ValueItem)*vr->vsNumValues < vpmax) {
+	  if ((char*)vi+sizeof(ValueItem)*vr->vsNumValues < vpmax) {
 	    memcpy(vi,vr->vsValues,sizeof(ValueItem)*vr->vsNumValues);
-	    vp = (void*)vi + sizeof(ValueItem) * vr->vsNumValues;
+	    vp = (char*)vi + sizeof(ValueItem) * vr->vsNumValues;
 	    for (i=0;i<vr->vsNumValues;i++) {
 	      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
 		      ("Returning value for mid=%d, resource %s: %d",
 		       vr->vsId,
 		       vr->vsValues[i].viResource,
 		       *(int*)vr->vsValues[i].viValue));
-	      if (vp + vr->vsValues[i].viValueLen < vpmax) {
+	      if ((char*)vp + vr->vsValues[i].viValueLen < vpmax) {
 		memcpy(vp,vr->vsValues[i].viValue,vr->vsValues[i].viValueLen);
 		vi[i].viValue = vp;
-		vp += vi[i].viValueLen;
+		vp = (char*)vp + vi[i].viValueLen;
 		if (vr->vsValues[i].viResource) {
-		  if (vp + strlen(vr->vsValues[i].viResource) + 1 < vpmax) {
+		  if ((char*)vp + strlen(vr->vsValues[i].viResource) + 1 < vpmax) {
 		    strcpy(vp,vr->vsValues[i].viResource);
 		    vi[i].viResource = vp;
-		    vp += strlen(vp)+1;
+		    vp = (char*)vp + strlen(vp)+1;
 		  }
 		} else {
 		  comm->gc_result=-1;
 		  break;
 		}
 		if (vr->vsValues[i].viSystemId) {
-		  if (vp + strlen(vr->vsValues[i].viSystemId) + 1 < vpmax) {
+		  if ((char*)vp + strlen(vr->vsValues[i].viSystemId) + 1 < vpmax) {
 		    strcpy(vp,vr->vsValues[i].viSystemId);
 		    vi[i].viSystemId = vp;
-		    vp += strlen(vp)+1;
+		    vp = (char*)vp + strlen(vp)+1;
 		  }
 		} else {
 		  comm->gc_result=-1;
@@ -394,7 +395,7 @@ int main(int argc, char * argv[])
 	  } else {
 	    comm->gc_result=-1;
 	  }
-	  comm->gc_datalen=vp - (void*)vr;
+	  comm->gc_datalen= (char*)vp - (char*)vr;
 	}
 	ch_release(ch);
 	break;

@@ -1,5 +1,5 @@
 /*
- * $Id: rplugmgr.c,v 1.1 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: rplugmgr.c,v 1.2 2004/11/22 09:22:59 mihajlov Exp $
  * (C) Copyright IBM Corp. 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
@@ -10,7 +10,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Repository Plugin Manager
  * Does dynamic loading of repository plugins.
@@ -35,7 +35,7 @@ int RP_Load (RepositoryPlugin *plugin)
 	    dlerror());
     return -1;
   }
-  mdef = dlsym(plugin->rpHandle,REPOSITORYMETRIC_DEFINITIONPROC_S);
+  mdef = (RepositoryMetricsDefined*)dlsym(plugin->rpHandle,REPOSITORYMETRIC_DEFINITIONPROC_S);
   if (!mdef) {
     fprintf(stderr,
 	    "Error locating " REPOSITORYMETRIC_DEFINITIONPROC_S " in %s: %s\n", 

@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.6 2004/08/04 11:27:36 mihajlov Exp $
+ * $Id: gather.c,v 1.7 2004/11/22 09:22:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com> 
  *
  * Description: Gatherer Library
  * 
@@ -218,10 +218,11 @@ int metricplugin_list(const char *pluginname, PluginDefinition **pdef,
 int metricpluginname_list(char ***pluginname, 
 			  COMMHEAP ch)
 {
+  MetricPlugin *mp = NULL;
   if (pluginname) {
     int i=0;
     *pluginname = ch_alloc(ch,sizeof(char*)*(pluginnum+1));
-    MetricPlugin *mp = pl_first();
+    mp = pl_first();
     while (mp) {
       (*pluginname)[i]= ch_alloc(ch,strlen(mp->mpName)+1);
       strcpy((*pluginname)[i],mp->mpName);

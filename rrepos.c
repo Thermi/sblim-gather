@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.17 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: rrepos.c,v 1.18 2004/11/22 09:22:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com> 
  *
  * Description: Remote Repository Access Library
  * Implementation of the Remote API use to control the Repository
@@ -232,20 +232,20 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
 	vp = xbuf + sizeof(GATHERCOMM) + sizeof(ValueRequest) + 
 	  resourcelen + systemlen;
 	memcpy(vr->vsValues,vp,sizeof(ValueItem)*vr->vsNumValues);
-	vp += vr->vsNumValues*sizeof(ValueItem);
+	vp = (char*)vp + vr->vsNumValues*sizeof(ValueItem);
 	for (i=0; i<vr->vsNumValues; i++) {
 	  vr->vsValues[i].viValue=ch_alloc(ch,vr->vsValues[i].viValueLen);
 	  memcpy(vr->vsValues[i].viValue,vp,vr->vsValues[i].viValueLen);
-	  vp += vr->vsValues[i].viValueLen;  
+	  vp = (char*)vp + vr->vsValues[i].viValueLen;  
 	  if (vr->vsValues[i].viResource) {
 	    vr->vsValues[i].viResource = ch_alloc(ch,strlen(vp)+1);
 	    strcpy(vr->vsValues[i].viResource,vp);
-	    vp += strlen(vp) + 1;
+	    vp = (char*)vp + strlen(vp) + 1;
 	  }
 	  if (vr->vsValues[i].viSystemId) {
 	    vr->vsValues[i].viSystemId = ch_alloc(ch,strlen(vp)+1);
 	    strcpy(vr->vsValues[i].viSystemId,vp);
-	    vp += strlen(vp) + 1;
+	    vp = (char*)vp + strlen(vp) + 1;
 	  }
 	}
 	pthread_mutex_unlock(&rrepos_mutex);

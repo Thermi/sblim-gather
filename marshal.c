@@ -1,5 +1,5 @@
 /*
- * $Id: marshal.c,v 1.1 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: marshal.c,v 1.2 2004/11/22 09:22:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com> 
  *
  * Description: Marshaling
  * 
@@ -82,7 +82,7 @@ int unmarshal_data(void **data, size_t datalen, const char *mbuf,
 		   off_t *offset, size_t mbuflen)
 {
   if (data && mbuf && offset) {  
-    *data = (void*)mbuf + *offset;
+    *data = (char*)mbuf + *offset;
     *offset += datalen;
     if (*offset > mbuflen) {
       /* length error */
