@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryProcessor.c,v 1.2 2004/11/03 08:16:36 heidineu Exp $
+ * $Id: repositoryProcessor.c,v 1.3 2004/12/03 15:57:22 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <commutil.h>
 
 /* ---------------------------------------------------------------------------*/
 
@@ -55,7 +56,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_AVERAGE;
   metricCalcDef[0].mcChangeType=MD_GAUGE;
   metricCalcDef[0].mcIsContinuous=MD_TRUE;
-  metricCalcDef[0].mcDataType=MD_UINT8;
+  metricCalcDef[0].mcDataType=MD_FLOAT32;
   metricCalcDef[0].mcCalc=metricCalcCPUTimePerc;
 
   *mcnum=1;
@@ -72,19 +73,19 @@ size_t metricCalcCPUTimePerc( MetricValue *mv,
 			      int mnum,
 			      void *v, 
 			      size_t vlen ) {
-  int total = 0;
-  int sum   = 0;
+  float total = 0;
+  float sum   = 0;
   int i     = 0;
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Calculate TotalCPUTimePercentage\n",
 	  __FILE__,__LINE__);
 #endif
-  if ( mv && (vlen>=mv->mvDataLength) && (mnum>=2) ) {
-    for(;i<mnum;i++) { sum = sum + *(unsigned char*)mv->mvData; }
+  if ( mv && (vlen>=mv->mvDataLength)) {
+    for(;i<mnum;i++) { sum = sum + ntohf(*(float*)mv->mvData); }
     total = sum / mnum;
-    memcpy(v, &total, sizeof(unsigned char));
-    return sizeof(unsigned char);
+    memcpy(v, &total, sizeof(float));
+    return sizeof(float);
   }
   return -1;
 }

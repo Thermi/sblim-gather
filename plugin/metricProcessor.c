@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.c,v 1.5 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: metricProcessor.c,v 1.6 2004/12/03 15:57:22 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -28,6 +28,7 @@
 #include <string.h>     
 #include <time.h>
 #include <unistd.h>
+#include <commutil.h>
 
 /* ---------------------------------------------------------------------------*/
 
@@ -122,11 +123,11 @@ int metricRetrCPUTimePerc( int mid,
   char   buf[60000];
   size_t bytes_read = 0;
   int    i          = 0;
-  unsigned char      size = 0;
-  unsigned long long val1 = 0;
-  unsigned long long val2 = 0;
-  unsigned long long val3 = 0;
-  unsigned long long val4 = 0;
+  float size = 0;
+  float val1 = 0;
+  float val2 = 0;
+  float val3 = 0;
+  float val4 = 0;
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving TotalCPUTimePercentage\n",
@@ -146,22 +147,22 @@ int metricRetrCPUTimePerc( int mid,
       if( bytes_read > 0 ) {
 	for(;i<_enum_size;i++) {
 	  ptr = strchr(buf,'\n')+1;
-	  sscanf(ptr,"%*s %lld %lld %lld %lld",&val1,&val2,&val3,&val4);
+	  sscanf(ptr,"%*s %f %f %f %f",&val1,&val2,&val3,&val4);
 	  size = ((val1+val2+val3)*100) / (val1+val2+val3+val4);
 	  proc = _enum_proc + (i*64);	  
-	  //fprintf(stderr,"[%i] proc: %s ... size : %i\n",i,proc,size);
+	  /*fprintf(stderr,"[%i] proc: %s ... size : %f\n",i,proc,size);*/
 
 	  mv = calloc(1, sizeof(MetricValue) + 
-		         sizeof(unsigned char) + 
+		         sizeof(float) + 
 		         (strlen(proc)+1) );
 	  if (mv) {
 	    mv->mvId = mid;
 	    mv->mvTimeStamp = time(NULL);
-	    mv->mvDataType = MD_UINT8;
-	    mv->mvDataLength = sizeof(unsigned char);
+	    mv->mvDataType = MD_FLOAT32;
+	    mv->mvDataLength = sizeof(float);
 	    mv->mvData = (char*)mv + sizeof(MetricValue);
-	    *(unsigned char*)mv->mvData = size;
-	    mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned char);
+	    *(float*)mv->mvData = htonf(size);
+	    mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(float);
 	    strcpy(mv->mvResource,proc);
 	    mret(mv);
 	  }  
