@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.2 2004/05/14 12:11:09 mihajlov Exp $
+ * $Id: rgather.c,v 1.3 2004/06/23 15:55:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -40,6 +40,9 @@ int rgather_load()
       break;
     case -1:
       return -1;
+      break;
+    default:
+      sleep(1);
       break;
     }
   }
