@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.3 2004/07/23 16:26:34 mihajlov Exp $
+ * $Id: repos.h,v 1.4 2004/08/02 14:23:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -22,11 +22,14 @@
 #include <stdlib.h>
 #include "commheap.h"
 
+/* for quick test purposes use metric.h directly */
+#include "metric.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-struct _RepositoryToken {
+typedef struct _RepositoryToken {
   unsigned long rt_size;
   unsigned long rt1;
   unsigned long rt2;
@@ -36,6 +39,8 @@ int repos_token(RepositoryToken *rt);
 
 int repos_init(); 
 int repos_terminate(); 
+
+int repos_sessiontoken(RepositoryToken *rt);
 
 int reposplugin_add(const char *pluginname);
 int reposplugin_remove(const char *pluginname);
@@ -79,7 +84,8 @@ typedef struct _ValueRequest {
 
 typedef void * MVENUM;
 
-int reposvalue_put(ValueRequest *vs, COMMHEAP ch);
+int reposvalue_put(const char *reposplugin, const char *metric, 
+		   MetricValue *mv);
 int reposvalue_get(ValueRequest *vs, COMMHEAP ch);
 
 #ifdef __cplusplus

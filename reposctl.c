@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.1 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: reposctl.c,v 1.2 2004/08/02 14:23:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -33,6 +33,7 @@ static const char* commands[] = {
   "\tu plugin\tunload plugin\n",
   "\tv plugin\tview/list metrics for plugin\n",
   "\tq\t\tquit\n",
+  "\tg id [resource [from [to]]]\tget metric value\n",
   NULL
 };
 
@@ -49,6 +50,8 @@ int main()
   RepositoryStatus  rs;
   int               pnum;
   COMMHEAP          commh;
+  int               offFrom, offTo;
+  ValueRequest      vr;
   RepositoryPluginDefinition *rdef;
   
   while(fgets(buf,sizeof(buf),stdin)) {
@@ -99,6 +102,81 @@ int main()
 	  for (j=0;rdef[i].rdResource[j];j++) {
 	    printf("\t for resource \"%s\"\n",rdef[i].rdResource[j]);
 	  }
+	}
+      }
+      ch_release(commh);
+      break;
+    case 'g':
+      vr.vsId = 0;
+      offFrom = 0;
+      offTo  = 0;
+      vr.vsResource = argbuf;
+      vr.vsResource[0]=0;
+      sscanf(arg,"%d %s %d %d",&vr.vsId,vr.vsResource,&offFrom,&offTo);
+      if (strlen(vr.vsResource)==0 || vr.vsResource[0]=='*') 
+	vr.vsResource=NULL;
+      if (offTo) 
+	vr.vsTo = time(NULL) + offTo;
+      else
+	vr.vsTo = 0;
+      if (offFrom) 
+	vr.vsFrom = time(NULL) + offFrom;
+      else
+	vr.vsFrom = 0;
+      commh=ch_init();
+      if (rrepos_get(&vr,commh)) {
+	printf("Failed\n");
+      } else {
+	printf("Value id %d has value data \n",
+	       vr.vsId);
+	for (i=0; i < vr.vsNumValues; i++) {
+	  printf("\t for resource %s ",vr.vsValues[i].viResource);
+	  switch(vr.vsDataType) {
+	  case MD_BOOL:
+	    printf("%s", *vr.vsValues[i].viValue ? "true" : "false" );
+	    break;
+	  case MD_SINT8:
+	    printf("%hhd",*vr.vsValues[i].viValue);
+	    break;
+	  case MD_UINT8:
+	    printf("%hhuu",*(unsigned char*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_UINT16:
+	  case MD_CHAR16:
+	    printf("%hu",*(unsigned short*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_SINT16:
+	    printf("%hd",*(short*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_UINT32:
+	    printf("%lu",*(unsigned long*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_SINT32:
+	    printf("%ld",*(long*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_UINT64:
+	    printf("%llu",*(unsigned long long*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_SINT64:
+	    printf("%lld",*(long long*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_FLOAT32:
+	    printf("%f",*(float*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_FLOAT64:
+	    printf("%f",*(double*)vr.vsValues[i].viValue);
+	    break;
+	  case MD_STRING:
+	    printf(vr.vsValues[i].viValue);
+	    break;
+	  default:
+	    printf("datatype %0x not supported",vr.vsDataType);
+	    break;
+	  }
+	  printf(", sample time %ld duration %ld",
+		 vr.vsValues[i].viCaptureTime,
+		 vr.vsValues[i].viDuration);
+	  printf ("\n");
 	}
       }
       ch_release(commh);

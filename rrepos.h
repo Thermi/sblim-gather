@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.h,v 1.1 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: rrepos.h,v 1.2 2004/08/02 14:23:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -49,7 +49,7 @@ int rrepos_register(const PluginDefinition *pdef);
  * 0  OK
  * -1 Failure
  */
-int rrepos_put(MetricValue *mv);
+int rrepos_put(const char *reposplugin, const char *metric,MetricValue *mv);
 
 /*
  * Retrieve value from remote repository

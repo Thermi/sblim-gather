@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.1 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: reposd.c,v 1.2 2004/08/02 14:23:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -45,6 +45,8 @@ int main(int argc, char * argv[])
   int           i,j;
   size_t        valreslen;
   RepositoryPluginDefinition *rdef;
+  char         *pluginname, *metricname;
+  MetricValue  *mv;
   
   if (argc == 1) {
     /* daemonize if no arguments are given */
@@ -83,6 +85,11 @@ int main(int argc, char * argv[])
     case GCMD_TERM:
       comm->gc_result=repos_terminate();
       comm->gc_datalen=0;
+      break;
+    case GCMD_GETTOKEN:
+      comm->gc_result=
+	repos_sessiontoken((RepositoryToken*)(buffer+sizeof(GATHERCOMM)));
+      comm->gc_datalen=sizeof(RepositoryToken);
       break;
     case GCMD_ADDPLUGIN:
       comm->gc_result=reposplugin_add(buffer+sizeof(GATHERCOMM));
@@ -143,6 +150,25 @@ int main(int argc, char * argv[])
       }
       ch_release(ch);
       break;
+    case GCMD_SETVALUE:
+      /* the transmitted parameters are
+       * 1: pluginname
+       * 2: metricname
+       * 3: metricvalue
+       */
+      pluginname=buffer+sizeof(GATHERCOMM);
+      metricname=pluginname+strlen(pluginname)+1;
+      mv=(MetricValue*)(metricname+strlen(metricname)+1);
+      /* fixups */
+      if (mv->mvResource) {
+	mv->mvResource=(char*)(mv + 1);
+	mv->mvData=mv->mvResource + strlen(mv->mvResource) + 1;
+      } else {
+	mv->mvData=(char*)(mv + 1);
+      }
+      comm->gc_result=reposvalue_put(pluginname,metricname,mv);
+      comm->gc_datalen=0;
+      break;      
     case GCMD_GETVALUE:
       /* the transmitted ValueRequest contains
        * 1: Header

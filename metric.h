@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.3 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: metric.h,v 1.4 2004/08/02 14:23:01 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -58,8 +58,9 @@ extern "C" {
 #define MD_FLOAT32   (MD_FLOAT|MD_32BIT)
 #define MD_FLOAT64   (MD_FLOAT|MD_64BIT)
 
-#define MD_VERSION_MAJOR 0x0200
-#define MD_VERSION_MINOR 0x0001
+#define MD_VERSION_MAJOR     0x0200
+#define MD_VERSION_MINOR     0x0001
+#define MD_VERSION_MINOR_MAX 0x00ff
 #define MD_VERSION (MD_VERSION_MAJOR+MD_VERSION_MINOR)
 
 typedef struct _MetricValue {

@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.3 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: gather.c,v 1.4 2004/08/02 14:23:01 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -135,19 +135,34 @@ int metricplugin_add(const char *pluginname)
       status = 0;
       pl_link(mp);
       /* register all metrics */
-      for (i=0;i<mp->mpNumMetricDefs;i++)
+      for (i=0;i<mp->mpNumMetricDefs;i++) {
+	if (mp->mpMetricDefs[i].mdVersion > 
+	    (MD_VERSION_MAJOR+MD_VERSION_MINOR_MAX) || 
+	    mp->mpMetricDefs[i].mdReposPluginName==NULL) {
+	  status=-1;
+	  break;
+	} 
 	if (MPR_UpdateMetric(pluginname,mp->mpMetricDefs+i)==0 &&
 	    (mp->mpMetricDefs[i].mdMetricType & MD_RETRIEVED)) {	  
 	  MetricBlock *mb=MakeMB(mp->mpMetricDefs[i].mdId,
 				 gather_sample,
 				 mp->mpMetricDefs[i].mdSampleInterval);
-	  if (mb==NULL || ML_Relocate(metriclist,mb))
+	  if (mb==NULL || ML_Relocate(metriclist,mb)) {
 	    status = -1;
+	    break;
+	  }
 	  else if (retriever)
 	    /* notify retriever about new metrics */
 	    MR_Wakeup(retriever);
 	}
+      }
+      if (status<0) {
+      /* failed during registration - unload */
+	metricplugin_remove(pluginname);
+	return status;
+      }
     } else {
+      /* failed during loading */
       if(mp->mpName) free(mp->mpName);
       if(mp) free(mp);
     }

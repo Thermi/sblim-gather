@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.2 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: repos.c,v 1.3 2004/08/02 14:23:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <netinet/in.h>
 
 /* Plugin Control -- copied over from gather.c */
 typedef struct _PluginList {
@@ -66,6 +67,17 @@ int repos_terminate()
       reposplugin_remove(pluginhead->plugin->rpName);
     };
     RPR_FinishRegistry();
+    return 0;
+  }
+  return -1;
+}
+
+int repos_sessiontoken(RepositoryToken *rt)
+{
+  if (rt) {
+    rt->rt_size=htonl(sizeof(RepositoryToken));
+    rt->rt1 = 1234567;
+    rt->rt1 = 7654321;
     return 0;
   }
   return -1;
@@ -151,8 +163,14 @@ int reposplugin_list(const char *pluginname,
   return i;
 }
 
-int reposvalue_put(ValueRequest *vs, COMMHEAP ch)
+int reposvalue_put(const char *reposplugin, const char *metric, 
+		   MetricValue *mv)
 {
+  int id = RPR_IdForString(reposplugin,metric);
+  if (id > 0) {
+    mv->mvId=id;
+    return MetricRepository->mrep_add(mv);
+  }
   return -1;
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: metricSample4.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: metricSample4.c,v 1.3 2004/08/02 14:23:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -24,11 +24,6 @@
 static MetricDefinition metricDef[3];
 
 static MetricRetriever   metricRetriever;
-static MetricCalculator  metricCalculator1;
-static MetricCalculator  metricCalculator2;
-static MetricCalculator  metricCalculator3;
-static ResourceLister    resourceLister;
-static ResourceListDeallocator  resourceListDeallocator;
 
 int _DefinedMetrics (MetricRegisterId *mr,
 		     const char *pluginname,
@@ -42,21 +37,27 @@ int _DefinedMetrics (MetricRegisterId *mr,
     fprintf(stderr,"invalid parameter list\n");
     return -1;
   }
+  metricDef[0].mdVersion=MD_VERSION;
   metricDef[0].mdName="sample4-1";
+  metricDef[0].mdReposPluginName="samples/librepositorySample.so";
   metricDef[0].mdId=mr(pluginname,metricDef[0].mdName);
   metricDef[0].mdSampleInterval=30;
   metricDef[0].mdMetricType=MD_RETRIEVED | MD_POINT;
   metricDef[0].mdDataType=MD_SINT32;
   metricDef[0].mproc=metricRetriever;
   metricDef[0].mdeal=free;
+  metricDef[1].mdVersion=MD_VERSION;
   metricDef[1].mdName="sample4-2";
+  metricDef[1].mdReposPluginName="samples/librepositorySample.so";
   metricDef[1].mdId=mr(pluginname,metricDef[1].mdName);
   metricDef[1].mdMetricType=MD_CALCULATED | MD_INTERVAL;
   metricDef[1].mdDataType=MD_SINT32;
   //  metricDef[1].mdAliasId=metricDef[0].mdId;
   metricDef[1].mproc=NULL;
   metricDef[1].mdeal=NULL;
+  metricDef[2].mdVersion=MD_VERSION;
   metricDef[2].mdName="sample4-3";
+  metricDef[2].mdReposPluginName="samples/librepositorySample.so";
   metricDef[2].mdId=mr(pluginname,metricDef[2].mdName);
   metricDef[2].mdMetricType=MD_CALCULATED | MD_RATE    ;
   metricDef[2].mdDataType=MD_SINT32;
@@ -113,60 +114,3 @@ int metricRetriever(int mid, MetricReturner mret)
   return numvalues;
 }
 
-size_t metricCalculator1(MetricValue *mv, int mnum, void *v, size_t vlen)
-{
-  /* plain copy */
-  if (mv && vlen >=  mv->mvDataLength) {
-    memcpy(v,mv->mvData,mv->mvDataLength);
-    return mv->mvDataLength;
-  }
-  return -1;
-}
-
-size_t metricCalculator2(MetricValue *mv, int mnum, void *v, size_t vlen)
-{
-  /* some calculation*/
-  int i1, i2;
-  if (mv && vlen >=  mv->mvDataLength) {
-    i1 = *(int*)mv[0].mvData;
-    if (mnum > 1) {
-      i2 = *(int*)mv[mnum-1].mvData;
-    } else {
-      i2 = 0;
-    }
-    *(int*)v = i1 - i2;
-    return sizeof(int);
-  }
-  return -1;
-}
-
-size_t metricCalculator3(MetricValue *mv, int mnum, void *v, size_t vlen)
-{
-  /* some calculation*/
-  int i1, i2;
-  if (mv && vlen >=  mv->mvDataLength &&
-      strcmp(mv->mvResource,"sample4res") == 0) {
-    i1 = *(int*)mv[0].mvData;
-    if (mnum > 1) {
-      i2 = *(int*)mv[mnum-1].mvData;
-    } else {
-      i2 = 0;
-    }
-    *(int*)v = i1 - i2;
-    return sizeof(int);
-  }
-  return -1;
-}
-
-static char * resourcelist[] = { "sample4res",
-				 "sample4res2"};
-
-int resourceLister(int mid, char *** list)
-{
-  if (list) *list = resourcelist;
-  return 2;
-}
-
-void resourceListDeallocator(char ** list)
-{
-}

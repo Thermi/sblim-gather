@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.4 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: rgather.c,v 1.5 2004/08/02 14:23:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -25,6 +25,15 @@
 #include <unistd.h>
 //#include <stdlib.h>
 #include <sys/wait.h>
+
+
+static int initialized = 0;
+
+#define INITCHECK() \
+if (!initialized) { \
+  mcc_init(GATHER_COMMID); \
+  initialized=0; \
+}
 
 int rgather_load()
 {
@@ -57,12 +66,12 @@ int rgather_unload()
   GATHERCOMM *comm=(GATHERCOMM*)xbuf;
   size_t      commlen=sizeof(xbuf);
 
+  INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_QUIT;
   comm->gc_datalen=0;
   if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
-      mcc_response(&hdr,comm,&commlen)==0 &&
-      mcc_term()==0) {
+      mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
   } else {
     return -1;
@@ -76,11 +85,11 @@ int rgather_init()
   GATHERCOMM *comm=(GATHERCOMM*)xbuf;
   size_t      commlen=sizeof(xbuf);
 
+  INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_INIT;
   comm->gc_datalen=0;
-  if (mcc_init(GATHER_COMMID)==0 &&
-      mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
   } else {
@@ -95,6 +104,7 @@ int rgather_terminate()
   GATHERCOMM *comm=(GATHERCOMM*)xbuf;
   size_t      commlen=sizeof(xbuf);
 
+  INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_TERM;
   comm->gc_datalen=0;
@@ -114,6 +124,7 @@ int rgather_start()
   GATHERCOMM *comm=(GATHERCOMM*)xbuf;
   size_t      commlen=sizeof(xbuf);
 
+  INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_START;
   comm->gc_datalen=0;
@@ -132,6 +143,7 @@ int rgather_stop()
   GATHERCOMM *comm=(GATHERCOMM*)xbuf;
   size_t      commlen=sizeof(xbuf);
 
+  INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_STOP;
   comm->gc_datalen=0;
@@ -152,6 +164,7 @@ int rgather_status(GatherStatus *gs)
   size_t        commlen=sizeof(xbuf);
 
   if (gs) {
+    INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_STATUS;
     comm->gc_datalen=0;
@@ -173,6 +186,7 @@ int rmetricplugin_add(const char *pluginname)
   size_t        commlen=sizeof(xbuf);
   
   if (pluginname && *pluginname) {
+    INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_ADDPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
@@ -193,6 +207,7 @@ int rmetricplugin_remove(const char *pluginname)
   size_t        commlen=sizeof(xbuf);
 
   if (pluginname && *pluginname) {
+    INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_REMPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
@@ -216,6 +231,7 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
   char         *stringpool;
 
   if (pluginname && *pluginname && pdef) {
+    INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_LISTPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
