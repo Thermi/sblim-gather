@@ -1,5 +1,5 @@
 /*
- * $Id: rcclt_ip.c,v 1.2 2004/10/14 15:54:25 heidineu Exp $
+ * $Id: rcclt_ip.c,v 1.3 2004/10/18 12:26:31 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -55,7 +55,7 @@ int rcc_init(const char *srvid, const int *portid)
   struct hostent *srv = NULL;
   char   ip[16];
 
-  if (srvid && portid && !srvaddr.sin_family) {
+  if (srvid && portid && srvaddr.sin_port==0) {
 
     /* retrieve and set server information */
     if ((srv = gethostbyname(srvid)) == NULL) {
