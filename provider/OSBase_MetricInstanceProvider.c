@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricInstanceProvider.c,v 1.5 2004/12/22 16:45:53 mihajlov Exp $
+ * $Id: OSBase_MetricInstanceProvider.c,v 1.6 2004/12/23 14:37:39 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -105,6 +105,9 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 				      metricname, metricid,
 				      &vr.vsValues[i], 
 				      cop, &st );
+	    if (co == NULL) {
+	      continue;
+	    }
 	    if (names && associators) {
 	      CMReturnObjectPath(rslt,co);
 	    } else if (!names && associators) {
@@ -112,7 +115,9 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 					&vr.vsValues[i],
 					vr.vsDataType,
 					cop, &st );
-	      CMReturnInstance(rslt,ci);	      
+	      if (ci) {
+		CMReturnInstance(rslt,ci);	      
+	      }
 	    } else if (names) {
 	      CMReturnObjectPath(rslt,_makeRefPath(cop, co));
 	    } else {
@@ -135,16 +140,20 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 	co = makeMetricDefPath(_broker,ctx,
 			       metricname,metricid,CMGetCharPtr(namesp),
 			       &st); 
-	if (names && associators) {
-	  CMReturnObjectPath(rslt,co);
-	} else if (!names && associators) {
-	  ci = makeMetricDefInst( _broker, ctx, metricname, metricid,
-				  CMGetCharPtr(namesp), &st );
-	  CMReturnInstance(rslt,ci);	      
-	} else if (names) {
-	  CMReturnObjectPath(rslt,_makeRefPath(co, cop));
-	} else {
-	  CMReturnInstance(rslt,_makeRefInstance(co, cop));
+	if (co==NULL) {
+	  if (names && associators) {
+	    CMReturnObjectPath(rslt,co);
+	  } else if (!names && associators) {
+	    ci = makeMetricDefInst( _broker, ctx, metricname, metricid,
+				    CMGetCharPtr(namesp), &st );
+	    if (ci) {
+	      CMReturnInstance(rslt,ci);	      
+	    }
+	  } else if (names) {
+	    CMReturnObjectPath(rslt,_makeRefPath(co, cop));
+	  } else {
+	    CMReturnInstance(rslt,_makeRefInstance(co, cop));
+	  }
 	}
       }
       

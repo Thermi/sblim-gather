@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricForMEProvider.c,v 1.5 2004/12/22 16:45:53 mihajlov Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.6 2004/12/23 14:37:39 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -138,6 +138,9 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 				      metricnames[i], metricids[i],
 				      &vr.vsValues[j], 
 				      cop, &st );
+	    if (co==NULL) {
+	      continue;
+	    }
 	    if (names && associators) {
 	      CMReturnObjectPath(rslt,co);
 	    } else if (!names && associators) {
@@ -146,7 +149,9 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 					&vr.vsValues[j],
 					vr.vsDataType,
 					cop, &st );
-	      CMReturnInstance(rslt,ci);	      
+	      if (ci) {
+		CMReturnInstance(rslt,ci);	      
+	      }
 	    } else if (names) {
 	      CMReturnObjectPath(rslt,_makeRefPath(cop, co));
 	    } else {

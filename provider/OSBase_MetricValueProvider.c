@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.10 2004/12/22 16:45:53 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.11 2004/12/23 14:37:39 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -169,32 +169,33 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
     ch=ch_init();
     if (parseMetricValueId(metricValueName(cop),vName,&vId,vResource,vSystemId,&vTimestamp) 
 	== 0) {
-  if( _debug )
-    fprintf(stderr, "id criteria %s,%s, %ld\n", vName, vResource, 
-	    vTimestamp);
-    // get value 
-    vr.vsId = vId;
-    vr.vsResource = vResource;
-    vr.vsSystemId = vSystemId;
-    vr.vsFrom = vr.vsTo = vTimestamp;
-    if (rrepos_get(&vr,ch)== 0) {
       if( _debug )
-	fprintf( stderr, "::: got %d values for id \n", vr.vsId);
-      if (vr.vsNumValues>=1) {
-	ci = makeMetricValueInst( _broker, ctx, vName, vId, &vr.vsValues[0], vr.vsDataType,
-				  cop, &rc );    
-	if( ci == NULL ) {
-	  if( _debug ) {
-	    if( rc.msg != NULL )
-	      { fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc.msg)); }
+	fprintf(stderr, "id criteria %s,%s, %ld\n", vName, vResource, 
+		vTimestamp);
+      // get value 
+      vr.vsId = vId;
+      vr.vsResource = vResource;
+      vr.vsSystemId = vSystemId;
+      vr.vsFrom = vr.vsTo = vTimestamp;
+      if (rrepos_get(&vr,ch)== 0) {
+	if( _debug )
+	  fprintf( stderr, "::: got %d values for id \n", vr.vsId);
+	if (vr.vsNumValues>=1) {
+	  ci = makeMetricValueInst( _broker, ctx, vName, vId, &vr.vsValues[0], vr.vsDataType,
+				    cop, &rc );    
+	  if( ci == NULL ) {
+	    if( _debug ) {
+	      if( rc.msg != NULL )
+		{ fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc.msg)); }
+	    }
+	  } else {
+	    CMReturnInstance( rslt, ci );
 	  }
 	}
-	CMReturnInstance( rslt, ci );
       }
-    }
     } else {
-	CMSetStatusWithChars( _broker, &rc, 
-			      CMPI_RC_ERR_INVALID_PARAMETER, "Invalid Object Path Key \"Id\""); 
+      CMSetStatusWithChars( _broker, &rc, 
+			    CMPI_RC_ERR_INVALID_PARAMETER, "Invalid Object Path Key \"Id\""); 
     }
     ch_release(ch);
   } else {
@@ -325,8 +326,9 @@ static void returnPathes(CMPIBroker *_broker,
 	      { fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc->msg)); }
 	  }
 	  break;
-	}      
-	CMReturnObjectPath( rslt, co );
+	} else {
+	  CMReturnObjectPath( rslt, co );
+	}
       }
     }
   }
@@ -366,8 +368,9 @@ static void returnInstances(CMPIBroker *_broker,
 	      { fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc->msg)); }
 	  }
 	  break;
-	}      
-	CMReturnInstance( rslt, ci );
+	} else {      
+	  CMReturnInstance( rslt, ci );
+	}
       }
     }
   }
