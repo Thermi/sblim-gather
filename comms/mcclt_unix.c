@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.8 2004/11/22 09:22:59 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.9 2004/11/30 13:16:50 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -56,6 +56,8 @@ static struct {
 int mcc_init(const char *commid)
 {
   int i;
+  struct sigaction sigact;
+
   M_TRACE(MTRACE_FLOW,MTRACE_COMM,("mcc_init(%s) called",commid));
   pthread_mutex_lock(&sockname_mutex);
   for (i=0; i < MAXCONN;i++) {
@@ -71,7 +73,9 @@ int mcc_init(const char *commid)
 	return -1;
       }
       if (!_sigpipe_h_installed) {
-	signal(SIGPIPE,_sigpipe_h);
+	sigact.sa_handler = _sigpipe_h;
+	sigact.sa_flags = 0;
+	sigaction(SIGPIPE,&sigact,NULL);
       }
       pthread_mutex_unlock(&sockname_mutex);
       M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_init return handle %d",i));

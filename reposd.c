@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.20 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: reposd.c,v 1.21 2004/11/30 13:16:50 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -34,9 +34,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include <memory.h>
+#include <pthread.h>
 
 #define CHECKBUFFER(comm,buffer,sz) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=sizeof(buffer))
 
@@ -371,6 +372,7 @@ int main(int argc, char * argv[])
 	vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen);
 	vr->vsValues=NULL;
 	ch=ch_init();
+	
 	comm->gc_result=reposvalue_get(vr,ch);
 	/* copy value data into transfer buffer and compute total length */
 	if (comm->gc_result != -1) {
@@ -448,7 +450,7 @@ static void * repos_remote()
 {
   pthread_t thread;
   int       hdl = -1;
-
+  
   m_log(M_INFO,M_QUIET,"Remote reposd is starting up.\n");
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Remote reposd is starting up."));
 
@@ -491,7 +493,8 @@ static void * repos_remote()
 static void * rrepos_getrequest(void * hdl)
 {
   GATHERCOMM   *comm;
-  char          buffer[GATHERVALBUFLEN];
+  char *buffer = malloc(GATHERVALBUFLEN);
+;
   size_t        bufferlen;
   char         *pluginname, *metricname;
   MetricValue  *mv;
@@ -504,9 +507,11 @@ static void * rrepos_getrequest(void * hdl)
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Detached thread on socket %i",(int)hdl));
 
   while (1) {
-    memset(buffer, 0, sizeof(buffer));
-    bufferlen=sizeof(buffer);
+    memset(buffer, 0, GATHERVALBUFLEN);
+    bufferlen=GATHERVALBUFLEN;
+
     pthread_mutex_lock(&connect_mutex);
+
     if (rcs_getrequest((int)hdl,buffer,&bufferlen) == -1) {
       connects--;
       M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
@@ -538,6 +543,7 @@ static void * rrepos_getrequest(void * hdl)
     pluginname=buffer+sizeof(GATHERCOMM);
     metricname=pluginname+strlen(pluginname)+1;
     mv=(MetricValue*)(metricname+strlen(metricname)+1);
+
     /* fixups */
     if (mv->mvResource) {
       mv->mvResource=(char*)(mv + 1);
@@ -545,6 +551,7 @@ static void * rrepos_getrequest(void * hdl)
     } else {
       mv->mvData=(char*)(mv + 1);
     }
+
     /* convert from host byte order into network byte order */
     mv->mvId         = ntohl((int)mv->mvId);
     mv->mvTimeStamp  = ntohl((time_t)mv->mvTimeStamp);
@@ -560,5 +567,6 @@ static void * rrepos_getrequest(void * hdl)
     }
   }
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Ending thread on socket %i",(int)hdl));
+  free(buffer);
   return NULL;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: rcclt_ip.c,v 1.5 2004/10/22 12:11:20 heidineu Exp $
+ * $Id: rcclt_ip.c,v 1.6 2004/11/30 13:16:50 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -54,6 +54,7 @@ int rcc_init(const char *srvid, const int *portid)
 {
   struct hostent *srv = NULL;
   char   ip[16];
+  struct sigaction sigact;
 
   M_TRACE(MTRACE_FLOW,MTRACE_COMM,("rcc_init(%s,%d) called",srvid,*portid));
   if (srvid && portid && srvaddr.sin_port==0) {
@@ -83,7 +84,9 @@ int rcc_init(const char *srvid, const int *portid)
 
     /* install signal handler */
     if (!_sigpipe_h_installed) {
-      signal(SIGPIPE,_sigpipe_h);
+      sigact.sa_handler = _sigpipe_h;            
+      sigact.sa_flags = 0;
+      sigaction(SIGPIPE,&sigact,NULL);
     }
 
     /* init global variables */

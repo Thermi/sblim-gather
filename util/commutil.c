@@ -1,5 +1,5 @@
 /*
- * $Id: commutil.c,v 1.1 2004/11/09 16:19:42 heidineu Exp $
+ * $Id: commutil.c,v 1.2 2004/11/30 13:16:50 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Heidi Neumann <heidineu@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Communcation Utility Functions
  */
@@ -19,6 +19,7 @@
 
 #include <commutil.h>
 
+#ifndef AIX
 uint64_t htonll(uint64_t v)
 {
 #if BYTE_ORDER == BIG_ENDIAN
@@ -29,11 +30,14 @@ uint64_t htonll(uint64_t v)
 # error "What kind of system is this?"
 #endif
 }
+#endif
 
+#ifndef AIX
 uint64_t ntohll(uint64_t v)
 {
   return htonll(v);
 }
+#endif
 
 float htonf(float v) 
 {

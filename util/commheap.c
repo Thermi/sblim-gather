@@ -1,5 +1,5 @@
 /*
- * $Id: commheap.c,v 1.1 2004/10/20 08:15:20 mihajlov Exp $
+ * $Id: commheap.c,v 1.2 2004/11/30 13:16:50 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Memory Management for Communication Functions.
  */
@@ -19,6 +19,7 @@
 #include "commheap.h"
 #include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 struct _COMMHEAP_CTL {
   int   cc_max;

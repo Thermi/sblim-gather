@@ -1,5 +1,5 @@
 /*
- * $Id: mplugmgr.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mplugmgr.c,v 1.2 2004/11/30 13:16:50 mihajlov Exp $
  * (C) Copyright IBM Corp. 2003
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
@@ -10,7 +10,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Metric Plugin Manager
  * Does dynamic loading of metric plugins.
@@ -36,14 +36,14 @@ int MP_Load (MetricPlugin *plugin)
 	    dlerror());
     return -1;
   }
-  mdef = dlsym(plugin->mpHandle,METRIC_DEFINITIONPROC_S);
+  mdef = (MetricsDefined*)dlsym(plugin->mpHandle,METRIC_DEFINITIONPROC_S);
   if (!mdef) {
     fprintf(stderr,"Error locating " METRIC_DEFINITIONPROC_S " in %s: %s\n", 
 	    plugin->mpName,dlerror());
     dlclose(plugin->mpHandle);
     return -1;
   }
-  mss = dlsym(plugin->mpHandle,METRIC_STARTSTOPPROC_S);
+  mss = (MetricStartStop*)dlsym(plugin->mpHandle,METRIC_STARTSTOPPROC_S);
   if(!mss) {
     fprintf(stderr,"Error locating " METRIC_STARTSTOPPROC_S " in %s: %s\n", 
 	    plugin->mpName, dlerror());
@@ -78,7 +78,7 @@ int MP_Unload(MetricPlugin *plugin)
     fprintf(stderr,"Null plugin specified\n");
     return -1;
   }
-  mss = dlsym(plugin->mpHandle,METRIC_STARTSTOPPROC_S);
+  mss = (MetricStartStop*)dlsym(plugin->mpHandle,METRIC_STARTSTOPPROC_S);
   if(!mss) {
     fprintf(stderr,"Error locating " METRIC_STARTSTOPPROC_S " in %s: %s\n", 
 	    plugin->mpName,dlerror());

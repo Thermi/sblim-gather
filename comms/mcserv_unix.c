@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv_unix.c,v 1.5 2004/11/22 09:22:59 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.6 2004/11/30 13:16:50 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -48,6 +48,8 @@ static char lockname[PATH_MAX+1] = {0};
 int mcs_init(const char *commid)
 {
   struct sockaddr_un sa;
+  struct sigaction sigact;
+
   if (commhandle==-1) {
     commhandle=socket(PF_UNIX,SOCK_STREAM,0);
     if (commhandle==-1) {
@@ -98,7 +100,9 @@ int mcs_init(const char *commid)
       return -1;
     }
     if (!_sigpipe_h_installed) {
-      signal(SIGPIPE,_sigpipe_h);
+      sigact.sa_handler = _sigpipe_h;
+      sigact.sa_flags = 0;
+      sigaction(SIGPIPE,&sigact,NULL);
     }
     listen(commhandle,0);
   }

@@ -1,5 +1,5 @@
 /*
- * $Id: commutil.h,v 1.1 2004/11/09 16:19:42 heidineu Exp $
+ * $Id: commutil.h,v 1.2 2004/11/30 13:16:51 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -11,7 +11,7 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Heidi Neumann <heidineu@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Communcation Utility Functions
  */
@@ -21,8 +21,10 @@
 
 #include <netinet/in.h>
 
+#ifndef AIX
 uint64_t htonll(uint64_t v);
 uint64_t ntohll(uint64_t v);
+#endif
 
 float htonf(float v);
 float ntohf(float v);

@@ -12,6 +12,7 @@
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.com>
  * Contributors: Heidi Neumann <heidineu@de.ibm.com>
+ *               Michael Schuele <schuelem@de.ibm.com>
  *
  * Description:
  * Trace Support based on the SBLIM OSBASE Providers
@@ -86,7 +87,7 @@ static int _f_trace(char * buf, size_t len, int level, unsigned component,
   struct tm        cttm;
   struct timeval   tv;
   struct timezone  tz;
-  long             sec  = 0;
+  time_t           sec  = 0;
   char             tm[20];
   static pid_t     pid=0;
   

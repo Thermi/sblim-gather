@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv_ip.c,v 1.6 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: rcserv_ip.c,v 1.7 2004/11/30 13:16:50 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -65,6 +65,7 @@ static void _sigpipe_h(int signal)
 int rcs_init(const int *portid)
 {
   struct sockaddr_in srvaddr;
+  struct sigaction sigact;
 
   M_TRACE(MTRACE_FLOW,MTRACE_COMM,("rcs_init(%d) called",*portid));
   if (srvhdl != -1) {
@@ -110,7 +111,9 @@ int rcs_init(const int *portid)
 
   /* install signal handler */
   if (!_sigpipe_h_installed) {
-    signal(SIGPIPE,_sigpipe_h);
+    sigact.sa_handler = _sigpipe_h;            
+    sigact.sa_flags = 0;
+    sigaction(SIGPIPE,&sigact,NULL);
   }
 
   /* listen on socket */
@@ -247,6 +250,7 @@ int rcs_getrequest(int clthdl, void *reqdata, size_t *reqdatalen)
       do {
 	/* get length */
 	readlen=read(clthdl,(char*)reqdatalen+recvlen,sizeof(size_t)-recvlen);
+
 	if (readlen <= 0) { break; }
 	recvlen += readlen;
       } while (recvlen != sizeof(size_t));

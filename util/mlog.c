@@ -1,5 +1,5 @@
 /*
- * $Id: mlog.c,v 1.1 2004/10/20 08:15:21 mihajlov Exp $
+ * $Id: mlog.c,v 1.2 2004/11/30 13:16:51 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -11,13 +11,13 @@
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
- * Contributors: 
+ * Contributors: Michael Schuele <schuelem@de.ibm.com>
  *
  * Description: Metric Defintiona and Value data types.
  *
  */
 
-const char *_mlog_id = "$Id: mlog.c,v 1.1 2004/10/20 08:15:21 mihajlov Exp $";
+const char *_mlog_id = "$Id: mlog.c,v 1.2 2004/11/30 13:16:51 mihajlov Exp $";
 
 #include "mlog.h"
 #include <syslog.h>
@@ -34,6 +34,9 @@ void m_log(int priority, int errout, const char *fmt, ...)
 {
   va_list ap;
   int priosysl;
+
+  char buf[4096];
+
   switch (priority) {
   case M_DEBUG:
     priosysl=LOG_DEBUG;
@@ -47,8 +50,12 @@ void m_log(int priority, int errout, const char *fmt, ...)
     break;
   }
   va_start(ap,fmt);
-  vsyslog(priosysl,fmt,ap);
+  
+  vsnprintf(buf,4096,fmt,ap);
+  syslog(priosysl,buf);
+
   if (errout) {
     vfprintf(stderr,fmt,ap);
   }
+  va_end(ap);
 }
