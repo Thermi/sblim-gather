@@ -1,5 +1,5 @@
 /*
- * $Id: sforward.c,v 1.1 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: sforward.c,v 1.2 2004/11/18 15:53:32 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -84,12 +84,13 @@ int subs_enable_forwarding(SubscriptionRequest *sr, const char *listenerid)
 void subs_forward(int corrid, ValueRequest *vr)
 {
   char   sendbuffer[1000];
-  off_t  sendsize = 0;
+  off_t  sendsize;
   ForwardingEntry *fwl = fwHead;
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
 	  ("subs_forward %d %p", corrid, vr));
 
-  while(fwl && corrid <= fwl->fw_corrid) {
+  while(fwl && corrid >= fwl->fw_corrid) {
+    sendsize=0;
     if (fwl->fw_corrid == corrid) {
       if (marshal_data(&fwl->fw_origcorrid,sizeof(fwl->fw_origcorrid),
 		       sendbuffer,

@@ -1,5 +1,5 @@
 /*
- * $Id: slisten.c,v 1.1 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: slisten.c,v 1.2 2004/11/18 15:53:32 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -76,7 +76,7 @@ static void * subs_listener(void *unused)
   int               *corrid;
   ValueRequest      *vr;
   char               buf[1000];
-  off_t              offset=0;
+  off_t              offset;
 
   M_TRACE(MTRACE_FLOW,MTRACE_RREPOS,
 	  ("subs_listener"));
@@ -92,6 +92,7 @@ static void * subs_listener(void *unused)
 	       sockname.sun_path));
     }
     while(1) {
+      offset=0;
       if (recv(fdsocket,buf,sizeof(buf),0) != -1) {
 	if (unmarshal_data((void**)&corrid,sizeof(int),
 			   buf,&offset,sizeof(buf)) == 0 &&
@@ -168,12 +169,12 @@ int add_subscription_listener(char *listenerid, SubscriptionRequest *sr,
   cbl->cb_corrid = sr->srCorrelatorId;
   cbl->cb_callback = scb;
   if (cbHead == prev && 
-      (cbHead == NULL || cbHead->cb_corrid > sr->srMetricId) ) {
+      (cbHead == NULL || cbHead->cb_corrid > sr->srCorrelatorId) ) {
     cbl->cb_next = cbHead;
     cbHead = cbl;
   } else {
-    cbl->cb_next=prev->cb_next;
-    prev->cb_next = cbl->cb_next;
+    cbl->cb_next = prev->cb_next;
+    prev->cb_next = cbl;
   }
   return 0;
 }
