@@ -1,5 +1,5 @@
 /*
- * $Id: slisten.c,v 1.3 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: slisten.c,v 1.4 2004/12/13 14:01:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -98,6 +98,8 @@ static void * subs_listener(void *unused)
 			   buf,&offset,sizeof(buf)) == 0 &&
 	    unmarshal_valuerequest(&vr,buf,&offset,
 				   sizeof(buf)) == 0) {
+	  M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+		  ("subs_listener received a metric packet for %d",vr->vsId));
 	  call_callbacks(*corrid,vr);
 	} else {
 	  M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,

@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.19 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: rrepos.c,v 1.20 2004/12/13 14:01:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -619,7 +619,6 @@ int rrepos_unsubscribe(SubscriptionRequest *sr,  SubscriptionCallback *scb)
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
       pthread_mutex_unlock(&rrepos_mutex);
-      return comm->gc_result;
     } else {
       pthread_mutex_unlock(&rrepos_mutex);
       M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
@@ -632,9 +631,10 @@ int rrepos_unsubscribe(SubscriptionRequest *sr,  SubscriptionCallback *scb)
 	     offset,sizeof(xbuf)));    
     return -1;
   }
-  if (remove_subscription_listener(listener,sr,scb)==-1) {
+  if (comm->gc_result==0 && remove_subscription_listener(listener,sr,scb)==-1) {
     M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
 	    ("srepos_unsubscribe could not remove listener"));    
     return -1;
   }
+  return comm->gc_result;
 }
