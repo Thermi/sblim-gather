@@ -1,7 +1,7 @@
 /*
- * $Id: gather.h,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: gather.h,v 1.2 2004/07/09 15:20:52 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -53,28 +53,6 @@ typedef struct _GatherStatus {
 } GatherStatus;
 
 void gather_status(GatherStatus *gs); 
-
-typedef struct _ValueItem {
-  time_t viCaptureTime;
-  time_t viDuration;
-  size_t viValueLen;
-  char * viValue;
-  char * viResource;
-} ValueItem;
-
-typedef struct _ValueRequest {
-  int         vsId;
-  char       *vsResource;
-  time_t      vsFrom;
-  time_t      vsTo;
-  unsigned    vsDataType;
-  int         vsNumValues;
-  ValueItem  *vsValues;
-} ValueRequest;
-
-typedef void * MVENUM;
-
-int metricvalue_get(ValueRequest *vs, COMMHEAP ch);
 
 #ifdef __cplusplus
 }

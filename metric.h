@@ -1,7 +1,7 @@
 /*
- * $Id: metric.h,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metric.h,v 1.2 2004/07/09 15:20:52 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -58,6 +58,10 @@ extern "C" {
 #define MD_FLOAT32   (MD_FLOAT|MD_32BIT)
 #define MD_FLOAT64   (MD_FLOAT|MD_64BIT)
 
+#define MD_VERSION_MAJOR 0x0200
+#define MD_VERSION_MINOR 0x0001
+#define MD_VERSION (MD_VERSION_MAJOR+MD_VERSION_MINOR)
+
 typedef struct _MetricValue {
   int       mvId;       /* Metric Id */
   time_t    mvTimeStamp;
@@ -76,8 +80,10 @@ typedef int (ResourceLister) (int mid, char *** list);
 typedef void (ResourceListDeallocator) (char ** list);
 typedef size_t (MetricCalculator) (MetricValue *mv, int mnum,
 				   void *v, size_t vlen);
+/* Gatherer V1 Metric Definition
+ */
 
-typedef struct _MetricDefinition {
+typedef struct _MetricDefinitionV1 {
   char              *mdName;           /* Metric Descriptive Name */
   int                mdId;             /* Metric Id */
   time_t             mdSampleInterval;
@@ -89,6 +95,19 @@ typedef struct _MetricDefinition {
   MetricCalculator  *mcalc;
   ResourceLister    *mresl;
   ResourceListDeallocator *mresldeal;
+} MetricDefinitionV1;
+
+typedef struct _MetricDefinition {
+  short              version;          /* New: mandatory version */
+  char              *mdName;           /* Metric Descriptive Name */
+  char              *mdReposPluginName;/* Name of repository plugin (lib) */
+  int                mdId;             /* Metric Id */
+  time_t             mdSampleInterval;
+  int                mdMetricType;
+  int                mdAliasId;        /* Alias for computed metrics */
+  unsigned           mdDataType;
+  MetricRetriever   *mproc;
+  MetricDeallocator *mdeal;
 } MetricDefinition;
 
 #ifdef __cplusplus

@@ -1,7 +1,7 @@
 /*
- * $Id: gather.c,v 1.2 2004/07/09 15:20:52 mihajlov Exp $
+ * $Id: repos.c,v 1.1 2004/07/09 15:20:52 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003, 2004
+* (C) Copyright IBM Corp. 2003
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -195,6 +195,129 @@ int metricplugin_list(const char *pluginname, PluginDefinition **pdef,
     }
   }
   return i;
+}
+
+int metricvalue_get(ValueRequest *vs, COMMHEAP ch)
+{
+  MetricDefinition *md;
+  MetricValue      **mv=NULL;
+  int               i,j;
+  int               id;
+  char            **resources=NULL;
+  int               resnum=0; 
+  int              *numv=NULL;
+  int               totalnum=0;
+  int               actnum=0;
+  int               useIntervals=0;
+  int               intervalnum=0;
+  
+  if (vs) {
+    md=MPR_GetMetric(vs->vsId);
+    if (md && md->mcalc) {
+      id = (md->mdMetricType&MD_CALCULATED) ? md->mdAliasId : vs->vsId;
+      if  (vs->vsResource) {
+	resources = &vs->vsResource;
+	resnum = 1;
+      } else if (md->mresl) {
+	resnum = md->mresl(id,&resources);
+      }
+      if ( (md->mdMetricType&MD_INTERVAL) 
+	   || (md->mdMetricType&MD_RATE) 
+	   || (md->mdMetricType&MD_AVERAGE) ) {
+	useIntervals=1;
+	if(vs->vsFrom==vs->vsTo) { 
+	  /* "point" interval */
+	  if (md->mdMetricType&MD_INTERVAL)
+	    intervalnum = 1;
+	  else
+	    intervalnum = 2;
+	}
+      }
+      if (resnum) {
+	mv = calloc(resnum, sizeof(MetricValue*));
+	numv = calloc(resnum,sizeof(int));
+	for (j=0; j < resnum; j++) {
+	  if (MetricRepository-> mrep_retrieve(id,
+					       resources[j],
+					       &mv[j],
+					       &numv[j],
+					       vs->vsFrom,
+					       vs->vsTo,
+					       intervalnum) != -1 ) {
+	    totalnum += numv[j];
+	  }
+	}
+	if (useIntervals) {
+	  /* here the interval-type metrics are computed - by resource */
+	  vs->vsNumValues=resnum; /* one per resource */
+	  for (j=0; j < resnum; j++) {
+	    if (intervalnum && (numv[j]<intervalnum)) {
+	      numv[j] = 0;  /* this value cannot be computed */
+	    }
+	    if (numv[j]==0) {
+	      vs->vsNumValues-=1; 
+	    }
+	  }
+	} else {
+	  vs->vsNumValues=totalnum; /* all values used for point metrics */
+	}  
+	vs->vsValues=ch_alloc(ch,vs->vsNumValues*sizeof(ValueItem));
+	vs->vsDataType=md->mdDataType;
+	for (j=0;j < resnum; j++) {
+	  if (useIntervals && numv[j] > 0) {
+	    vs->vsValues[j].viCaptureTime=mv[j][numv[j]-1].mvTimeStamp;
+	    vs->vsValues[j].viDuration=
+	      mv[j][0].mvTimeStamp -
+	      vs->vsValues[j].viCaptureTime;
+	    vs->vsValues[j].viValueLen=100; /* TODO : calc meaningful length */
+	    vs->vsValues[j].viValue=ch_alloc(ch,vs->vsValues[j].viValueLen);
+	    if (md->mcalc(mv[j],
+			  numv[j],
+			  vs->vsValues[j].viValue,
+			  vs->vsValues[j].viValueLen) == -1) {
+	      /* failed to obtain value */
+	      resnum -= 1;
+	      vs->vsNumValues -= 1;
+	      continue;
+	    }	      
+	    vs->vsValues[j].viResource=ch_alloc(ch,strlen(resources[j])+1);
+	    strcpy(vs->vsValues[j].viResource,resources[j]);
+	  } else {	
+	    for (i=0; i < numv[j]; i++) {
+	      vs->vsValues[actnum+i].viCaptureTime=mv[j][i].mvTimeStamp;
+	      vs->vsValues[actnum+i].viDuration=0;
+	      vs->vsValues[actnum+i].viValueLen=100;
+	      vs->vsValues[actnum+i].viValue=
+		ch_alloc(ch,vs->vsValues[actnum+i].viValueLen);
+	      if (md->mcalc(&mv[j][i],
+			    1,
+			    vs->vsValues[actnum+i].viValue,
+			    vs->vsValues[actnum+i].viValueLen) == -1) {
+		/* failed to obtain value */
+		numv[j] -= 1;
+		vs->vsNumValues -= 1;
+		continue;
+	      }	      
+	      vs->vsValues[actnum+i].viResource=
+		ch_alloc(ch,strlen(resources[j])+1);
+	      strcpy(vs->vsValues[actnum+i].viResource,resources[j]);
+	    }
+	    actnum = actnum + numv[j];
+	  }
+	}
+	if (vs->vsResource == NULL && resources && md->mresldeal) {
+	  md->mresldeal(resources);
+	}
+	for (j=0; j < resnum; j++) {
+	  MetricRepository->mrep_release(mv[j]);
+	}
+	if (numv) free(numv);
+	if (mv) free(mv);
+	if (vs->vsNumValues > 0) return 0;
+      }
+    }
+  }
+  return -1;
 }
 
 static void pl_link(MetricPlugin *mp)
