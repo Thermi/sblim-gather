@@ -16,6 +16,7 @@ fi
     
 USERID=
 PASSWORD=
+SBLIM_TESTSUITE_ACCESS=
 
 while [ "$#" -gt 0 ]
 do
@@ -41,16 +42,24 @@ if [[ -n $USERID && -z $PASSWORD ]]; then
     echo "test-gather.sh : Please specify a password for UserID $USERID : option -p"; 
     exit 1;
 elif  [[ -n $USERID && -n $PASSWORD ]]; then
-    export SBLIM_TESTSUITE_ACCESS="$USERID:$PASSWORD@";
+    SBLIM_TESTSUITE_ACCESS="$USERID:$PASSWORD@";
+fi
+
+CIMTEST=`wbemgc http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:CIM_ManagedElement 2>&1`
+if echo $CIMTEST | grep Exception > /dev/null
+then
+    echo "Error occurred ... is the CIMOM running?"
+    echo $CIMTEST
+    exit -1
 fi
 
 # Initialize Gatherer Service 
 #echo k | gatherctl
 #echo d | gatherctl
 GATHER=`wbemein http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricGatherer 2>&1`
-if echo $GATHER | grep CIM_ERR > /dev/null
+if echo $GATHER | grep Linux_MetricDataGatherer > /dev/null
 then
-    echo "Error occurred listing the Metric Gatherer ... is the CIMOM running?"
+    echo "Error occurred listing the Metric Gatherer ... are the providers installed?"
     echo $GATHER
     exit -1
 fi
@@ -85,14 +94,15 @@ declare -i max=10;
 declare -i i=0;
 
 OPTS=
-if [ -n $USERID ]
+if [ -n "$USERID" ]
 then
 OPTS="$OPTS -u $USERID"
 fi
-if [ -n $PASSWORD ]
+if [ -n "$PASSWORD" ]
 then
 OPTS="$OPTS -p $PASSWORD"
 fi
+
 while(($i<=$max))
 do
   . run.sh ${CLASSNAMES[$i]} $OPTS || exit 1;
