@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv_unix.c,v 1.3 2004/10/12 08:44:53 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.4 2004/10/20 09:08:16 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -19,6 +19,7 @@
  */
 
 #include "mcserv.h"
+#include <mlog.h>
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -29,6 +30,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <errno.h>
 
 static int _sigpipe_h_installed = 0;
 static int _sigpipe_h_received = 0;
@@ -49,35 +51,50 @@ int mcs_init(const char *commid)
   if (commhandle==-1) {
     commhandle=socket(PF_UNIX,SOCK_STREAM,0);
     if (commhandle==-1) {
-      perror("Could not open socket");
+      m_log(M_ERROR,M_QUIET,
+	    "mcs_init: could not create socket, error string %s\n",
+	    strerror(errno));
       return -1;
     }
     if (fdlockfile == -1) {
       if (snprintf(lockname,sizeof(lockname),MC_LOCKFILE,commid) > 
 	  sizeof(lockname)) {
-	perror("Could not complete lockfile name");
+	m_log(M_ERROR,M_QUIET,
+	      "mcs_init: could not cimplete lockfile name %s\n"
+	      MC_LOCKFILE);
 	return -1;
       }
       fdlockfile = open(lockname,O_CREAT|O_RDWR, 0664);
       if (fdlockfile==-1) {
-	perror("Could not open lockfile");
+	m_log(M_ERROR,M_QUIET,
+	      "mcs_init: could not open lockfile %s, error string %s\n",
+	      lockname,
+	      strerror(errno));
 	return -1;
       }
     }
     if (flock(fdlockfile,LOCK_EX|LOCK_NB)) {
-      perror("lock already in use");
+ 	m_log(M_ERROR,M_QUIET,
+	      "mcs_init: lockfile %s already in use, error string %s\n",
+	      lockname,
+	      strerror(errno));
       return -1;
     } 
     if (snprintf(sockname,sizeof(sockname),MC_SOCKET,commid) > 
 	sizeof(sockname)) {
-      perror("Could not complete socket name");
-      return -1;
+	m_log(M_ERROR,M_QUIET,
+	      "mcs_init: could not cimplete socket name %s\n"
+	      MC_SOCKET);
+	return -1;
     }
     unlink(sockname);
     sa.sun_family=AF_UNIX;
     strcpy(sa.sun_path,sockname);
     if (bind(commhandle,(struct sockaddr*)&sa,sizeof(sa))) {
-      perror("Could not bind socket");
+      m_log(M_ERROR,M_QUIET,
+	    "mcs_init: could not bind socket %s, error string %s\n",
+	    sockname,
+	    strerror(errno));
       return -1;
     }
     if (!_sigpipe_h_installed) {
@@ -115,7 +132,10 @@ int mcs_accept(MC_REQHDR *hdr)
   if (hdr) {
     hdr->mc_handle=accept(commhandle,NULL,0);
     if (hdr->mc_handle == -1) {
-      perror("mcs_accept");
+      m_log(M_ERROR,M_QUIET,
+	    "mcs_accept: failed to accept server socket, error string %s\n",
+	    sockname,
+	    strerror(errno));
       return -1;
     } 
     return 0;
@@ -149,7 +169,10 @@ int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
 	  /* get header & size */
 	  readlen=readv(srvhandle,iov,2);
 	  if (readlen <= 0) {
-	    perror("null read");
+	    m_log(M_ERROR,M_QUIET,
+		  "mcs_getrequest: failed to read header, error string %s\n",
+		  sockname,
+		  strerror(errno));
 	    break;
 	  }
 	  recvlen += readlen;
@@ -162,8 +185,8 @@ int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
 	  }
 	} while (recvlen != (sizeof(MC_REQHDR)+sizeof(size_t)));
 	if (maxlen > 0 && *reqdatalen > maxlen) {
-	  fprintf(stderr,
-		  "getrequest buffer to small, needed %d available %d\n",
+	    m_log(M_ERROR,M_QUIET,
+		  "mcs_request: buffer too small, needed %d available %d\n",
 		  *reqdatalen,
 		  maxlen);
 	} else { 
@@ -179,7 +202,9 @@ int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
 	  if (readlen > 0) { 
 	    return 0;
 	  } else {
-	    perror("mcserv data error");
+	    m_log(M_ERROR,M_QUIET,
+		  "mcs_request: data read error, error string %s\n",
+		  strerror(errno));
 	  }
 	}
       }
@@ -206,10 +231,10 @@ int mcs_sendresponse(MC_REQHDR *hdr, void *respdata, size_t respdatalen)
     sentlen = writev(hdr->mc_handle,iov,3);
     if (sentlen == (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR)))
       return 0;
-    fprintf(stderr,"sendresponse error, wanted %d got %d\n",
-	    respdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
-	    sentlen);
+    m_log(M_ERROR,M_QUIET,
+	  "mcs_sendresponse: send error, wanted %d got %d, error string %s\n",
+	  respdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
+	  sentlen, strerror(errno));
   }
-  perror("mcserv response");
   return -1;
 }
