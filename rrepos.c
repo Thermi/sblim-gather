@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.4 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: rrepos.c,v 1.5 2004/08/04 11:27:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -22,7 +22,9 @@
 #include "gatherc.h"
 #include "mcclt.h"
 #include <string.h>
+#include <unistd.h>
 #include <netinet/in.h>
+#include <sys/wait.h>
 
 static RepositoryToken _RemoteToken = {sizeof(RepositoryToken),0,0};
 static int initialized=0;
@@ -350,4 +352,47 @@ int rreposplugin_list(const char *pluginname,
   }        
   return -1;  
   
+}
+
+int rrepos_load()
+{
+  int pid;
+  if (system("ps -C reposd")) {
+    /* No reposd around */
+    /*signal(SIGCHLD,SIG_IGN);*/
+    pid=fork();
+    switch(pid) {
+    case 0:
+      execlp("reposd","reposd",NULL);
+      exit(-1);
+      break;
+    case -1:
+      return -1;
+      break;
+    default:
+      waitpid(pid,NULL,0);
+      sleep(1); /* todo: need to make sure daemon is initialized */
+      break;
+    }
+  }
+  return 0;
+}
+
+int rrepos_unload()
+{
+  MC_REQHDR   hdr;
+  char        xbuf[GATHERBUFLEN];
+  GATHERCOMM *comm=(GATHERCOMM*)xbuf;
+  size_t      commlen=sizeof(xbuf);
+
+  INITCHECK();
+  hdr.mc_type=GATHERMC_REQ;
+  comm->gc_cmd=GCMD_QUIT;
+  comm->gc_datalen=0;
+  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+      mcc_response(&hdr,comm,&commlen)==0) {
+    return comm->gc_result;
+  } else {
+    return -1;
+  }
 }

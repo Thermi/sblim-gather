@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.5 2004/08/02 14:23:02 mihajlov Exp $
+ * $Id: rgather.c,v 1.6 2004/08/04 11:27:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -23,7 +23,6 @@
 #include "mcclt.h"
 #include <string.h>
 #include <unistd.h>
-//#include <stdlib.h>
 #include <sys/wait.h>
 
 

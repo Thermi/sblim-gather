@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.5 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: gather.c,v 1.6 2004/08/04 11:27:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -142,7 +142,8 @@ int metricplugin_add(const char *pluginname)
 	  status=-1;
 	  break;
 	} 
-	if (MPR_UpdateMetric(pluginname,mp->mpMetricDefs+i)==0) {	  
+	if (MPR_UpdateMetric(pluginname,mp->mpMetricDefs+i)==0 &&
+	    mp->mpMetricDefs[i].mproc) {	  
 	  MetricBlock *mb=MakeMB(mp->mpMetricDefs[i].mdId,
 				 gather_sample,
 				 mp->mpMetricDefs[i].mdSampleInterval);
@@ -179,7 +180,9 @@ int metricplugin_remove(const char *pluginname)
     if (mp) {
       /* unregister all metrics for this plugin */
       for (i=0;i<mp->mpNumMetricDefs;i++) {
-	ML_Remove(metriclist,mp->mpMetricDefs[i].mdId);
+	if (mp->mpMetricDefs[i].mproc) {
+	  ML_Remove(metriclist,mp->mpMetricDefs[i].mdId);
+	}
 	MPR_RemoveMetric(mp->mpMetricDefs[i].mdId);
       }
       pl_unlink(mp);

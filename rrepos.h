@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.h,v 1.2 2004/08/02 14:23:02 mihajlov Exp $
+ * $Id: rrepos.h,v 1.3 2004/08/04 11:27:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -57,6 +57,16 @@ int rrepos_put(const char *reposplugin, const char *metric,MetricValue *mv);
  * -1 Failure
  */
 int rrepos_get(ValueRequest *vs, COMMHEAP ch);
+
+/*
+ * Control interface, spawn repository daemon
+ */
+int rrepos_load();
+
+/*
+ * Control interface, kill repository daemon
+ */
+int rrepos_unload();
 
 /*
  * Control interface, initialize repository daemon

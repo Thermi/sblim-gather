@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.4 2004/08/04 07:29:26 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.5 2004/08/04 11:27:36 mihajlov Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -441,7 +441,7 @@ static char * metricPluginName(CMPIBroker *broker, CMPIContext *context,
 	if (plugininst) {
 	  if( _debug )
 	    fprintf(stderr,"::: got instance for %s\n",clsname_p);
-	  plugindata = CMGetProperty(plugininst,"MetricPluginName",&rc);
+	  plugindata = CMGetProperty(plugininst,"RepositoryPluginName",&rc);
 	  pluginname = plugindata.value.string ? 
 	    CMGetCharPtr(plugindata.value.string) : NULL;
 	}

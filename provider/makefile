@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2004/08/04 07:29:26 mihajlov Exp $
+# $Id: makefile,v 1.6 2004/08/04 11:27:36 mihajlov Exp $
 
 include setting.cmpi
 
@@ -8,7 +8,8 @@ LOADLIBES=-L .. -lrrepos -lgatherutil
 
 SUBDIRS=mof
 SOURCES=OSBase_MetricDefinitionProvider.c OSBase_MetricValueProvider.c \
-	OSBase_MetricGathererProvider.c
+	OSBase_MetricGathererProvider.c \
+	OSBase_MetricRepositoryServiceProvider.c
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 
@@ -18,9 +19,11 @@ include ../rules
 
 all: $(SUBDIRS) libOSBase_MetricDefinitionProvider.so \
 	libOSBase_MetricValueProvider.so \
-	libOSBase_MetricGathererProvider.so	
+	libOSBase_MetricGathererProvider.so \
+	libOSBase_MetricRepositoryServiceProvider.so
 
 libOSBase_MetricGathererProvider.so: LOADLIBES=-L .. -lrgather -lcmpiOSBase_Common
+libOSBase_MetricRepositoryServiceProvider.so: LDLIBS=-lcmpiOSBase_Common
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) libOSBase_Metric*.so

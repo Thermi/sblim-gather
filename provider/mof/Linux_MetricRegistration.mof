@@ -1,7 +1,7 @@
 //
-// $Id: Linux_MetricRegistration.mof,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+// $Id: Linux_MetricRegistration.mof,v 1.2 2004/08/04 11:27:36 mihajlov Exp $
 //
-// (C) Copyright IBM Corp. 2003
+// (C) Copyright IBM Corp. 2003, 2004
 //
 // THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
 // ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -93,6 +93,40 @@ instance of PG_ProviderCapabilities
    CapabilityID = "2";
    //Name of the CIM class as defined in the mof
    ClassName = "Linux_MetricGatherer";
+   Namespaces = {"root/cimv2"};
+   ProviderType = { 2, 5 }; // Instance & Method
+   SupportedProperties = NULL; // All properties
+   SupportedMethods = NULL; // All methods
+};
+
+instance of PG_ProviderModule
+{
+   Name = "OSBase_MetricRepositoryServiceProviderModule";
+   //The library name on disk
+   Location = "OSBase_MetricRepositoryServiceProvider";
+   Vendor = "SBLIM";
+   Version = "2.0.0";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricRepositoryServiceProviderModule";
+   // The provider name as referenced in the code
+   Name = "OSBase_MetricRepositoryServiceProvider";
+};
+
+instance of PG_ProviderCapabilities
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricRepositoryServiceProviderModule";
+   //The provider name as defined in PG_Provider
+   ProviderName = "OSBase_MetricRepositoryServiceProvider";
+   CapabilityID = "2";
+   //Name of the CIM class as defined in the mof
+   ClassName = "Linux_MetricRepositoryService";
    Namespaces = {"root/cimv2"};
    ProviderType = { 2, 5 }; // Instance & Method
    SupportedProperties = NULL; // All properties

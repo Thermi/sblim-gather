@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.3 2004/08/03 12:36:08 mihajlov Exp $
+ * $Id: reposctl.c,v 1.4 2004/08/04 11:27:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -34,6 +34,8 @@ static const char* commands[] = {
   "\tv plugin\tview/list metrics for plugin\n",
   "\tq\t\tquit\n",
   "\tg id [resource [from [to]]]\tget metric value\n",
+  "\tk\t\tkill daemon\n",
+  "\td\t\tstart daemon\n",
   NULL
 };
 
@@ -180,6 +182,14 @@ int main()
 	}
       }
       ch_release(commh);
+      break;
+    case 'k':
+      if(rrepos_unload())
+	printf("Failed to unload daemon\n");
+      break;
+    case 'd':
+      if(rrepos_load())
+	printf("Failed to load daemon\n");
       break;
     case 'q':
       quit=1;

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricDefinitionProvider.c,v 1.3 2004/08/04 07:29:26 mihajlov Exp $
+ * $Id: OSBase_MetricDefinitionProvider.c,v 1.4 2004/08/04 11:27:36 mihajlov Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -32,7 +32,7 @@
 #include "cmpimacs.h"
 
 
-#define _debug 0
+#define _debug 1
 
 CMPIBroker * _broker;
 
@@ -118,7 +118,7 @@ CMPIStatus OSBase_MetricDefinitionProviderEnumInstanceNames( CMPIInstanceMI * mi
       while (en && CMHasNext(en,NULL)) {
 	data = CMGetNext(en,NULL);
 	if (data.value.inst) {
-	  plugindata = CMGetProperty(data.value.inst,"MetricPluginName",&rc);
+	  plugindata=CMGetProperty(data.value.inst,"RepositoryPluginName",&rc);
 	  data = CMGetProperty(data.value.inst,"MetricDefinitionClassName",&rc);
 	  if (plugindata.value.string && data.value.string) {
 	    pname = CMGetCharPtr(plugindata.value.string);
@@ -171,7 +171,7 @@ CMPIStatus OSBase_MetricDefinitionProviderEnumInstances( CMPIInstanceMI * mi,
       while (en && CMHasNext(en,NULL)) {
 	data = CMGetNext(en,NULL);
 	if (data.value.inst) {
-	  plugindata = CMGetProperty(data.value.inst,"MetricPluginName",&rc);
+	  plugindata=CMGetProperty(data.value.inst,"RepositoryPluginName",&rc);
 	  data = CMGetProperty(data.value.inst,"MetricDefinitionClassName",&rc);
 	  if (plugindata.value.string && data.value.string) {
 	    pname = CMGetCharPtr(plugindata.value.string);
@@ -400,11 +400,12 @@ static char * metricPluginName(CMPIBroker *broker, CMPIContext *context,
       if( _debug )
 	fprintf(stderr,"::: getting instance  for %s (%s)\n",clsname,
 		CMGetCharPtr(CDToString(broker,pluginpath,NULL)));
+      /* todo: this is case sensitive - should not be */
       plugininst = CBGetInstance(broker,context,pluginpath,NULL,&rc);
       if (plugininst) {
 	if( _debug )
 	  fprintf(stderr,"::: got instance for %s\n",clsname);
-	plugindata = CMGetProperty(plugininst,"MetricPluginName",&rc);
+	plugindata = CMGetProperty(plugininst,"RepositoryPluginName",&rc);
 	pluginname = plugindata.value.string ? 
 	  CMGetCharPtr(plugindata.value.string) : NULL;
       }

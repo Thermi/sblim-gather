@@ -1,7 +1,7 @@
 //
-// $Id: Linux_LocalFileSystemMetric.mof,v 1.2 2004/08/04 07:29:26 mihajlov Exp $
+// $Id: Linux_LocalFileSystemMetric.mof,v 1.3 2004/08/04 11:27:36 mihajlov Exp $
 //
-// (C) Copyright IBM Corp. 2003
+// (C) Copyright IBM Corp. 2003, 2004
 //
 // THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
 // ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -55,7 +55,7 @@ instance of Linux_MetricPlugin
 instance of Linux_RepositoryPlugin  
 {
 	MetricDefinitionClassName = "Linux_LocalFileSystemMetric";
- 	MetricPluginName = "librepositoryLocalFileSystem.so";
+ 	RepositoryPluginName = "librepositoryLocalFileSystem.so";
 };
 
 

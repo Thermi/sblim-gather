@@ -1,5 +1,5 @@
 //
-// $Id: Linux_Metric.mof,v 1.3 2004/08/04 07:29:26 mihajlov Exp $
+// $Id: Linux_Metric.mof,v 1.4 2004/08/04 11:27:36 mihajlov Exp $
 //
 // (C) Copyright IBM Corp. 2003
 //
@@ -50,6 +50,17 @@ class Linux_MetricGatherer : CIM_Service
   boolean   StopSampling();
 };
 
+[ Provider("cmpi:OSBase_MetricRepositoryServiceProvider"),
+  Description ("Metric Repository Service")
+]
+class Linux_MetricRepositoryService : CIM_Service
+{ 
+  [Description("Number of registered plugins")]
+  uint16 NumberOfPlugins;
+  [Description("Number of registered metrics")]
+  uint16 NumberOfMetrics;
+};
+
 [  Description ("Plugin Control")
 ]
 class Linux_MetricPlugin : CIM_Setting
@@ -69,7 +80,7 @@ class Linux_RepositoryPlugin : CIM_Setting
   [Key, Description("Metric Definition Class Name")]
   String MetricDefinitionClassName;
   [Description("Name of the repository plugin library")]
-  String MetricPluginName; 
+  String RepositoryPluginName; 
   [Description("Is this plugin enabled")]
   boolean Enabled; 
 };
