@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv.h,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: mcserv.h,v 1.3 2004/10/12 08:44:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -28,6 +28,7 @@ extern "C" {
 
 int mcs_init(const char *commid);
 int mcs_term();
+int mcs_accept(MC_REQHDR *hdr);
 int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen);
 int mcs_sendresponse(MC_REQHDR *hdr, void *respdata, size_t respdatalen);
 

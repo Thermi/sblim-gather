@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.4 2004/10/08 11:06:41 mihajlov Exp $
+ * $Id: gatherd.c,v 1.5 2004/10/12 08:44:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -50,121 +50,124 @@ int main(int argc, char * argv[])
   }
   
   if (mcs_init(GATHER_COMMID)) {
+    fprintf(stderr,"Could not open gatherd socket.\n");
     return -1;
   }
 
   memset(buffer, 0, sizeof(buffer));
 
-  while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
-    if (hdr.mc_type != GATHERMC_REQ) {
-      /* ignore unknown message types */
-      fprintf(stderr,"--- invalid request type  received %c\n",hdr.mc_type);
-      continue;
-    }
-    comm=(GATHERCOMM*)buffer;
-    /* perform sanity check */
-    if (bufferlen != sizeof(GATHERCOMM) + comm->gc_datalen) {
-      fprintf(stderr,"--- invalid length received: expected %d got %d\n",
-	      sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
-      continue;
-    }
-    switch (comm->gc_cmd) {
-    case GCMD_STATUS:
-      gather_status((GatherStatus*)(buffer+sizeof(GATHERCOMM)));
-      comm->gc_result=0;
-      comm->gc_datalen=sizeof(GatherStatus);
-      break;
-    case GCMD_INIT:
-      comm->gc_result=gather_init();
-      comm->gc_datalen=0;
-      break;
-    case GCMD_TERM:
-      comm->gc_result=gather_terminate();
-      comm->gc_datalen=0;
-      break;
-    case GCMD_START:
-      comm->gc_result=gather_start();
-      comm->gc_datalen=0;
-      break;
-    case GCMD_STOP:
-      comm->gc_result=gather_stop();
-      comm->gc_datalen=0;
-      break;
-    case GCMD_ADDPLUGIN:
-      comm->gc_result=metricplugin_add(buffer+sizeof(GATHERCOMM));
-      comm->gc_datalen=0;
-      break;
-    case GCMD_REMPLUGIN:
-      comm->gc_result=metricplugin_remove(buffer+sizeof(GATHERCOMM));
-      comm->gc_datalen=0;
-      break;
-    case GCMD_LISTPLUGIN:
-      ch=ch_init();
-      comm->gc_result=metricplugin_list(buffer+sizeof(GATHERCOMM),
-					&pdef,
-					ch);
-      if (comm->gc_result > 0) {
-	if (CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
-			comm->gc_result*sizeof(PluginDefinition))) {
-	  comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
-	    comm->gc_result*sizeof(PluginDefinition);
-	  memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
-		 pdef,
-		 comm->gc_result*sizeof(PluginDefinition));
-	  for (i=0; i < comm->gc_result; i++) {
-	    if (!CHECKBUFFER(comm,buffer,strlen(pdef[i].pdName) + 1)) {
-	      comm->gc_result=-1;
-	      break;
-	    }
-	    memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		   pdef[i].pdName,
-		   strlen(pdef[i].pdName) + 1);
-	    comm->gc_datalen += strlen(pdef[i].pdName) + 1;
-	    /* add pointer block for resources */
-	    if (pdef[i].pdResource)
-	      for (j=0;pdef[i].pdResource[j];j++) {
-		if (!CHECKBUFFER(comm,buffer,strlen(pdef[i].pdResource[j]) + 1)) {
-		  comm->gc_result=-1;
-		  break;
-		}
-		memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		       pdef[i].pdResource[j],
-		       strlen(pdef[i].pdResource[j]) + 1);
-		comm->gc_datalen += strlen(pdef[i].pdResource[j]) + 1;	    
-	      }
-	    else if CHECKBUFFER(comm,buffer,1) {
-	      memset(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		     0,
-		     1);
-	      comm->gc_datalen += 1;
-	    } else {
-	      comm->gc_result=-1;
-	    }
-	  }  
-	} else {
-	  comm->gc_result=-1;
-	}
-      } else {
-	comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1;
+  while (!quit && mcs_accept(&hdr)==0) {
+    while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
+      if (hdr.mc_type != GATHERMC_REQ) {
+	/* ignore unknown message types */
+	fprintf(stderr,"--- invalid request type  received %c\n",hdr.mc_type);
+	continue;
       }
-      ch_release(ch);
-      break;
-    case GCMD_QUIT:
-      quit=1;
-      comm->gc_result=0;
-      comm->gc_datalen=0;
-      break;
-    default:
-      comm->gc_result=-1;
-      comm->gc_datalen=0;
-      break;
+      comm=(GATHERCOMM*)buffer;
+      /* perform sanity check */
+      if (bufferlen != sizeof(GATHERCOMM) + comm->gc_datalen) {
+	fprintf(stderr,"--- invalid length received: expected %d got %d\n",
+		sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
+	continue;
+      }
+      switch (comm->gc_cmd) {
+      case GCMD_STATUS:
+	gather_status((GatherStatus*)(buffer+sizeof(GATHERCOMM)));
+	comm->gc_result=0;
+	comm->gc_datalen=sizeof(GatherStatus);
+	break;
+      case GCMD_INIT:
+	comm->gc_result=gather_init();
+	comm->gc_datalen=0;
+	break;
+      case GCMD_TERM:
+	comm->gc_result=gather_terminate();
+	comm->gc_datalen=0;
+	break;
+      case GCMD_START:
+	comm->gc_result=gather_start();
+	comm->gc_datalen=0;
+	break;
+      case GCMD_STOP:
+	comm->gc_result=gather_stop();
+	comm->gc_datalen=0;
+	break;
+      case GCMD_ADDPLUGIN:
+	comm->gc_result=metricplugin_add(buffer+sizeof(GATHERCOMM));
+	comm->gc_datalen=0;
+	break;
+      case GCMD_REMPLUGIN:
+	comm->gc_result=metricplugin_remove(buffer+sizeof(GATHERCOMM));
+	comm->gc_datalen=0;
+	break;
+      case GCMD_LISTPLUGIN:
+	ch=ch_init();
+	comm->gc_result=metricplugin_list(buffer+sizeof(GATHERCOMM),
+					  &pdef,
+					  ch);
+	if (comm->gc_result > 0) {
+	  if (CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
+			  comm->gc_result*sizeof(PluginDefinition))) {
+	    comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
+	      comm->gc_result*sizeof(PluginDefinition);
+	    memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
+		   pdef,
+		   comm->gc_result*sizeof(PluginDefinition));
+	    for (i=0; i < comm->gc_result; i++) {
+	      if (!CHECKBUFFER(comm,buffer,strlen(pdef[i].pdName) + 1)) {
+		comm->gc_result=-1;
+		break;
+	      }
+	      memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
+		     pdef[i].pdName,
+		     strlen(pdef[i].pdName) + 1);
+	      comm->gc_datalen += strlen(pdef[i].pdName) + 1;
+	      /* add pointer block for resources */
+	      if (pdef[i].pdResource)
+		for (j=0;pdef[i].pdResource[j];j++) {
+		  if (!CHECKBUFFER(comm,buffer,strlen(pdef[i].pdResource[j]) + 1)) {
+		    comm->gc_result=-1;
+		    break;
+		  }
+		  memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
+			 pdef[i].pdResource[j],
+			 strlen(pdef[i].pdResource[j]) + 1);
+		  comm->gc_datalen += strlen(pdef[i].pdResource[j]) + 1;	    
+		}
+	      else if CHECKBUFFER(comm,buffer,1) {
+		memset(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
+		       0,
+		       1);
+		comm->gc_datalen += 1;
+	      } else {
+		comm->gc_result=-1;
+	      }
+	    }  
+	  } else {
+	    comm->gc_result=-1;
+	  }
+	} else {
+	  comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1;
+	}
+	ch_release(ch);
+	break;
+      case GCMD_QUIT:
+	quit=1;
+	comm->gc_result=0;
+	comm->gc_datalen=0;
+	break;
+      default:
+	comm->gc_result=-1;
+	comm->gc_datalen=0;
+	break;
+      }
+      hdr.mc_type=GATHERMC_RESP;
+      if (sizeof(GATHERCOMM) + comm->gc_datalen > sizeof(buffer)) {
+	fprintf(stderr,"Error: Available data size is exceeding buffer.\n");
+      }
+      mcs_sendresponse(&hdr,buffer,sizeof(GATHERCOMM)+comm->gc_datalen);
+      bufferlen=sizeof(buffer);
     }
-    hdr.mc_type=GATHERMC_RESP;
-    if (sizeof(GATHERCOMM) + comm->gc_datalen > sizeof(buffer)) {
-      fprintf(stderr,"Error: Available data size is exceeding buffer.\n");
-    }
-    mcs_sendresponse(&hdr,buffer,sizeof(GATHERCOMM)+comm->gc_datalen);
-    bufferlen=sizeof(buffer);
   }
   mcs_term();
   return 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: mcctest.c,v 1.3 2004/08/05 10:23:46 mihajlov Exp $
+ * $Id: mcctest.c,v 1.4 2004/10/12 08:44:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -24,11 +24,12 @@
 
 static int transactions = 0;
 
-
+#define FACTOR 10
+#define PAUSE  3
 
 int main()
 {
-  MC_REQHDR  req;
+  MC_REQHDR  req = {0,-1};
   char   buf[500];
   size_t buflen;
   time_t start, end;
@@ -36,9 +37,10 @@ int main()
 
   start=time(NULL);
   comhdl = mcc_init("mcstest");
+  memset(buf,0,sizeof(buf));
 
+  strcpy(buf,"x");
   do {
-    strcpy(buf,"x");
     /* fgets(buf,sizeof(buf),stdin); */
     if (*buf=='q') {
       req.mc_type=0;
@@ -49,10 +51,13 @@ int main()
       buflen=sizeof(buf);
       if (mcc_request(comhdl,&req,buf,strlen(buf))==0) {
 	mcc_response(&req,buf,&buflen);	
-	if (transactions++ == 500000) {
+	if (transactions == 100 * FACTOR) {
+	  sleep(PAUSE); /* stall processing */
+	}
+	if (transactions++ == 500 * FACTOR) {
 	  end = time(NULL);
 	  fprintf(stderr,"Transactions %d in seconds %ld, rate = %ld\n",
-		  transactions,end-start,transactions/(end-start));
+		  transactions,end-start-PAUSE,transactions/(end-start-PAUSE));
 	  break;
 	}
 	/*puts(buf);*/

@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv_unix.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.3 2004/10/12 08:44:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -23,10 +23,20 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/file.h>
+#include <sys/poll.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
+
+static int _sigpipe_h_installed = 0;
+static int _sigpipe_h_received = 0;
+
+static void _sigpipe_h(int signal)
+{
+  _sigpipe_h_received++; 
+}
 
 static int commhandle = -1;
 static int fdlockfile = -1;
@@ -70,6 +80,9 @@ int mcs_init(const char *commid)
       perror("Could not bind socket");
       return -1;
     }
+    if (!_sigpipe_h_installed) {
+      signal(SIGPIPE,_sigpipe_h);
+    }
     listen(commhandle,0);
   }
   return 0;
@@ -97,65 +110,100 @@ int mcs_term()
   return 0;
 }
 
+int mcs_accept(MC_REQHDR *hdr)
+{
+  if (hdr) {
+    hdr->mc_handle=accept(commhandle,NULL,0);
+    if (hdr->mc_handle == -1) {
+      perror("mcs_accept");
+      return -1;
+    } 
+    return 0;
+  }
+  
+  return -1;
+}
+
 int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
 {
+  struct iovec iov[2] = {
+    {hdr,sizeof(MC_REQHDR)},
+    {reqdatalen,sizeof(size_t)}
+  };
+  struct pollfd pf;
   int           srvhandle=-1;
-  size_t        readlen=0;
+  int           readlen=0;
   size_t        recvlen=0;
   int           maxlen=0;
+
   if (hdr && commhandle != -1 && reqdata && reqdatalen) {
+    srvhandle = hdr->mc_handle;
     if (*reqdatalen>0) maxlen=*reqdatalen;
-    srvhandle=accept(commhandle,NULL,0);
     if (srvhandle != -1) {
-      do {
-	/* get header */
-	readlen=read(srvhandle,(void*)hdr+recvlen,sizeof(MC_REQHDR)-recvlen);
-	if (readlen <= 0) break;
-	recvlen += readlen;
-      } while (recvlen != sizeof(MC_REQHDR));
-      if (readlen > 0) {
-	hdr->mc_handle = srvhandle;
-	readlen=0;
-	recvlen=0;
+      /* use poll to implement a timeout disconnection */
+      pf.fd=srvhandle;
+      pf.events=POLLIN;
+      if (poll(&pf,1,1000) == 1 && 
+	  !(pf.revents & (POLLERR|POLLNVAL|POLLHUP))) {
 	do {
-	  /* get length */
-	  readlen=read(srvhandle,(void*)reqdatalen+recvlen,
-		       sizeof(size_t)-recvlen);
-	  if (readlen <= 0) break;
+	  /* get header & size */
+	  readlen=readv(srvhandle,iov,2);
+	  if (readlen <= 0) {
+	    perror("null read");
+	    break;
+	  }
 	  recvlen += readlen;
-	} while (recvlen != sizeof(size_t));
+	  if (iov[0].iov_len < readlen) {
+	    readlen -= iov[0].iov_len;
+	    iov[0].iov_len=0; 
+	    iov[1].iov_len-=readlen;
+	  } else {
+	    iov[0].iov_len-=readlen; 
+	  }
+	} while (recvlen != (sizeof(MC_REQHDR)+sizeof(size_t)));
 	if (maxlen > 0 && *reqdatalen > maxlen) {
 	  fprintf(stderr,
 		  "getrequest buffer to small, needed %d available %d\n",
 		  *reqdatalen,
 		  maxlen);
- 	} else if( readlen >0 ) {
+	} else { 
 	  readlen=0;
 	  recvlen=0;
+	  hdr->mc_handle=srvhandle;
 	  do {
 	    /* get data */
 	    readlen=read(srvhandle,reqdata+recvlen,*reqdatalen-recvlen);
 	    if (readlen <= 0) break;
 	    recvlen += readlen;
 	  } while (recvlen != *reqdatalen);
-	  if (readlen > 0) 
+	  if (readlen > 0) { 
 	    return 0;
+	  } else {
+	    perror("mcserv data error");
+	  }
 	}
       }
     }
   }
-  perror("mcserv request");
+  if (srvhandle != -1) {
+    close(srvhandle);
+  }
+  if (hdr) {
+    hdr->mc_handle=-1;
+  }
   return -1;
 }
 
 int mcs_sendresponse(MC_REQHDR *hdr, void *respdata, size_t respdatalen)
 {
   int    sentlen;
+  struct iovec iov[3] = {
+    {hdr,sizeof(MC_REQHDR)},
+    {&respdatalen,sizeof(size_t)},
+    {respdata,respdatalen}
+  };
   if (hdr && hdr->mc_handle != -1 && respdata) {
-    sentlen = write(hdr->mc_handle,hdr,sizeof(MC_REQHDR)) +
-      write(hdr->mc_handle,&respdatalen,sizeof(size_t)) +
-      write(hdr->mc_handle,respdata,respdatalen);
-    close(hdr->mc_handle);
+    sentlen = writev(hdr->mc_handle,iov,3);
     if (sentlen == (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR)))
       return 0;
     fprintf(stderr,"sendresponse error, wanted %d got %d\n",

@@ -1,5 +1,5 @@
 /*
- * $Id: mcstest.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: mcstest.c,v 1.3 2004/10/12 08:44:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -29,23 +29,29 @@ int main()
   size_t     buflen;
   
   if (mcs_init("mcstest") == 0) {
-    do {
-      buflen=sizeof(buf);
-      if (mcs_getrequest(&req,buf,&buflen) == -1) {
-	break;
+    while (1) {
+      /* keep on living */
+      if (mcs_accept(&req) == -1) {
+	return -1;
       }
-      /*      if (req.mc_len>0)
-	      puts(req.mc_data);*/
-      if (req.mc_type!=0) {
-	buflen = 5;
-	strcpy(buf,"JUHU");
-	if (mcs_sendresponse(&req,buf,buflen) == -1) {
+      do {
+	buflen=sizeof(buf);
+	if (mcs_getrequest(&req,buf,&buflen) == -1) {
 	  break;
 	}
-      } else {
-	break;
-      }
-    } while (1);
+	/*      if (req.mc_len>0)
+		puts(req.mc_data);*/
+	if (req.mc_type!=0) {
+	  buflen = 5;
+	  strcpy(buf,"JUHU");
+	  if (mcs_sendresponse(&req,buf,buflen) == -1) {
+	  break;
+	  }
+	} else {
+	  break;
+	}
+      } while (1);
+    }
     mcs_term();
   }  
   return 0;

@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.8 2004/10/08 11:06:41 mihajlov Exp $
+ * $Id: rgather.c,v 1.9 2004/10/12 08:44:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -24,14 +24,18 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-
+#include <pthread.h>
 
 static int rgatherhandle=-1;
 
+static pthread_mutex_t rgather_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 #define INITCHECK() \
+pthread_mutex_lock(&rgather_mutex); \
 if (rgatherhandle==-1) { \
   rgatherhandle=mcc_init(GATHER_COMMID); \
-}
+} \
+pthread_mutex_unlock(&rgather_mutex);
 
 int rgather_load()
 {
@@ -70,10 +74,13 @@ int rgather_unload()
   comm->gc_cmd=GCMD_QUIT;
   comm->gc_datalen=0;
   comm->gc_result=0;
+  pthread_mutex_lock(&rgather_mutex);
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
+    pthread_mutex_unlock(&rgather_mutex);
     return comm->gc_result;
   } else {
+    pthread_mutex_unlock(&rgather_mutex);
     return -1;
   }
 }
@@ -91,10 +98,13 @@ int rgather_init()
   comm->gc_cmd=GCMD_INIT;
   comm->gc_datalen=0;
   comm->gc_result=0;
+  pthread_mutex_lock(&rgather_mutex);
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
+    pthread_mutex_unlock(&rgather_mutex);
     return comm->gc_result;
   } else {
+    pthread_mutex_unlock(&rgather_mutex);
     return -1;
   }
 }
@@ -112,11 +122,14 @@ int rgather_terminate()
   comm->gc_cmd=GCMD_TERM;
   comm->gc_datalen=0;
   comm->gc_result=0;
+  pthread_mutex_lock(&rgather_mutex);
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0 &&
       mcc_term(rgatherhandle)==0) {
+    pthread_mutex_unlock(&rgather_mutex);
     return comm->gc_result;
   } else {
+    pthread_mutex_unlock(&rgather_mutex);
     return -1;
   }
 }
@@ -134,10 +147,13 @@ int rgather_start()
   comm->gc_cmd=GCMD_START;
   comm->gc_datalen=0;
   comm->gc_result=0;
+  pthread_mutex_lock(&rgather_mutex);
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
+    pthread_mutex_unlock(&rgather_mutex);
     return comm->gc_result;
   } else {
+    pthread_mutex_unlock(&rgather_mutex);
     return -1;
   }
 }
@@ -155,10 +171,13 @@ int rgather_stop()
   comm->gc_cmd=GCMD_STOP;
   comm->gc_datalen=0;
   comm->gc_result=0;
+  pthread_mutex_lock(&rgather_mutex);
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
+    pthread_mutex_unlock(&rgather_mutex);
     return comm->gc_result;
   } else {
+    pthread_mutex_unlock(&rgather_mutex);
     return -1;
   }
 }
@@ -178,12 +197,15 @@ int rgather_status(GatherStatus *gs)
     comm->gc_cmd=GCMD_STATUS;
     comm->gc_datalen=0;
     comm->gc_result=0;
+    pthread_mutex_lock(&rgather_mutex);
     if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == sizeof(GatherStatus) + sizeof(GATHERCOMM)) {
       *gs = *gsp;
+      pthread_mutex_unlock(&rgather_mutex);
       return comm->gc_result;
     } 
+    pthread_mutex_unlock(&rgather_mutex);      
   }    
   return -1;
 }
@@ -203,11 +225,14 @@ int rmetricplugin_add(const char *pluginname)
     comm->gc_datalen=strlen(pluginname)+1;
     comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+    pthread_mutex_lock(&rgather_mutex);
     if (mcc_request(rgatherhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
+      pthread_mutex_unlock(&rgather_mutex);
       return comm->gc_result;
     } 
+    pthread_mutex_unlock(&rgather_mutex);
   }
   return -1;
 }
@@ -227,11 +252,14 @@ int rmetricplugin_remove(const char *pluginname)
     comm->gc_datalen=strlen(pluginname)+1;
     comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+    pthread_mutex_lock(&rgather_mutex);
     if (mcc_request(rgatherhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
+      pthread_mutex_unlock(&rgather_mutex);
       return comm->gc_result;
     }
+    pthread_mutex_unlock(&rgather_mutex);
   }        
   return -1;  
 }
@@ -254,6 +282,7 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
     comm->gc_datalen=strlen(pluginname)+1;
     comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+    pthread_mutex_lock(&rgather_mutex);
     if (mcc_request(rgatherhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
@@ -284,8 +313,10 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
 	  stringpool += 1;
 	}
       }
+      pthread_mutex_unlock(&rgather_mutex);
       return comm->gc_result;
     }
+    pthread_mutex_unlock(&rgather_mutex);
   }        
   return -1;  
   

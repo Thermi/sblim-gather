@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.9 2004/10/08 11:06:41 mihajlov Exp $
+ * $Id: rrepos.c,v 1.10 2004/10/12 08:44:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -25,16 +25,21 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/wait.h>
+#include <pthread.h>
 
 static RepositoryToken _RemoteToken = {sizeof(RepositoryToken),0,0};
 static int rreposhandle=-1;
 static char _systemId[260] = {0};
 
+/* use mutex for I/O serialisation */
+static pthread_mutex_t rrepos_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #define INITCHECK() \
+pthread_mutex_lock(&rrepos_mutex); \
 if (rreposhandle==-1) { \
   rreposhandle=mcc_init(REPOS_COMMID); \
-}
+} \
+pthread_mutex_unlock(&rrepos_mutex); 
 
 #ifdef NAGNAG
 typedef struct _IdMap {
@@ -146,12 +151,15 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
     memcpy(xbuf+dataoffs,mv->mvData,mv->mvDataLength);
     dataoffs+=mv->mvDataLength;
     strcpy(xbuf+dataoffs,_systemId);
+    pthread_mutex_lock(&rrepos_mutex);
     if (mcc_request(rreposhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == sizeof(GATHERCOMM)) {
+      pthread_mutex_unlock(&rrepos_mutex);
       return comm->gc_result;
-    } 
+    }
+    pthread_mutex_unlock(&rrepos_mutex);
   }    
   return -1;
 }
@@ -180,6 +188,7 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
       /* empty resource is allowed */
       strcpy(xbuf+sizeof(GATHERCOMM) + sizeof(ValueRequest),vr->vsResource);
     }
+    pthread_mutex_lock(&rrepos_mutex);
     if (mcc_request(rreposhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
@@ -208,9 +217,11 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
 	    vp += strlen(vp) + 1;
 	  }
 	}
+	pthread_mutex_unlock(&rrepos_mutex);
 	return comm->gc_result;
       }
     }
+    pthread_mutex_unlock(&rrepos_mutex);    
   }        
   return -1;  
 }
@@ -228,10 +239,13 @@ int rrepos_init()
   comm->gc_cmd=GCMD_INIT;
   comm->gc_datalen=0;
   comm->gc_result=0;
+  pthread_mutex_lock(&rrepos_mutex);
   if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
+    pthread_mutex_unlock(&rrepos_mutex);
     return comm->gc_result;
   } else {
+    pthread_mutex_unlock(&rrepos_mutex);
     return -1;
   }
 }
@@ -249,10 +263,13 @@ int rrepos_terminate()
   comm->gc_cmd=GCMD_TERM;
   comm->gc_datalen=0;
   comm->gc_result=0;
+  pthread_mutex_lock(&rrepos_mutex);
   if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
+    pthread_mutex_unlock(&rrepos_mutex);
     return comm->gc_result;
   } else {
+    pthread_mutex_unlock(&rrepos_mutex);
     return -1;
   }
 }
@@ -272,12 +289,15 @@ int rrepos_status(RepositoryStatus *rs)
     comm->gc_cmd=GCMD_STATUS;
     comm->gc_datalen=0;
     comm->gc_result=0;
+    pthread_mutex_lock(&rrepos_mutex);
     if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == sizeof(RepositoryStatus) + sizeof(GATHERCOMM)) {
       *rs = *rsp;
+      pthread_mutex_unlock(&rrepos_mutex);
       return comm->gc_result;
     } 
+    pthread_mutex_unlock(&rrepos_mutex);
   }    
   return -1;
 }
@@ -297,11 +317,14 @@ int rreposplugin_add(const char *pluginname)
     comm->gc_datalen=strlen(pluginname)+1;
     comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+    pthread_mutex_lock(&rrepos_mutex);
     if (mcc_request(rreposhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
+      pthread_mutex_unlock(&rrepos_mutex);
       return comm->gc_result;
     } 
+    pthread_mutex_unlock(&rrepos_mutex);
   }
   return -1;
 }
@@ -321,11 +344,14 @@ int rreposplugin_remove(const char *pluginname)
     comm->gc_datalen=strlen(pluginname)+1;
     comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+    pthread_mutex_lock(&rrepos_mutex);
     if (mcc_request(rreposhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
+      pthread_mutex_unlock(&rrepos_mutex);
       return comm->gc_result;
     }
+    pthread_mutex_unlock(&rrepos_mutex);
   }        
   return -1;  
 }
@@ -349,6 +375,7 @@ int rreposplugin_list(const char *pluginname,
     comm->gc_datalen=strlen(pluginname)+1;
     comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+    pthread_mutex_lock(&rrepos_mutex);
     if (mcc_request(rreposhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
@@ -381,8 +408,10 @@ int rreposplugin_list(const char *pluginname,
 	  stringpool += 1;
 	}
       }
+      pthread_mutex_unlock(&rrepos_mutex);
       return comm->gc_result;
     }
+    pthread_mutex_lock(&rrepos_mutex);	
   }        
   return -1;  
   
@@ -425,10 +454,13 @@ int rrepos_unload()
   comm->gc_cmd=GCMD_QUIT;
   comm->gc_datalen=0;
   comm->gc_result=0;
+  pthread_mutex_lock(&rrepos_mutex);
   if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
+    pthread_mutex_unlock(&rrepos_mutex);
     return comm->gc_result;
   } else {
+    pthread_mutex_unlock(&rrepos_mutex);
     return -1;
   }
 }

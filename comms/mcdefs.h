@@ -1,5 +1,5 @@
 /*
- * $Id: mcdefs.h,v 1.2 2004/07/16 15:30:05 mihajlov Exp $ 
+ * $Id: mcdefs.h,v 1.3 2004/10/12 08:44:53 mihajlov Exp $ 
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -30,8 +30,8 @@ extern "C" {
 
 struct _MC_REQHDR
 {
-  int            mc_handle;
-  unsigned short mc_type;
+  int      mc_handle;
+  unsigned mc_type;
 
 };
 
