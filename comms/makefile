@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.5 2004/10/14 14:19:33 heidineu Exp $
+# $Id: makefile,v 1.6 2004/10/20 08:31:06 mihajlov Exp $
 
 export CFLAGS=-Wall -g -fPIC
 #export CFLAGS=-Wall -O3 -fPIC
-LDFLAGS=$(CFLAGS)
-CPPFLAGS=
-LOADLIBES=
+LDFLAGS=$(CFLAGS) -L ../util
+CPPFLAGS=-I ../util
+LOADLIBES=-lgatherutil
 
 SUBDIRS=
 SOURCES=mcserv_unix.c mcclt_unix.c mcstest.c mcctest.c \
@@ -32,7 +32,6 @@ libmcserv.so: libmcserv_unix.so
 	cp $< $@
 
 libmcserv_unix.so: mcclt_unix.o mcserv_unix.o
-
 
 # Remote Communication via TCP/IP Sockets --------------------------
 

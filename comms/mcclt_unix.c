@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.4 2004/10/12 08:44:53 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.5 2004/10/20 08:31:06 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -22,15 +22,15 @@
 
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <mlog.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
+#include <errno.h>
 
 #define MAXCONN 10
-
-
 
 static int _sigpipe_h_installed = 0;
 static int _sigpipe_h_received = 0;
@@ -60,7 +60,9 @@ int mcc_init(const char *commid)
     if (sockname[i].sn_name[0]==0) {
       if (snprintf(sockname[i].sn_name,sizeof(sockname),MC_SOCKET,commid) > 
 	  sizeof(sockname[i].sn_name)) {
-	perror("Could not complete socket name");
+	m_log(M_ERROR,M_QUIET,
+	      "mcc_init: could not complete socket name for %s\n",
+	      commid);
 	pthread_mutex_unlock(&sockname_mutex);
 	return -1;
       }
@@ -102,7 +104,10 @@ static int _mcc_connect(int commhandle)
     }
     sockname[commhandle].sn_handle=socket(PF_UNIX,SOCK_STREAM,0);
     if (sockname[commhandle].sn_handle==-1) {
-      perror("socket");
+      m_log(M_ERROR,M_QUIET,
+	    "_mcc_connect: could not create socket for %s, error string %s\n",
+	    sockname[commhandle].sn_name,
+	    strerror(errno));
       return -1;
     }
     sa.sun_family = AF_UNIX;
@@ -132,14 +137,20 @@ int mcc_request(int commhandle, MC_REQHDR *hdr,
   }
   if (sockname[commhandle].sn_handle<=0) {
     if (_mcc_connect(commhandle)<0 ) {
-      perror("mcserv connect");
+      m_log(M_ERROR,M_QUIET,
+	    "mcc_request: could not connect socket for %s, error string %s\n",
+	    sockname[commhandle].sn_name,
+	    strerror(errno));
       return -1;
     }
   }
   sentlen = writev(sockname[commhandle].sn_handle,iov,3);
   if (sentlen <= 0) {
     if (_mcc_connect(commhandle)<0 ) {
-      perror("mcserv reconnect");
+      m_log(M_ERROR,M_QUIET,
+	    "mcc_init: could not reconnect socket for %s, error string %s\n",
+	    sockname[commhandle].sn_name,
+	    strerror(errno));
       return -1;
     } else {
       sentlen = writev(sockname[commhandle].sn_handle,iov,3);
@@ -150,10 +161,10 @@ int mcc_request(int commhandle, MC_REQHDR *hdr,
     sockname[commhandle].sn_requests++;
     return 0;
   }
-  fprintf(stderr,"sendrequest error, wanted %d got %d\n",
-	  reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
-	  sentlen);
-  perror("mcserv send");
+  m_log(M_ERROR,M_QUIET,
+	"mcc_request: send error, wanted %d got %d, error string %s\n",
+	reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
+	sentlen, strerror(errno));
   return -1;
 }
 
@@ -189,10 +200,10 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
     }
   } while (recvlen != (sizeof(MC_REQHDR)+sizeof(size_t)));
   if (maxlen > 0 && *respdatalen > maxlen) {
-    fprintf(stderr,
-	    "getresponse buffer to small, needed %d available %d\n",
-	    *respdatalen,
-	    maxlen);
+    m_log(M_ERROR, M_QUIET,
+	  "mcc_repsonse: buffer to small, needed %d available %d\n",
+	  *respdatalen,
+	  maxlen);
     return -1;
   }  
   readlen=0;
