@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryUnixProcess.c,v 1.2 2004/08/19 10:54:59 heidineu Exp $
+ * $Id: repositoryUnixProcess.c,v 1.3 2004/09/13 15:26:46 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -32,6 +32,7 @@
  * AccumulatedUserModeTime
  * AccumulatedTotalCPUTime
  * VirtualSize
+ * SharedSize
  *
  */
 
@@ -44,7 +45,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[17];
+static MetricCalculationDefinition metricCalcDef[18];
 
 /* --- CPUTime is base for :
  * KernelModeTime, UserModeTime, TotalCPUTime,
@@ -80,6 +81,9 @@ static MetricCalculator  metricCalcPageInRate;
 
 /* --- VirtualSize --- */
 static MetricCalculator  metricCalcVirtualSize;
+
+/* --- SharedSize --- */
+static MetricCalculator  metricCalcSharedSize;
 
 
 /* ---------------------------------------------------------------------------*/
@@ -253,7 +257,14 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[16].mcDataType=MD_UINT64;
   metricCalcDef[16].mcCalc=metricCalcVirtualSize;
 
-  *mcnum=17;
+  metricCalcDef[17].mcVersion=MD_VERSION;
+  metricCalcDef[17].mcName="SharedSize";
+  metricCalcDef[17].mcId=mr(pluginname,metricCalcDef[17].mcName);
+  metricCalcDef[17].mcMetricType=MD_RETRIEVED|MD_POINT;
+  metricCalcDef[17].mcDataType=MD_UINT64;
+  metricCalcDef[17].mcCalc=metricCalcSharedSize;
+
+  *mcnum=18;
   *mc=metricCalcDef;
   return 0;
 }
@@ -504,6 +515,28 @@ size_t metricCalcVirtualSize( MetricValue *mv,
   
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Calculate VirtualSize\n",
+	  __FILE__,__LINE__);
+#endif
+  /* plain copy */
+  if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
+    memcpy(v,mv->mvData,mv->mvDataLength);
+    return mv->mvDataLength;
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* SharedSize                                                                 */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcSharedSize( MetricValue *mv,   
+			     int mnum,
+			     void *v, 
+			     size_t vlen ) {
+  
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate SharedSize\n",
 	  __FILE__,__LINE__);
 #endif
   /* plain copy */
@@ -972,7 +1005,7 @@ float getCPUKernelTimePercentage( char * start, char * end ) {
   }
   else {
     kernelPerc = (end_kernel / end_total_os) *
-      os_getTotalCPUTimePercentage(NULL,end);
+                 os_getTotalCPUTimePercentage(NULL,end);
   }
 
   return kernelPerc;
@@ -1002,7 +1035,7 @@ float getCPUUserTimePercentage( char * start, char * end ) {
   }
   else { 
     userPerc = (end_user / end_total_os) *
-      os_getTotalCPUTimePercentage(NULL,end); 
+               os_getTotalCPUTimePercentage(NULL,end); 
   }
 
   return userPerc;
@@ -1129,30 +1162,27 @@ unsigned long long os_getCPUTotalTime( char * data ) {
 
 float os_getCPUKernelTimePercentage( char * start, char * end ) {
 
-  float end_idle     = 0;
-  float end_total    = 0;
   float end_kernel   = 0;
-  float start_idle   = 0;
-  float start_total  = 0;
+  float end_total    = 0;
   float start_kernel = 0;
+  float start_total  = 0;
   float kernelPerc   = 0;
 
   if(!end) return -1;
 
-  end_idle   = os_getCPUIdleTime(end);
-  end_total  = os_getCPUTotalTime(end);
   end_kernel = os_getCPUKernelTime(end);
+  end_total  = os_getCPUTotalTime(end);
 
   if( start != NULL ) {
-    start_idle   = os_getCPUIdleTime(start);
-    start_total  = os_getCPUTotalTime(start);
     start_kernel = os_getCPUKernelTime(start);
+    start_total  = os_getCPUTotalTime(start);
 
     kernelPerc = ( (end_kernel-start_kernel) / 
 		   (end_total-start_total) ) *
-      os_getTotalCPUTimePercentage(start,end) ;
+                 os_getTotalCPUTimePercentage(start,end) ;
   }
-  else { kernelPerc = (end_kernel*100)/(end_idle+end_total); }
+  else { kernelPerc = (end_kernel / end_total ) *
+	               os_getTotalCPUTimePercentage(NULL,end); }
 
   return kernelPerc;
 }
@@ -1161,29 +1191,26 @@ float os_getCPUKernelTimePercentage( char * start, char * end ) {
 float os_getCPUUserTimePercentage( char * start, char * end ) {
 
   float end_user    = 0;
-  float end_idle    = 0;
   float end_total   = 0;
-  float start_idle  = 0;
-  float start_total = 0;
   float start_user  = 0;
+  float start_total = 0;
   float userPerc    = 0;
 
   if(!end) return -1;
 
   end_user  = os_getCPUUserTime(end);
-  end_idle  = os_getCPUIdleTime(end);
   end_total = os_getCPUTotalTime(end);
 
   if( start != NULL ) {
     start_user  = os_getCPUUserTime(start);
-    start_idle  = os_getCPUIdleTime(start);
     start_total = os_getCPUTotalTime(start);
 
     userPerc = ( (end_user-start_user) / 
 		 (end_total-start_total) ) *
-      os_getTotalCPUTimePercentage(start,end) ;
+               os_getTotalCPUTimePercentage(start,end) ;
   }
-  else { userPerc = (end_user*100)/(end_idle+end_total); }
+  else { userPerc = (end_user / end_total) *
+	            os_getTotalCPUTimePercentage(NULL,end); }
 
   return userPerc;
 }

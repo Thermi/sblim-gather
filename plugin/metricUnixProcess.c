@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.5 2004/08/19 10:54:59 heidineu Exp $
+ * $Id: metricUnixProcess.c,v 1.6 2004/09/13 15:26:46 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -16,22 +16,11 @@
  * Description:
  * Metrics Gatherer Plugin of the following Unix Process specific metrics :
  *
- * KernelModeTime
- * UserModeTime
- * TotalCPUTime
+ * CPUTime
  * ResidentSetSize
  * PageInCounter
- * PageInRate
- * InternalViewKernelModePercentage
- * InternalViewUserModePercentage
- * InternalViewTotalCPUPercentage
- * ExternalViewKernelModePercentage
- * ExternalViewUserModePercentage
- * ExternalViewTotalCPUPercentage
- * AccumulatedKernelModeTime
- * AccumulatedUserModeTime
- * AccumulatedTotalCPUTime
  * VirtualSize
+ * SharedSize
  *
  */
 
@@ -49,7 +38,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricDefinition  metricDef[4];
+static MetricDefinition  metricDef[5];
 
 /* --- CPUTime is base for :
  * KernelModeTime, UserModeTime, TotalCPUTime,
@@ -69,6 +58,9 @@ static MetricRetriever   metricRetrPageInCounter;
 
 /* --- VirtualSize --- */
 static MetricRetriever   metricRetrVirtualSize;
+
+/* --- SharedSize --- */
+static MetricRetriever   metricRetrSharedSize;
 
 /* ---------------------------------------------------------------------------*/
 
@@ -121,7 +113,15 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[3].mproc=metricRetrVirtualSize;
   metricDef[3].mdeal=free;
 
-  *mdnum=4;
+  metricDef[4].mdVersion=MD_VERSION;
+  metricDef[4].mdName="SharedSize";
+  metricDef[4].mdReposPluginName="librepositoryUnixProcess.so";
+  metricDef[4].mdId=mr(pluginname,metricDef[4].mdName);
+  metricDef[4].mdSampleInterval=60;
+  metricDef[4].mproc=metricRetrSharedSize;
+  metricDef[4].mdeal=free;
+
+  *mdnum=5;
   *md=metricDef;
   return 0;
 }
@@ -410,6 +410,71 @@ int metricRetrVirtualSize( int mid,
 		 &size);
 	  fclose(fhd);
 	}
+	
+	mv = calloc( 1, sizeof(MetricValue) + 
+		     sizeof(unsigned long long) +
+		     (strlen(_enum_pid + (i*64))+1) );
+	if (mv) {
+	  mv->mvId = mid;
+	  mv->mvTimeStamp = time(NULL);
+	  mv->mvDataType = MD_UINT64;
+	  mv->mvDataLength = sizeof(unsigned long long);
+	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  *(unsigned long long *)mv->mvData = size;	
+	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  strcpy(mv->mvResource,_enum_pid + (i*64));
+	  mret(mv);
+	}
+      }
+      if(_enum_pid) free(_enum_pid);
+      return _enum_size;
+    }
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* SharedSize                                                                 */
+/* ---------------------------------------------------------------------------*/
+
+int metricRetrSharedSize( int mid, 
+			  MetricReturner mret ) {
+  MetricValue   * mv         = NULL;
+  FILE          * fhd        = NULL;
+  char          * _enum_pid  = NULL;
+  char            buf[254];
+  int             _enum_size = 0;
+  int             i          = 0;
+  unsigned long long size    = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Retrieving SharedSize\n",
+	  __FILE__,__LINE__);
+#endif
+  if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
+  else {
+#ifdef DEBUG
+    fprintf(stderr,"--- %s(%i) : Sampling for metric SharedSize ID %d\n",
+	    __FILE__,__LINE__,mid);
+#endif
+    /* get number of processes */
+    _enum_size = enum_all_pid( &_enum_pid );
+    if( _enum_size > 0 ) {
+      for(i=0;i<_enum_size;i++) {
+
+	size = 0;
+	memset(buf,0,sizeof(buf));
+	strcpy(buf,"/proc/");
+	strcat(buf,_enum_pid + (i*64));
+	strcat(buf,"/statm");
+	if( (fhd = fopen(buf,"r")) != NULL ) {
+	  fscanf(fhd,"%*s %*s %lld",
+		 &size);
+	  fclose(fhd);
+	}
+
+	size = size * sysconf(_SC_PAGESIZE);
 	
 	mv = calloc( 1, sizeof(MetricValue) + 
 		     sizeof(unsigned long long) +
