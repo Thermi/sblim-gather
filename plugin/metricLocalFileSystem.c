@@ -1,5 +1,5 @@
 /*
- * $Id: metricLocalFileSystem.c,v 1.4 2004/10/08 07:34:54 mihajlov Exp $
+ * $Id: metricLocalFileSystem.c,v 1.5 2004/11/09 16:18:17 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -24,6 +24,7 @@
 /* ---------------------------------------------------------------------------*/
 
 #include <mplugin.h>
+#include <commutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>       
@@ -189,7 +190,7 @@ int metricRetrAvSpace( int mid,
 	mv->mvDataType = MD_UINT64;
 	mv->mvDataLength = sizeof(unsigned long long);
 	mv->mvData = (void*)mv + sizeof(MetricValue);
-	*(unsigned long long*)mv->mvData = size;
+	*(unsigned long long*)mv->mvData = htonll(size);
 	mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	strcpy(mv->mvResource,ptr_name);
 	mret(mv);

@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.9 2004/10/08 11:06:41 mihajlov Exp $
+ * $Id: metricUnixProcess.c,v 1.10 2004/11/09 16:18:18 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -28,6 +28,7 @@
 /* ---------------------------------------------------------------------------*/
 
 #include <mplugin.h>
+#include <commutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>     
@@ -304,7 +305,7 @@ int metricRetrResSetSize( int mid,
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
 	  mv->mvData = (void*)mv + sizeof(MetricValue);
-	  *(unsigned long long *)mv->mvData = size;	
+	  *(unsigned long long *)mv->mvData = htonll(size);	
 	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
@@ -369,7 +370,7 @@ int metricRetrPageInCounter( int mid,
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
 	  mv->mvData = (void*)mv + sizeof(MetricValue);
-	  *(unsigned long long*)mv->mvData = page;	 
+	  *(unsigned long long*)mv->mvData = htonll(page);	 
 	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
@@ -436,7 +437,7 @@ int metricRetrPageOutCounter( int mid,
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
 	  mv->mvData = (void*)mv + sizeof(MetricValue);
-	  *(unsigned long long*)mv->mvData = page;	 
+	  *(unsigned long long*)mv->mvData = htonll(page);	 
 	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
@@ -500,7 +501,7 @@ int metricRetrVirtualSize( int mid,
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
 	  mv->mvData = (void*)mv + sizeof(MetricValue);
-	  *(unsigned long long *)mv->mvData = size;	
+	  *(unsigned long long *)mv->mvData = htonll(size);	
 	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
@@ -565,7 +566,7 @@ int metricRetrSharedSize( int mid,
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
 	  mv->mvData = (void*)mv + sizeof(MetricValue);
-	  *(unsigned long long *)mv->mvData = size;	
+	  *(unsigned long long *)mv->mvData = htonll(size);	
 	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);

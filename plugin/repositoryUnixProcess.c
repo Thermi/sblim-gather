@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryUnixProcess.c,v 1.5 2004/11/03 08:16:36 heidineu Exp $
+ * $Id: repositoryUnixProcess.c,v 1.6 2004/11/09 16:18:18 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -41,6 +41,7 @@
 /* ---------------------------------------------------------------------------*/
 
 #include <mplugin.h>
+#include <commutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -512,6 +513,7 @@ size_t metricCalcResSetSize( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -534,6 +536,7 @@ size_t metricCalcPageInCounter( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -580,6 +583,7 @@ size_t metricCalcPageOutCounter( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -626,6 +630,7 @@ size_t metricCalcVirtualSize( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -648,6 +653,7 @@ size_t metricCalcSharedSize( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;

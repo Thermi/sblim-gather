@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.9 2004/11/03 08:16:36 heidineu Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.10 2004/11/09 16:18:18 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -53,11 +53,13 @@
 /* ---------------------------------------------------------------------------*/
 
 #include <mplugin.h>
+#include <commutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <time.h>
+#include <netinet/in.h>
 
 /* ---------------------------------------------------------------------------*/
 
@@ -476,6 +478,7 @@ size_t metricCalcNumOfUser( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long*)v = ntohl(*(unsigned long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -498,6 +501,7 @@ size_t metricCalcNumOfProc( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long*)v = ntohl(*(unsigned long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -976,6 +980,7 @@ size_t metricCalcPageInCounter( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -1022,6 +1027,7 @@ size_t metricCalcPageOutCounter( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -1068,6 +1074,7 @@ size_t metricCalcLoadCounter( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(float*)v = ntohf(*(float*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -1116,6 +1123,7 @@ size_t metricCalcContextSwitchCounter( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -1162,6 +1170,7 @@ size_t metricCalcHardwareInterruptCounter( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(unsigned long long*)v = ntohll(*(unsigned long long*)v);
     return mv->mvDataLength;
   }
   return -1;

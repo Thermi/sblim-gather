@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.12 2004/10/08 11:08:21 mihajlov Exp $
+ * $Id: metricOperatingSystem.c,v 1.13 2004/11/09 16:18:18 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -31,14 +31,16 @@
 /* ---------------------------------------------------------------------------*/
 
 #include <mplugin.h>
+#include <commutil.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>     
 #include <time.h>
-
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/utsname.h>
+#include <netinet/in.h>
 
 /* ---------------------------------------------------------------------------*/
 
@@ -251,7 +253,7 @@ int metricRetrNumOfUser( int mid,
       mv->mvDataType = MD_UINT32;
       mv->mvDataLength = sizeof(unsigned long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
-      *(unsigned long*)mv->mvData = atol(str);
+      *(unsigned long*)mv->mvData = htonl(atol(str));
       mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long);
       strcpy(mv->mvResource,resource);
       mret(mv);
@@ -308,7 +310,7 @@ int metricRetrNumOfProc( int mid,
       mv->mvDataType = MD_UINT32;
       mv->mvDataLength = sizeof(unsigned long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
-      *(unsigned long*)mv->mvData = nop;
+      *(unsigned long*)mv->mvData = htonl(nop);
       mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long);
       strcpy(mv->mvResource,resource);
       mret(mv);
@@ -525,7 +527,12 @@ int metricRetrPageInCounter( int mid,
       mv->mvDataType = MD_UINT64;
       mv->mvDataLength = sizeof(unsigned long long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
-      *(unsigned long long*)mv->mvData = in;
+      *(unsigned long long*)mv->mvData = htonll(in);
+
+
+      fprintf(stderr,"PageInCounter: origin %llu : converted %llu\n",in,*(unsigned long long*)mv->mvData);
+
+
       mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
       strcpy(mv->mvResource,resource);
       mret(mv);
@@ -593,7 +600,7 @@ int metricRetrPageOutCounter( int mid,
       mv->mvDataType = MD_UINT64;
       mv->mvDataLength = sizeof(unsigned long long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
-      *(unsigned long long*)mv->mvData = out;
+      *(unsigned long long*)mv->mvData = htonll(out);
       mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
       strcpy(mv->mvResource,resource);
       mret(mv);
@@ -642,7 +649,12 @@ int metricRetrLoadCounter( int mid,
       mv->mvDataType = MD_FLOAT32;
       mv->mvDataLength = sizeof(float);
       mv->mvData = (void*)mv + sizeof(MetricValue);
-      *(float*)mv->mvData = load;
+      *(float*)mv->mvData = htonf(load);
+
+
+      fprintf(stderr,"LoadCounter: origin %f : converted %f\n",load,*(float*)mv->mvData);
+
+
       mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(float);
       strcpy(mv->mvResource,resource);
       mret(mv);
@@ -694,7 +706,7 @@ int metricRetrContextSwitchCounter( int mid,
       mv->mvDataType = MD_UINT64;
       mv->mvDataLength = sizeof(unsigned long long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
-      *(unsigned long long*)mv->mvData = ctxt;
+      *(unsigned long long*)mv->mvData = htonll(ctxt);
       mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
       strcpy(mv->mvResource,resource);
       mret(mv);
@@ -747,7 +759,7 @@ int metricRetrHardwareInterruptCounter( int mid,
       mv->mvDataType = MD_UINT64;
       mv->mvDataLength = sizeof(unsigned long long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
-      *(unsigned long long*)mv->mvData = intr;
+      *(unsigned long long*)mv->mvData = htonll(intr);
       mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
       strcpy(mv->mvResource,resource);
       mret(mv);

@@ -1,11 +1,12 @@
-# $Id: makefile,v 1.8 2004/10/08 07:34:54 mihajlov Exp $
+# $Id: makefile,v 1.9 2004/11/09 16:18:17 heidineu Exp $
 
 # define the Hardware Platform the compile will run on
 HW=$(shell ./platform.sh)
 
 export CFLAGS=-Wall -g
-CPPFLAGS=-I .. -D$(HW) -I$(PEGASUS_ROOT)/src/Pegasus/Provider/CMPI
-LOADLIBES=
+CPPFLAGS=-I .. -I ../util -D$(HW) -I$(PEGASUS_ROOT)/src/Pegasus/Provider/CMPI
+LDFLAGS=-L .. -L ../util
+LOADLIBES=-lgatherutil
 
 SUBDIRS=
 SOURCES= metricOperatingSystem.c repositoryOperatingSystem.c \
