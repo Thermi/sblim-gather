@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.c,v 1.2 2004/08/04 09:00:04 heidineu Exp $
+ * $Id: metricProcessor.c,v 1.3 2004/10/08 11:06:41 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -142,6 +142,7 @@ int metricRetrCPUTimePerc( int mid,
     if( (fhd = fopen("/proc/stat","r")) != NULL ) {
 
       bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      buf[bytes_read] = 0; /* safeguard end of buffer */
       if( bytes_read > 0 ) {
 	for(;i<_enum_size;i++) {
 	  ptr = strchr(buf,'\n')+1;
@@ -204,11 +205,11 @@ int enum_all_proc() {
   if( pipe(fd_out)==0 && pipe(fd_err)==0 ) {
 
     fd_stdout = dup( fileno(stdout) );
-    close(fileno(stdout));
+    /*    close(fileno(stdout)); */
     dup2( fd_out[1], fileno(stdout) );
 
     fd_stderr = dup( fileno(stderr) );
-    close(fileno(stderr));
+    /*    close(fileno(stderr)); */
     dup2( fd_err[1], fileno(stderr) );
 
     cmd = calloc(1,(strlen(CPUINFO)+46));
@@ -220,6 +221,8 @@ int enum_all_proc() {
     if( rc == 0 ) { bytes_read = read( fd_out[0], buf, sizeof(buf)-1 ); }
     else          { bytes_read = read( fd_err[0], buf, sizeof(buf)-1 ); }
     
+    if (bytes_read >= 0) { buf[bytes_read] = 0; }
+
     close(fd_out[1]);
     dup2( fd_stdout, fileno(stdout) );
     close(fd_out[0]);

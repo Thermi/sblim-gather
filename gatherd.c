@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.3 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: gatherd.c,v 1.4 2004/10/08 11:06:41 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -52,6 +52,9 @@ int main(int argc, char * argv[])
   if (mcs_init(GATHER_COMMID)) {
     return -1;
   }
+
+  memset(buffer, 0, sizeof(buffer));
+
   while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
     if (hdr.mc_type != GATHERMC_REQ) {
       /* ignore unknown message types */

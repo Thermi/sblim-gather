@@ -1,0 +1,6 @@
+# Makefile for IPProtocolEndpoint Metric Installation
+include ../setting.cmpi
+
+install:	
+	install Linux_IPProtocolEndpointMetric.mof $(CIMOMMOF)
+	install Linux_IPProtocolEndpointMetricRegistration.mof $(CIMOMMOF)

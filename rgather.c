@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.7 2004/08/05 10:23:46 mihajlov Exp $
+ * $Id: rgather.c,v 1.8 2004/10/08 11:06:41 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -66,8 +66,10 @@ int rgather_unload()
 
   INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
   comm->gc_cmd=GCMD_QUIT;
   comm->gc_datalen=0;
+  comm->gc_result=0;
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
@@ -85,8 +87,10 @@ int rgather_init()
 
   INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
   comm->gc_cmd=GCMD_INIT;
   comm->gc_datalen=0;
+  comm->gc_result=0;
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
@@ -104,8 +108,10 @@ int rgather_terminate()
 
   INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
   comm->gc_cmd=GCMD_TERM;
   comm->gc_datalen=0;
+  comm->gc_result=0;
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0 &&
       mcc_term(rgatherhandle)==0) {
@@ -124,8 +130,10 @@ int rgather_start()
 
   INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
   comm->gc_cmd=GCMD_START;
   comm->gc_datalen=0;
+  comm->gc_result=0;
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
@@ -143,8 +151,10 @@ int rgather_stop()
 
   INITCHECK();
   hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
   comm->gc_cmd=GCMD_STOP;
   comm->gc_datalen=0;
+  comm->gc_result=0;
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
@@ -164,8 +174,10 @@ int rgather_status(GatherStatus *gs)
   if (gs) {
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
+    hdr.mc_handle=-1;
     comm->gc_cmd=GCMD_STATUS;
     comm->gc_datalen=0;
+    comm->gc_result=0;
     if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == sizeof(GatherStatus) + sizeof(GATHERCOMM)) {
@@ -186,8 +198,10 @@ int rmetricplugin_add(const char *pluginname)
   if (pluginname && *pluginname) {
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
+    hdr.mc_handle=-1;
     comm->gc_cmd=GCMD_ADDPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
+    comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
     if (mcc_request(rgatherhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
@@ -208,8 +222,10 @@ int rmetricplugin_remove(const char *pluginname)
   if (pluginname && *pluginname) {
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
+    hdr.mc_handle=-1;
     comm->gc_cmd=GCMD_REMPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
+    comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
     if (mcc_request(rgatherhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
@@ -233,8 +249,10 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
   if (pluginname && *pluginname && pdef) {
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
+    hdr.mc_handle=-1;
     comm->gc_cmd=GCMD_LISTPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
+    comm->gc_result=0;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
     if (mcc_request(rgatherhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&

@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.8 2004/10/07 12:55:22 heidineu Exp $
+ * $Id: metricUnixProcess.c,v 1.9 2004/10/08 11:06:41 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -191,6 +191,7 @@ int metricRetrCPUTime( int mid,
     /* get OS specific CPUTime */
     if( (fhd = fopen("/proc/stat","r")) != NULL ) {
       bytes_read = fread(os_buf, 1, sizeof(os_buf)-1, fhd);
+      os_buf[bytes_read] = 0; /* safeguard end of buffer */
       ptr = strstr(os_buf,"cpu")+3;
       while( *ptr == ' ') { ptr++; }
       end = strchr(ptr, '\n');

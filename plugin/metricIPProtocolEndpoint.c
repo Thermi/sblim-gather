@@ -1,5 +1,5 @@
 /*
- * $Id: metricIPProtocolEndpoint.c,v 1.1 2004/09/15 11:31:05 heidineu Exp $
+ * $Id: metricIPProtocolEndpoint.c,v 1.2 2004/10/08 11:06:41 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -124,6 +124,7 @@ int metricRetrBytesSubmitted( int mid,
 
     if( (fhd = fopen(NETINFO,"r")) != NULL ) {
       bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      buf[bytes_read] = 0; /* safeguard end of buffer */
       if( bytes_read > 0 ) {
 	/* skip first two lines */
 	ptr = strchr(buf,'\n')+1;
@@ -132,7 +133,7 @@ int metricRetrBytesSubmitted( int mid,
 	while( (end = strchr(ptr,'\n')) != NULL ) {
 	  sscanf(ptr,
 		 "%s %lld %lld %lld %*s %*s %*s %*s %*s %lld %lld %lld",
-		 &port,
+		 port,
 		 &receive_byte,&receive_packets,&receive_error,
 		 &trans_byte,&trans_packets,&trans_error);
 	  
@@ -145,7 +146,8 @@ int metricRetrBytesSubmitted( int mid,
 		  receive_byte,trans_byte,receive_error,trans_error,receive_packets,trans_packets);
 	  
 	  mv = calloc(1, sizeof(MetricValue) + 
-		      (strlen(values)+1) + 
+		      (strlen(values)+1) +
+		      strlen("IPv4_") +
 		      (strlen(port)+1) );
 	  if (mv) {
 	    mv->mvId = mid;
@@ -155,7 +157,8 @@ int metricRetrBytesSubmitted( int mid,
 	    mv->mvData = (void*)mv + sizeof(MetricValue);
 	    strcpy(mv->mvData,values);
 	    mv->mvResource = (void*)mv + sizeof(MetricValue) + (strlen(values)+1);
-	    strcpy(mv->mvResource,port);
+	    strcpy(mv->mvResource,"IPv4_");
+	    strcat(mv->mvResource,port);
 	    mret(mv);
 	  } 
 	  ptr = end+1;

@@ -1,5 +1,5 @@
 /*
- * $Id: metricNetworkPort.c,v 1.3 2004/09/15 11:29:40 heidineu Exp $
+ * $Id: metricNetworkPort.c,v 1.4 2004/10/08 11:06:41 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -124,6 +124,7 @@ int metricRetrBytesSubmitted( int mid,
 
     if( (fhd = fopen(NETINFO,"r")) != NULL ) {
       bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      buf[bytes_read] = 0; /* safeguard end of buffer */
       if( bytes_read > 0 ) {
 	/* skip first two lines */
 	ptr = strchr(buf,'\n')+1;

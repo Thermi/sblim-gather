@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.10 2004/09/23 13:00:37 heidineu Exp $
+ * $Id: metricOperatingSystem.c,v 1.11 2004/10/08 11:06:41 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -221,11 +221,11 @@ int metricRetrNumOfUser( int mid,
       memset(str,0,sizeof(str));
 
       fd_stdout = dup( fileno(stdout) );
-      close(fileno(stdout));
+      /*      close(fileno(stdout));*/
       dup2( fd_out[1], fileno(stdout) );
 
       fd_stderr = dup( fileno(stderr) );
-      close(fileno(stderr));
+      /*      close(fileno(stderr));*/
       dup2( fd_err[1], fileno(stderr) );
 
       rc = system("who -u | wc -l");
@@ -357,6 +357,7 @@ int metricRetrCPUTime( int mid,
     if( (fhd = fopen("/proc/stat","r")) != NULL ) {
 
       bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      buf[bytes_read] = 0; /* safeguard end of buffer */
       ptr = strstr(buf,"cpu")+3;
       while( *ptr == ' ') { ptr++; }
       end = strchr(ptr, '\n');
@@ -429,6 +430,7 @@ int metricRetrMemorySize( int mid,
     if ( (fhd=fopen("/proc/meminfo","r")) != NULL ) {
 
       bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      buf[bytes_read] = 0; /* safeguard end of buffer */
 
       ptr = strstr(buf,"MemTotal");
       sscanf(ptr, "%*s %lld", &totalPhysMem);
@@ -497,6 +499,7 @@ int metricRetrPageInCounter( int mid,
     if(kernel_release() < 25000 ) {
       if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
 	bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+	buf[bytes_read] = 0; /* safeguard end of buffer */
 	ptr = strstr(buf,"swap");
 	sscanf(ptr, "%*s %lld", &in);
 	fclose(fhd);
@@ -507,6 +510,7 @@ int metricRetrPageInCounter( int mid,
     else {
       if ( (fhd=fopen("/proc/vmstat","r")) != NULL ) {
 	bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+	buf[bytes_read] = 0; /* safeguard end of buffer */
 	ptr = strstr(buf,"pswpin");
 	sscanf(ptr, "%*s %lld", &in);
 	fclose(fhd);
@@ -563,6 +567,7 @@ int metricRetrPageOutCounter( int mid,
     if(kernel_release() < 25000 ) {
       if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
 	bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+	buf[bytes_read] = 0; /* safeguard end of buffer */
 	ptr = strstr(buf,"swap");
 	sscanf(ptr, "%*s %*s %lld", &out);
 	fclose(fhd);
@@ -573,6 +578,7 @@ int metricRetrPageOutCounter( int mid,
     else {
       if ( (fhd=fopen("/proc/vmstat","r")) != NULL ) {
 	bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+	buf[bytes_read] = 0; /* safeguard end of buffer */
 	ptr = strstr(buf,"pswpout");
 	sscanf(ptr, "%*s %lld", &out);
 	fclose(fhd);
@@ -674,6 +680,7 @@ int metricRetrContextSwitchCounter( int mid,
 #endif
     if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
       bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      buf[bytes_read] = 0; /* safeguard end of buffer */
       ptr = strstr(buf,"ctxt");
       sscanf(ptr, "%*s %lld", &ctxt);
       fclose(fhd);
@@ -726,6 +733,7 @@ int metricRetrHardwareInterruptCounter( int mid,
 #endif
     if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
       bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      buf[bytes_read] = 0; /* safeguard end of buffer */
       ptr = strstr(buf,"intr");
       sscanf(ptr, "%*s %lld", &intr);
       fclose(fhd);

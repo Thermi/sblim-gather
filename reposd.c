@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.4 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: reposd.c,v 1.5 2004/10/08 11:06:41 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -59,6 +59,9 @@ int main(int argc, char * argv[])
   if (mcs_init(REPOS_COMMID)) {
     return -1;
   }
+
+  memset(buffer, 0, sizeof(buffer));
+  
   while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
     if (hdr.mc_type != GATHERMC_REQ) {
       /* ignore unknown message types */

@@ -17,12 +17,13 @@ ifeq ("$(MOFMAKEFILE)","makefile.pegasus")
 	$(MAKE) -f makefile.Processor.pegasus install
 	$(MAKE) -f makefile.LocalFileSystem.pegasus install
 	$(MAKE) -f makefile.NetworkPort.pegasus install
+	$(MAKE) -f makefile.IPProtocolEndpoint.pegasus install
 else
 	$(MAKE) -f makefile.OperatingSystem.standalone install
 	$(MAKE) -f makefile.UnixProcess.standalone install
 	$(MAKE) -f makefile.Processor.standalone install
 	$(MAKE) -f makefile.LocalFileSystem.standalone install
-	$(MAKE) -f makefile.NetworkPort.standalone install
+	$(MAKE) -f makefile.IPProtocolEndpoint.standalone install
 endif
 
 uninstall:
