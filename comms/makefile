@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+# $Id: makefile,v 1.2 2004/03/27 18:55:45 mihajlov Exp $
 
 export CFLAGS=-Wall -g
 LDFLAGS=$(CFLAGS)
@@ -34,10 +34,10 @@ distclean: clean
 	$(RM) $(DEPFILES)
 
 install: all
-	/usr/bin/install libmcserv.so $(INSTALLROOT)/usr/local/lib
+	/usr/bin/install libmcserv.so $(INSTALLROOT)/usr/lib
 
 uninstall:
-	$(RM) $(INSTALLROOT)/usr/local/lib/libmcserv.so
+	$(RM) $(INSTALLROOT)/usr/lib/libmcserv.so
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)

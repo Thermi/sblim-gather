@@ -1,0 +1,6 @@
+# Makefile for UnixProcess Metric Installation
+include ../setting.cmpi
+
+install:	
+	install Linux_UnixProcessMetric.mof $(CIMOMMOF)
+	install Linux_UnixProcessMetricRegistration.mof $(CIMOMMOF)

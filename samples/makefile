@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+# $Id: makefile,v 1.2 2004/03/27 18:55:46 mihajlov Exp $
 
 export CFLAGS=-Wall -g 
 CPPFLAGS=-I ..
@@ -24,10 +24,10 @@ distclean: clean
 	$(RM) $(DEPFILES)
 
 install: all
-	/usr/bin/install libmetricSample?.so $(INSTALLROOT)/usr/local/lib
+#	/usr/bin/install libmetricSample?.so $(INSTALLROOT)/usr/lib
 
 uninstall:
-	$(RM) $(INSTALLROOT)/usr/local/lib/libmetricSample?.so
+#	$(RM) $(INSTALLROOT)/usr/lib/libmetricSample?.so
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)

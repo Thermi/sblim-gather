@@ -1,0 +1,6 @@
+# Makefile for LocalFileSystem Metric Installation
+include ../setting.cmpi
+
+install:	
+	install Linux_LocalFileSystemMetric.mof $(CIMOMMOF)
+	install Linux_LocalFileSystemMetricRegistration.mof $(CIMOMMOF)

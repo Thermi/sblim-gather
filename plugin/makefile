@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+# $Id: makefile,v 1.2 2004/03/27 18:55:45 mihajlov Exp $
 
 # define the Hardware Platform the compile will run on
 HW=$(shell ./platform.sh)
 
-export CFLAGS=-Wall -g -D$(HW)
-CPPFLAGS=-I ..
+# export CFLAGS=-Wall -g
+CPPFLAGS=-I .. -D$(HW) 
 LOADLIBES=
 
 SUBDIRS=
@@ -26,18 +26,18 @@ distclean: clean
 	$(RM) $(DEPFILES)
 
 install: all
-	/usr/bin/install libmetricOperatingSystem.so $(INSTALLROOT)/usr/local/lib
-	/usr/bin/install libmetricLocalFileSystem.so $(INSTALLROOT)/usr/local/lib
-	/usr/bin/install libmetricUnixProcess.so $(INSTALLROOT)/usr/local/lib
-	/usr/bin/install libmetricProcessor.so $(INSTALLROOT)/usr/local/lib
-	/usr/bin/install libmetricNetworkPort.so $(INSTALLROOT)/usr/local/lib
+	/usr/bin/install libmetricOperatingSystem.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install libmetricLocalFileSystem.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install libmetricUnixProcess.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install libmetricProcessor.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install libmetricNetworkPort.so $(INSTALLROOT)/usr/lib
 
 unistall:
-	$(RM) $(INSTALLROOT)/usr/local/lib/libmetricOperatingSystem.so
-	$(RM) $(INSTALLROOT)/usr/local/lib/libmetricLocalFileSystem.so
-	$(RM) $(INSTALLROOT)/usr/local/lib/libmetricUnixProcess.so
-	$(RM) $(INSTALLROOT)/usr/local/lib/libmetricProcessor.so
-	$(RM) $(INSTALLROOT)/usr/local/lib/libmetricNetworkPort.so
+	$(RM) $(INSTALLROOT)/usr/lib/libmetricOperatingSystem.so
+	$(RM) $(INSTALLROOT)/usr/lib/libmetricLocalFileSystem.so
+	$(RM) $(INSTALLROOT)/usr/lib/libmetricUnixProcess.so
+	$(RM) $(INSTALLROOT)/usr/lib/libmetricProcessor.so
+	$(RM) $(INSTALLROOT)/usr/lib/libmetricNetworkPort.so
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)

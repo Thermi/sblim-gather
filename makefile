@@ -1,6 +1,6 @@
-# $Id: makefile,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+# $Id: makefile,v 1.2 2004/03/27 18:55:45 mihajlov Exp $
 
-export CFLAGS=-Wall -g 
+export CFLAGS=-Wall -g -fPIC
 CPPFLAGS=-Icomms
 LOADLIBES=-lpthread -ldl
 
@@ -36,16 +36,16 @@ distclean: clean
 	$(RM) $(DEPFILES)
 
 install: all
-	/usr/bin/install -m755 gatherd   $(INSTALLROOT)/usr/local/bin
-	/usr/bin/install -m755 gatherctl $(INSTALLROOT)/usr/local/bin
-	/usr/bin/install libgather.so    $(INSTALLROOT)/usr/local/lib
-	/usr/bin/install librgather.so   $(INSTALLROOT)/usr/local/lib
+	/usr/bin/install -m755 gatherd   $(INSTALLROOT)/usr/bin
+	/usr/bin/install -m755 gatherctl $(INSTALLROOT)/usr/bin
+	/usr/bin/install libgather.so    $(INSTALLROOT)/usr/lib
+	/usr/bin/install librgather.so   $(INSTALLROOT)/usr/lib
 
 uninstall: $(SUBDIRS)
-	$(RM) $(INSTALLROOT)/usr/local/lib/librgather.so \
-		$(INSTALLROOT)/usr/local/lib/libgather.so \
-		$(INSTALLROOT)/usr/local/bin/gatherd \
-		$(INSTALLROOT)/usr/local/bin/gatherctl
+	$(RM) $(INSTALLROOT)/usr/lib/librgather.so \
+		$(INSTALLROOT)/usr/lib/libgather.so \
+		$(INSTALLROOT)/usr/bin/gatherd \
+		$(INSTALLROOT)/usr/bin/gatherctl
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)

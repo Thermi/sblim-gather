@@ -1,9 +1,9 @@
-# $Id: makefile,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+# $Id: makefile,v 1.2 2004/03/27 18:55:46 mihajlov Exp $
 
-include env
+include setting.cmpi
 
 export CFLAGS=-Wall -g 
-CPPFLAGS=-I .. -I $(CMPIINCL)
+CPPFLAGS=-I .. -I $(CIMOMINC)
 LOADLIBES=-L .. -lrgather
 
 SUBDIRS=mof
@@ -20,7 +20,7 @@ all: $(SUBDIRS) libOSBase_MetricDefinitionProvider.so \
 	libOSBase_MetricValueProvider.so \
 	libOSBase_MetricGathererProvider.so	
 
-libOSBase_MetricGathererProvider.so: LDLIBS=-L $(CMPILIB) -lcmpiOSBase_Common
+libOSBase_MetricGathererProvider.so: LDLIBS=-lcmpiOSBase_Common
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) libOSBase_Metric*.so
@@ -30,7 +30,7 @@ distclean: clean
 	$(RM) $(DEPFILES)
 
 install: all 
-	install libOSBase_Metric*.so $(CMPILIB)
+	install libOSBase_Metric*.so $(CIMOMLIB)
 
 uninstall: all
 	$(RM) $(CMPILIB)/libOSBase_Metric*.so

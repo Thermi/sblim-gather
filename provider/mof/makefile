@@ -2,18 +2,28 @@
 
 
 include ../../rules
+include ../setting.cmpi
 
 .PHONY: all install uninstall clean distclean
 
 all:
 
 install: 
-	$(MAKE) -f makefile.pegasus install
+	echo $(MOFMAKEFILE)
+	$(MAKE) -f $(MOFMAKEFILE) install
+ifeq ($(MOFMAKEFILE),"makefile.pegasus")
 	$(MAKE) -f makefile.OperatingSystem.pegasus install
 	$(MAKE) -f makefile.UnixProcess.pegasus install
 	$(MAKE) -f makefile.Processor.pegasus install
 	$(MAKE) -f makefile.LocalFileSystem.pegasus install
 	$(MAKE) -f makefile.NetworkPort.pegasus install
+else
+	$(MAKE) -f makefile.OperatingSystem.standalone install
+	$(MAKE) -f makefile.UnixProcess.standalone install
+	$(MAKE) -f makefile.Processor.standalone install
+	$(MAKE) -f makefile.LocalFileSystem.standalone install
+	$(MAKE) -f makefile.NetworkPort.standalone install
+endif
 
 uninstall:
 

@@ -1,0 +1,6 @@
+# Makefile for NetworkPort Metric Installation
+include ../setting.cmpi
+
+install:	
+	install Linux_NetworkPortMetric.mof $(CIMOMMOF)
+	install Linux_NetworkPortMetricRegistration.mof $(CIMOMMOF)
