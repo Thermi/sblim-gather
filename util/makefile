@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2004/10/21 15:51:18 mihajlov Exp $
+# $Id: makefile,v 1.5 2004/11/09 16:19:42 heidineu Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
@@ -7,7 +7,7 @@ LDFLAGS=$(CFLAGS)
 LDLIBS=-lpthread
 
 SUBDIRS=
-SOURCES=mrwlock.c commheap.c gatherutil.c \
+SOURCES=mrwlock.c commheap.c commutil.c gatherutil.c \
 	mcfg.c mcfgtest.c gathercfg.c reposcfg.c mlog.c mtrace.c \
 	mtracetest.c merrno.c merrnotest.c
 
@@ -22,7 +22,7 @@ include ../rules
 
 all: $(SUBDIRS) $(LIBRARIES) $(EXECUTABLES)
 
-libgatherutil.so: gatherutil.o commheap.o mrwlock.o mcfg.o gathercfg.o \
+libgatherutil.so: gatherutil.o commheap.o commutil.o mrwlock.o mcfg.o gathercfg.o \
 		reposcfg.o mlog.o mtrace.o merrno.o
 
 mcfgtest: mcfgtest.o mcfg.o mlog.o
