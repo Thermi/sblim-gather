@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.2 2004/09/24 15:30:29 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.3 2004/09/27 15:53:48 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -353,7 +353,7 @@ static char * metricClassName(const CMPIObjectPath *path)
   }
 }
 
-int pluginForClass(CMPIBroker *broker, CMPIContext *ctx, 
+static int pluginForClass(CMPIBroker *broker, CMPIContext *ctx, 
 		   const CMPIObjectPath *cop, char *pluginname)
 {
   char *metricclass = metricClassName(cop);
@@ -374,6 +374,83 @@ int pluginForClass(CMPIBroker *broker, CMPIContext *ctx,
   }
   MReadUnlock(&MdefLock);
   return -1;
+}
+
+int getPluginNamesForValueClass(CMPIBroker *broker, CMPIContext *ctx, 
+				const CMPIObjectPath *cop, char ***pluginnames)
+{
+  char  pluginname[500];
+  char *valclassname;
+  int   i=0, j=0;
+  int   totalnum=0;
+ 
+  if (pluginnames==NULL) {
+    return -1;
+  }
+  
+  /* search for matching value class and get plugin if found */
+  if (metricValueList==NULL) {
+    /* refresh definitions and values lists */
+    refreshMetricDefClasses(broker,ctx,CMGetCharPtr(CMGetNameSpace(cop,NULL)));
+  }  
+  MReadLock(&MdefLock);
+  valclassname=CMGetCharPtr(CMGetClassName(cop,NULL));
+  pluginname[0]=0;
+  while(metricValueList && metricValueList[i].mval_classname) {
+    if (strcmp(valclassname,metricValueList[i].mval_classname)==0) {
+      /* found definition class for valu class - now get plugin */
+      while(metricDefinitionList && metricDefinitionList[j].mdef_metricname) {
+	if (strcmp(metricValueList[i].mdef_classname,
+		   metricDefinitionList[j].mdef_classname)==0) {
+	  strcpy(pluginname, metricDefinitionList[j].mdef_pluginname);
+	  break;
+	}
+	j++;
+      }
+      break;
+    }
+    i++;
+  }
+  MReadUnlock(&MdefLock);
+	
+  if (pluginname[0]){
+    /* found plugin for this class */
+    *pluginnames = malloc(2*sizeof(char*));
+    (*pluginnames)[0] = strdup(pluginname);
+    (*pluginnames)[1] = NULL;
+    return 1;
+  } else {
+    /* no exact match - return all plugins */
+    *pluginnames=NULL;
+    MReadLock(&MdefLock);
+    i=0;
+    while(metricDefinitionList && metricDefinitionList[i].mdef_metricname) {
+      if (strcmp(pluginname,metricDefinitionList[i].mdef_pluginname)) {
+	/* a new plugin name found -- add to list */
+	strcpy(pluginname,metricDefinitionList[i].mdef_pluginname);
+	*pluginnames=realloc(*pluginnames, sizeof(char*)*(i+1));
+	(*pluginnames)[totalnum]=strdup(pluginname);
+	(*pluginnames)[totalnum+1]=NULL;
+	totalnum++;
+	MReadUnlock(&MdefLock);
+      }
+      i++;
+    }
+    MReadUnlock(&MdefLock);    
+    return totalnum;
+  }  
+}
+
+void releasePluginNames(char **pluginnames)
+{
+  int i = 0;
+  if (pluginnames) {
+    while (pluginnames[i]) {
+      free (pluginnames[i]);
+      i++;
+    }
+    free (pluginnames);
+  }
 }
 
 int getMetricDefsForClass(CMPIBroker *broker, CMPIContext *ctx, 
