@@ -1,5 +1,5 @@
 /*
- * $Id: rcctest.c,v 1.2 2004/10/14 15:54:25 heidineu Exp $
+ * $Id: rcctest.c,v 1.3 2004/10/14 16:28:50 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -40,6 +40,7 @@ int main()
   start=time(NULL);
 
   gethostname((char*)&hostname,sizeof(hostname));
+  //sprintf(hostname,"");
   if (rcc_init(hostname,&port) < 0 ) {
     return -1;
   }
@@ -57,6 +58,7 @@ int main()
       if (rcc_request(buf,strlen(buf))==0) {
 	fprintf(stderr,"send : %s\n",buf);
       }
+      else { break; }
       sleep(3);
       if (transactions++ == 10) {
 	end = time(NULL);

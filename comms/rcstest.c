@@ -1,5 +1,5 @@
 /*
- * $Id: rcstest.c,v 1.1 2004/10/14 14:19:33 heidineu Exp $
+ * $Id: rcstest.c,v 1.2 2004/10/14 16:28:50 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -37,7 +37,7 @@ static pthread_mutex_t connect_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void * _get_request(void * hdl)
 {
-  int    i      = 0;
+  int    i = 0;
   char   buf[500];
   size_t buflen;
 
@@ -49,7 +49,7 @@ static void * _get_request(void * hdl)
       fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
       break;
     }
-    //    fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buf);
+    fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buf);
   }
 
   pthread_mutex_lock(&connect_mutex);
