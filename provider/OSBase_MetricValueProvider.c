@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.8 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.9 2004/11/04 09:47:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -175,6 +175,7 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
     // get value 
     vr.vsId = vId;
     vr.vsResource = vResource;
+    vr.vsSystemId = vSystemId;
     vr.vsFrom = vr.vsTo = vTimestamp;
     if (rrepos_get(&vr,ch)== 0) {
       if( _debug )
@@ -306,6 +307,7 @@ static void returnPathes(CMPIBroker *_broker,
   for (i=0; i < rdefnum; i++) {
     vr.vsId = rdef[i].rdId;
     vr.vsResource = NULL;
+    vr.vsSystemId = NULL;
     vr.vsFrom = vr.vsTo = 0;
     if( _debug )
       fprintf( stderr, "::: getting value for id %d\n", rdef[i].rdId);
@@ -345,6 +347,7 @@ static void returnInstances(CMPIBroker *_broker,
   for (i=0; i < rdefnum; i++) {
     vr.vsId = rdef[i].rdId;
     vr.vsResource = NULL;
+    vr.vsSystemId = NULL;
     vr.vsFrom = vr.vsTo = 0;
     if( _debug )
       fprintf( stderr, "::: getting value for id %d\n", rdef[i].rdId);

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.5 2004/11/03 08:16:36 heidineu Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.6 2004/11/04 09:47:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -660,7 +660,9 @@ static FreeResourceClasses * _GetFreeRes(const char *pluginname);
 int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx, 
 				 const CMPIObjectPath* cop,
 				 char ***metricnames,
-				 int **mids, char ***resourceids)
+				 int **mids, 
+				 char ***resourceids,
+				 char ***systemids)
 {
   /* inefficient -- need better buffering */
   GetResourceClasses       *getres;
@@ -677,6 +679,7 @@ int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx,
 
   *mids=NULL;
   *resourceids=NULL;
+  *systemids=NULL;
   *metricnames=NULL;
   classname=CMGetCharPtr(CMGetClassName(cop,NULL));
   namesp=CMGetCharPtr(CMGetNameSpace(cop,NULL));
@@ -704,11 +707,13 @@ int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx,
 		*mids=realloc(*mids,sizeof(int)*(k+1));
 		*metricnames=realloc(*metricnames,sizeof(char*)*(k+2));
 		*resourceids=realloc(*resourceids,sizeof(char*)*(k+2));
+		*systemids=realloc(*systemids,sizeof(char*)*(k+2));
 		(*metricnames)[k] = 
 		  strdup(metricDefinitionList[i].mdef_metricname);
 		(*metricnames)[k+1] = NULL;
 		(*mids)[k] = metricDefinitionList[i].mdef_metricid;
 		(*resourceids)[k] = strdup(resourcename);
+		(*systemids)[k] = strdup(systemname);
 		k++;
 	      }
 	    }
@@ -725,7 +730,8 @@ int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx,
   return k;
 }
 
-void releaseMetricIds(char **metricnames,int *mids, char **resourceids) 
+void releaseMetricIds(char **metricnames,int *mids, char **resourceids,
+		      char **systemids)  
 {
 }
 

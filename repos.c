@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.7 2004/11/03 08:16:36 heidineu Exp $
+ * $Id: repos.c,v 1.8 2004/11/04 09:47:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -208,7 +208,8 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
   MetricValue                **mv=NULL;
   int                          i,j;
   int                          id;
-  char                       **resources=NULL;
+  MetricResourceId             singleResource;
+  MetricResourceId             *resources=NULL;
   int                          resnum=0; 
   int                         *numv=NULL;
   int                          totalnum=0;
@@ -220,11 +221,15 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
     mc=RPR_GetMetric(vs->vsId);
     if (mc && mc->mcCalc) {
       id = (mc->mcMetricType&MD_CALCULATED) ? mc->mcAliasId : vs->vsId;
-      if  (vs->vsResource) {
-	resources = &vs->vsResource;
+      if  (vs->vsResource && vs->vsSystemId) {
+	resources = &singleResource;
+	resources->mrid_resource = vs->vsResource;
+	resources->mrid_system = vs->vsSystemId;
 	resnum = 1;
       } else {
-	resnum = MetricRepository->mres_retrieve(id,&resources);
+	resnum = MetricRepository->mres_retrieve(id,&resources,
+						 vs->vsResource,
+						 vs->vsSystemId);
       }
       if ( (mc->mcMetricType&MD_INTERVAL) 
 	   || (mc->mcMetricType&MD_RATE) 
@@ -243,7 +248,7 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	numv = calloc(resnum,sizeof(int));
 	for (j=0; j < resnum; j++) {
 	  if (MetricRepository-> mrep_retrieve(id,
-					       resources[j],
+					       resources + j,
 					       &mv[j],
 					       &numv[j],
 					       vs->vsFrom,
@@ -289,9 +294,12 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	      resnum -= 1;
 	      vs->vsNumValues -= 1;
 	      continue;
-	    }	      
-	    vs->vsValues[actnum].viResource=ch_alloc(ch,strlen(resources[j])+1);
-	    strcpy(vs->vsValues[actnum].viResource,resources[j]);
+	    }
+	    /* Q: Shouldn't we use the resource from the value ?*/
+	    vs->vsValues[actnum].viResource=
+	      ch_alloc(ch,strlen(resources[j].mrid_resource)+1);
+	    strcpy(vs->vsValues[actnum].viResource,
+		   resources[j].mrid_resource);
 	    actnum += 1;
 	  } else {	
 	    for (i=0; i < numv[j]; i++) {
@@ -313,14 +321,16 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 		vs->vsNumValues -= 1;
 		continue;
 	      }	      
+	      /* Q: Shouldn't we use the resource from the value ?*/
 	      vs->vsValues[actnum+i].viResource=
-		ch_alloc(ch,strlen(resources[j])+1);
-	      strcpy(vs->vsValues[actnum+i].viResource,resources[j]);
+		ch_alloc(ch,strlen(resources[j].mrid_resource)+1);
+	      strcpy(vs->vsValues[actnum+i].viResource,
+		     resources[j].mrid_resource);
 	    }
 	    actnum = actnum + numv[j];
 	  }
 	}
-	if (vs->vsResource == NULL && resources) {
+	if (vs->vsResource == NULL && vs->vsSystemId == NULL &&  resources) {
 	  MetricRepository->mres_release(resources);
 	}
 	for (j=0; j < resnum; j++) {

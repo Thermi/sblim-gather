@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.h,v 1.4 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.h,v 1.5 2004/11/04 09:47:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -65,8 +65,11 @@ void releaseMetricDefs(char **mnames,int *mids);
 int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx, 
 				 const CMPIObjectPath* cop,
 				 char ***metricnames,
-				 int **mids, char ***resourceids);
-void releaseMetricIds(char **metricnames, int *mids, char **resourceids); 
+				 int **mids, 
+				 char ***resourceids,
+				 char ***systemids);
+void releaseMetricIds(char **metricnames, int *mids, char **resourceids,
+		      char **systemids); 
 
 /* support for instance and object path construction */
 CMPIInstance * makeMetricValueInst(CMPIBroker * broker, 

@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.6 2004/11/03 08:16:36 heidineu Exp $
+ * $Id: repos.h,v 1.7 2004/11/04 09:47:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -79,6 +79,7 @@ typedef struct _ValueItem {
 typedef struct _ValueRequest {
   int         vsId;
   char       *vsResource;
+  char       *vsSystemId;
   time_t      vsFrom;
   time_t      vsTo;
   unsigned    vsDataType;

@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.14 2004/10/21 13:55:11 heidineu Exp $
+ * $Id: reposd.c,v 1.15 2004/11/04 09:47:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -83,6 +83,7 @@ int main(int argc, char * argv[])
   void         *vp, *vpmax;
   int           i,j;
   size_t        valreslen;
+  size_t        valsyslen;
   RepositoryPluginDefinition *rdef;
   char         *pluginname, *metricname;
   MetricValue  *mv;
@@ -261,7 +262,8 @@ int main(int argc, char * argv[])
 	/* the transmitted ValueRequest contains
 	 * 1: Header
 	 * 2: ResourceName
-	 * 3: ValueItems
+	 * 3: System Id
+	 * 4: ValueItems
 	 */
 	vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
 	vp=vr;
@@ -273,7 +275,14 @@ int main(int argc, char * argv[])
 	} else {
 	  valreslen = 0;
 	}
-	vi=(void*)vr+sizeof(ValueRequest)+valreslen;
+	if (vr->vsSystemId) {
+	  /* adjust pointer to system id */
+	  vr->vsSystemId = (void*)vr + sizeof(ValueRequest) + valreslen;
+	  valsyslen = strlen(vr->vsSystemId) + 1;
+	} else {
+	  valsyslen = 0;
+	}
+	vi=(void*)vr+sizeof(ValueRequest)+valreslen+valsyslen;
 	vr->vsValues=NULL;
 	ch=ch_init();
 	comm->gc_result=reposvalue_get(vr,ch);

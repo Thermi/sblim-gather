@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricForMEProvider.c,v 1.1 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.2 2004/11/04 09:47:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -79,6 +79,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
   int             metricid;
   char          **metricnames;
   char          **resources;
+  char          **systems;
   int            *metricids;
   int             midnum, i, j;
   COMMHEAP        ch;
@@ -117,13 +118,16 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
     /* get all metric values for resource class */
     midnum=getMetricIdsForResourceClass(_broker,ctx,cop,
 					&metricnames,
-					&metricids,&resources);
+					&metricids,
+					&resources,
+					&systems);
     if (checkRepositoryConnection()) {
       ch=ch_init();
       for(i=0; i<midnum; i++) {
 	/* for all metric ids retrieve data for given resource */
 	vr.vsId=metricids[i];
 	vr.vsResource=resources[i];
+	vr.vsSystemId=systems[i];
 	vr.vsFrom=vr.vsTo=0;
 	if (rrepos_get(&vr,ch)==0) {
 	  for (j=0; j < vr.vsNumValues; j++) {
@@ -150,7 +154,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
       }
       ch_release(ch);
     }
-    releaseMetricIds(metricnames,metricids,resources);
+    releaseMetricIds(metricnames,metricids,resources,systems);
   }
   CMReturnDone(rslt);
   

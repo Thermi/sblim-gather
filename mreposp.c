@@ -1,5 +1,5 @@
 /*
- * $Id: mreposp.c,v 1.3 2004/08/04 07:29:26 mihajlov Exp $
+ * $Id: mreposp.c,v 1.4 2004/11/04 09:47:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -27,7 +27,7 @@
 #include <string.h>
   
 int ProxyMetricAdd (MetricValue *mv);
-int ProxyMetricRetrieve (int mid, char *resource,
+int ProxyMetricRetrieve (int mid, MetricResourceId *resource,
 			 MetricValue **mv, int *num, 
 			 time_t from, time_t to, int maxnum);
 int ProxyMetricRelease (MetricValue *mv);
@@ -98,7 +98,7 @@ int ProxyMetricAdd (MetricValue *mv)
  *    ii) from== 0 retrieve the newest "maxnum" entries 
  */
 
-int ProxyMetricRetrieve (int mid, char *resource,
+int ProxyMetricRetrieve (int mid, MetricResourceId *resource,
 			 MetricValue **mv, int *num, 
 			 time_t from, time_t to, int maxnum)
 {

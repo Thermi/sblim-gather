@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.13 2004/10/19 16:22:22 heidineu Exp $
+ * $Id: rrepos.c,v 1.14 2004/11/04 09:47:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -190,22 +190,29 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
   size_t        commlen=sizeof(xbuf);
   size_t        resourcelen;
+  size_t        systemlen;
   void         *vp;
   int           i;
 
   if (vr) {
     INITCHECK();
     resourcelen = vr->vsResource ? strlen(vr->vsResource) + 1 : 0;
+    systemlen = vr->vsSystemId ? strlen(vr->vsSystemId) + 1 : 0;
     hdr.mc_type=GATHERMC_REQ;
     hdr.mc_handle=-1;
     comm->gc_cmd=GCMD_GETVALUE;
-    comm->gc_datalen=sizeof(ValueRequest) + resourcelen;
+    comm->gc_datalen=sizeof(ValueRequest) + resourcelen + systemlen;
     comm->gc_result=0;
     /* copy parameters into xmit buffer and perform fixup for string */
     memcpy(xbuf+sizeof(GATHERCOMM),vr,sizeof(ValueRequest));
     if (resourcelen) {
       /* empty resource is allowed */
       strcpy(xbuf+sizeof(GATHERCOMM) + sizeof(ValueRequest),vr->vsResource);
+    }
+    if (systemlen) {
+      /* empty system id is allowed */
+      strcpy(xbuf+sizeof(GATHERCOMM) + sizeof(ValueRequest) + resourcelen,
+	     vr->vsSystemId);
     }
     pthread_mutex_lock(&rrepos_mutex);
     if (mcc_request(rreposhandle,&hdr,comm,
@@ -217,8 +224,9 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
 	 * allocate array elements and adjust pointers */
 	memcpy(vr,xbuf+sizeof(GATHERCOMM),sizeof(ValueRequest));
 	vr->vsValues=ch_alloc(ch,vr->vsNumValues*sizeof(ValueItem));
-	/* must consider resource name length */
-	vp = xbuf + sizeof(GATHERCOMM) + sizeof(ValueRequest) + resourcelen;
+	/* must consider resource name and system id length */
+	vp = xbuf + sizeof(GATHERCOMM) + sizeof(ValueRequest) + 
+	  resourcelen + systemlen;
 	memcpy(vr->vsValues,vp,sizeof(ValueItem)*vr->vsNumValues);
 	vp += vr->vsNumValues*sizeof(ValueItem);
 	for (i=0; i<vr->vsNumValues; i++) {

@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.5 2004/10/18 11:34:38 heidineu Exp $
+ * $Id: reposctl.c,v 1.6 2004/11/04 09:47:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -33,7 +33,7 @@ static const char* commands[] = {
   "\tu plugin\tunload plugin\n",
   "\tv plugin\tview/list metrics for plugin\n",
   "\tq\t\tquit\n",
-  "\tg id [resource [from [to]]]\tget metric value\n",
+  "\tg id [system [resource [from [to]]]]\tget metric value\n",
   "\tk\t\tkill daemon\n",
   "\td\t\tstart daemon\n",
   NULL
@@ -47,6 +47,7 @@ int main()
   char             *arg;
   char              buf[500];
   char              argbuf[500];
+  char              argbuf2[500];
   int               quit=0;
   int               i, j;
   RepositoryStatus  rs;
@@ -112,9 +113,15 @@ int main()
       vr.vsId = 0;
       offFrom = 0;
       offTo  = 0;
-      vr.vsResource = argbuf;
+      vr.vsSystemId = argbuf;
+      vr.vsSystemId[0]=0;
+      vr.vsResource = argbuf2;
       vr.vsResource[0]=0;
-      sscanf(arg,"%d %s %d %d",&vr.vsId,vr.vsResource,&offFrom,&offTo);
+      sscanf(arg,"%d %s %s %d %d ",&vr.vsId,
+	     vr.vsSystemId,vr.vsResource,&offFrom,&offTo );
+      if (strlen(vr.vsSystemId)==0 || vr.vsSystemId[0]=='*') {
+	vr.vsSystemId=NULL;
+      }
       if (strlen(vr.vsResource)==0 || vr.vsResource[0]=='*') 
 	vr.vsResource=NULL;
       if (offTo) 

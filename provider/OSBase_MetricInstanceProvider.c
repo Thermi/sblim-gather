@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricInstanceProvider.c,v 1.3 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: OSBase_MetricInstanceProvider.c,v 1.4 2004/11/04 09:47:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -96,6 +96,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 	ch=ch_init();
 	vr.vsId=metricid;
 	vr.vsResource=NULL;
+	vr.vsSystemId=NULL;
 	vr.vsFrom=vr.vsTo=0;
 	if (rrepos_get(&vr,ch) == 0 ) {
 	  for (i=0; i < vr.vsNumValues; i++) {
