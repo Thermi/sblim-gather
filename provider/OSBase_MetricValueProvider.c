@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.5 2004/08/04 11:27:36 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.6 2004/09/24 15:30:29 mihajlov Exp $
  *
- * Copyright (c) 2003, International Business Machines
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 

@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricDefinitionProvider.c,v 1.4 2004/08/04 11:27:36 mihajlov Exp $
+ * $Id: OSBase_MetricDefinitionProvider.c,v 1.5 2004/09/24 15:30:29 mihajlov Exp $
  *
- * Copyright (c) 2003, International Business Machines
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 
@@ -31,6 +31,7 @@
 #include "cmpift.h"
 #include "cmpimacs.h"
 
+#include "OSBase_MetricUtil.h"
 
 #define _debug 1
 
@@ -42,40 +43,6 @@ CMPIBroker * _broker;
 static char * _ClassName = "CIM_BaseMetricDefinition";
 static char * _FILENAME = "OSBase_MetricDefinitionProvider.c";
 
-
-static int checkConnection();
-
-static char * metricPluginName(CMPIBroker * broker, 
-			       CMPIContext *context,
-			       CMPIObjectPath *path);
-static char * metricClassName(CMPIObjectPath *path);
-static char * makeId(char * defid, const char * name, int id);
-static int parseId(const char * defid,
-		   char * name, int * id);
-
-static CMPIObjectPath * _pluginPath(CMPIBroker * broker,
-				    CMPIObjectPath *cop,
-				    CMPIStatus *rc);
-static CMPIInstance * _makeInst(CMPIBroker * broker, 
-				RepositoryPluginDefinition *def,
-				CMPIObjectPath *cop,
-				CMPIStatus * rc);
-static CMPIObjectPath * _makePath(CMPIBroker * broker, 
-				  RepositoryPluginDefinition *def, 
-				  CMPIObjectPath *cop,
-				  CMPIStatus * rc);
-static void returnPathes(CMPIBroker * broker, 
-			  RepositoryPluginDefinition *def, 
-			  int defnum,
-			  CMPIObjectPath *cop,
-			  CMPIResult *rslt,
-			  CMPIStatus * rc);
-static void returnInstances(CMPIBroker * broker, 
-			    RepositoryPluginDefinition *def, 
-			    int defnum,
-			    CMPIObjectPath *cop,
-			    CMPIResult *rslt,
-			    CMPIStatus * rc);
 /* ---------------------------------------------------------------------------*/
 
 
@@ -88,6 +55,7 @@ CMPIStatus OSBase_MetricDefinitionProviderCleanup( CMPIInstanceMI * mi,
            CMPIContext * ctx) { 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI Cleanup()\n", _FILENAME, _ClassName );
+  releaseMetricDefClasses();
   CMReturn(CMPI_RC_OK);
 }
 
@@ -96,48 +64,32 @@ CMPIStatus OSBase_MetricDefinitionProviderEnumInstanceNames( CMPIInstanceMI * mi
            CMPIResult * rslt, 
            CMPIObjectPath * ref) { 
   CMPIStatus       rc = {CMPI_RC_OK, NULL};
-  int              rdefnum;
-  RepositoryPluginDefinition *rdef;
-  COMMHEAP         ch;
-  char            *pname;
-  CMPIEnumeration *en;
-  CMPIData         plugindata;
-  CMPIData         data;
+  CMPIObjectPath  *co;
+  char           **metricnames;
+  int             *metricids;
+  int              metricnums;
+  int              i;
   
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI EnumInstanceNames()\n", _FILENAME, _ClassName );
 
-  if (checkConnection()) {
-    ch=ch_init();
-    pname = metricPluginName(_broker,ctx,ref);
-    if (pname) {
-      rdefnum = rreposplugin_list(pname,&rdef,ch);
-      returnPathes(_broker,rdef,rdefnum,ref,rslt,&rc);
-    } else {
-      en = CBEnumInstances(_broker,ctx,_pluginPath(_broker,ref,NULL),NULL,&rc);
-      while (en && CMHasNext(en,NULL)) {
-	data = CMGetNext(en,NULL);
-	if (data.value.inst) {
-	  plugindata=CMGetProperty(data.value.inst,"RepositoryPluginName",&rc);
-	  data = CMGetProperty(data.value.inst,"MetricDefinitionClassName",&rc);
-	  if (plugindata.value.string && data.value.string) {
-	    pname = CMGetCharPtr(plugindata.value.string);
-	    rdefnum = rreposplugin_list(pname,&rdef,ch);
-	    returnPathes(_broker,
-			 rdef,
-			 rdefnum,
-			 CMNewObjectPath(_broker,
-					 CMGetCharPtr(CMGetNameSpace(ref,NULL)),
-					 CMGetCharPtr(data.value.string),NULL),
-			 rslt,&rc);
-	  }
-	}
+  if (checkRepositoryConnection()) {
+    metricnums=getMetricDefsForClass(_broker,ctx,ref,&metricnames,&metricids);
+    for (i=0; i<metricnums;i++) {
+      co = makeMetricDefPath(_broker,ctx,metricnames[i],metricids[i],
+			     CMGetCharPtr(CMGetNameSpace(ref,NULL)),&rc);
+      if (co) {
+	CMReturnObjectPath(rslt,co);
+      } else {
+	CMSetStatusWithChars( _broker, &rc, 
+			      CMPI_RC_ERR_FAILED, 
+			      "Could not construct instance name." ); 
       }
     }
-    ch_release(ch);
+    releaseMetricDefs(metricnames,metricids);
   } else {
     CMSetStatusWithChars( _broker, &rc, 
-			  CMPI_RC_ERR_FAILED, "Gatherer Service not active" ); 
+			  CMPI_RC_ERR_FAILED, "Repository Service not active" ); 
   }
   CMReturnDone( rslt );
   return rc;
@@ -149,48 +101,31 @@ CMPIStatus OSBase_MetricDefinitionProviderEnumInstances( CMPIInstanceMI * mi,
            CMPIObjectPath * ref, 
            char ** properties) { 
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
-  int              rdefnum;
-  RepositoryPluginDefinition *rdef;
-  COMMHEAP         ch;
-  char            *pname;
-  CMPIEnumeration *en;
-  CMPIData         plugindata;
-  CMPIData         data;
+  CMPIInstance  *ci;
+  char         **metricnames;
+  int           *metricids;
+  int            metricnums;
+  int           i;
 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI EnumInstances()\n", _FILENAME, _ClassName );
 
-  if (checkConnection()) {
-    ch=ch_init();
-    pname = metricPluginName(_broker,ctx,ref);
-    if (pname) {
-      rdefnum = rreposplugin_list(pname,&rdef,ch);
-      returnInstances(_broker,rdef,rdefnum,ref,rslt,&rc);
-    } else {
-      en = CBEnumInstances(_broker,ctx,_pluginPath(_broker,ref,NULL),NULL,&rc);
-      while (en && CMHasNext(en,NULL)) {
-	data = CMGetNext(en,NULL);
-	if (data.value.inst) {
-	  plugindata=CMGetProperty(data.value.inst,"RepositoryPluginName",&rc);
-	  data = CMGetProperty(data.value.inst,"MetricDefinitionClassName",&rc);
-	  if (plugindata.value.string && data.value.string) {
-	    pname = CMGetCharPtr(plugindata.value.string);
-	    rdefnum = rreposplugin_list(pname,&rdef,ch);
-	    returnInstances(_broker,
-			    rdef,
-			    rdefnum,
-			    CMNewObjectPath(_broker,
-					    CMGetCharPtr(CMGetNameSpace(ref,NULL)),
-					    CMGetCharPtr(data.value.string),NULL),
-			    rslt,&rc);
-	  }
-	}
+  if (checkRepositoryConnection()) {
+    metricnums=getMetricDefsForClass(_broker,ctx,ref,&metricnames,&metricids);
+    for (i=0; i<metricnums;i++) {
+      ci = makeMetricDefInst(_broker,ctx,metricnames[i],metricids[i],
+			     CMGetCharPtr(CMGetNameSpace(ref,NULL)),&rc);
+      if (ci) {
+	CMReturnInstance(rslt,ci);
+      } else {
+	CMSetStatusWithChars( _broker, &rc, 
+			      CMPI_RC_ERR_FAILED, 
+			      "Could not construct instance." ); 
       }
-    }
-    ch_release(ch);
+    } 
   } else {
     CMSetStatusWithChars( _broker, &rc, 
-			  CMPI_RC_ERR_FAILED, "Gatherer Service not active" ); 
+			  CMPI_RC_ERR_FAILED, "Repository Service not active" ); 
   }
   CMReturnDone( rslt );
   return rc;
@@ -203,10 +138,6 @@ CMPIStatus OSBase_MetricDefinitionProviderGetInstance( CMPIInstanceMI * mi,
            char ** properties) {
   CMPIInstance * ci = NULL;
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
-  int              rdefnum;
-  int              i;
-  RepositoryPluginDefinition *rdef;
-  COMMHEAP         ch;
   char             mname[300];
   int              mid;
   CMPIData         idData;
@@ -215,35 +146,26 @@ CMPIStatus OSBase_MetricDefinitionProviderGetInstance( CMPIInstanceMI * mi,
     fprintf( stderr, "--- %s : %s CMPI GetInstance()\n", _FILENAME, _ClassName );
   
   idData = CMGetKey(cop,"Id",NULL);
-  if (idData.value.string && checkConnection()) {
-    ch=ch_init();
-    if (parseId(CMGetCharPtr(idData.value.string),mname,&mid) == 0) {
-    rdefnum = rreposplugin_list(metricPluginName(_broker,ctx,cop),&rdef,ch);
-    for (i=0; i < rdefnum; i++) {
-      if( _debug )
-	fprintf(stderr, "request for %s, metric name is %s\n", mname,
-		rdef[i].rdName);
-      if (strcmp(mname,rdef[i].rdName)==0 && mid==rdef[i].rdId) {
-	ci = _makeInst( _broker, &rdef[i], cop, &rc );
-	if( ci == NULL ) {
-	  if( _debug ) {
-	    if( rc.msg != NULL )
-	      { fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc.msg)); }
-	  }
-	  break;
+  if (idData.value.string && checkRepositoryConnection()) {
+    if (parseMetricDefId(CMGetCharPtr(idData.value.string),mname,&mid) == 0) {
+      ci=makeMetricDefInst(_broker,ctx,mname,mid,
+			   CMGetCharPtr(CMGetNameSpace(cop,NULL)),&rc);
+      if( ci == NULL ) {
+	if( _debug ) {
+	  if( rc.msg != NULL )
+	    { fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc.msg)); }
 	}
+      } else {
 	CMReturnInstance( rslt, ci );
-	break;
       }
-    }
     } else {
       CMSetStatusWithChars( _broker, &rc, 
-			  CMPI_RC_ERR_INVALID_PARAMETER, "Invalid Object Path Key \"Id\"" ); 
+			    CMPI_RC_ERR_INVALID_PARAMETER, 
+			    "Invalid Object Path Key \"Id\"" ); 
     }
-    ch_release(ch);
- } else {
+  } else {
     CMSetStatusWithChars( _broker, &rc, 
-			  CMPI_RC_ERR_FAILED, "Gatherer Service not active" ); 
+			  CMPI_RC_ERR_FAILED, "Repository Service not active" ); 
   }
   CMReturnDone(rslt);
   return rc;
@@ -320,210 +242,6 @@ CMInstanceMIStub( OSBase_MetricDefinitionProvider,
                   OSBase_MetricDefinitionProvider, 
                   _broker, 
                   CMNoHook);
-
-/* ---------------------------------------------------------------------------*/
-/*                               Private Stuff                                */
-/* ---------------------------------------------------------------------------*/
-
-static int checkConnection()
-{
-  RepositoryStatus stat;
-  if (rrepos_status(&stat)==0 && stat.rsInitialized)
-    return 1;
-  else
-    return 0;
-}
-
-static void returnPathes(CMPIBroker * broker, 
-			  RepositoryPluginDefinition *def, 
-			  int defnum,
-			  CMPIObjectPath *cop,
-			  CMPIResult *rslt,
-			  CMPIStatus * rc)
-{
-  int             i;
-  CMPIObjectPath *op;
-  
-  for (i=0; i < defnum; i++) {
-    op = _makePath( _broker, &def[i], cop, rc );
-    if( op == NULL ) {
-      if( _debug ) {
-	if( rc && rc->msg != NULL )
-	  { fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc->msg)); }
-      }
-      break;
-    }      
-    CMReturnObjectPath( rslt, op );
-  }
-}
-
-static void returnInstances(CMPIBroker * broker, 
-			    RepositoryPluginDefinition *def, 
-			    int defnum,
-			    CMPIObjectPath *cop,
-			    CMPIResult *rslt,
-			    CMPIStatus * rc)
-{
-  int           i;
-  CMPIInstance *inst;
-  
-  for (i=0; i < defnum; i++) {
-    inst = _makeInst( _broker, &def[i], cop, rc );
-    if( inst == NULL ) {
-      if( _debug ) {
-	if( rc && rc->msg != NULL )
-	  { fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc->msg)); }
-      }
-      break;
-    }      
-    CMReturnInstance( rslt, inst );
-  }
-}
-
-static char * metricPluginName(CMPIBroker *broker, CMPIContext *context,
-			       CMPIObjectPath *path)
-{
-  /* locate plugin instance for given class */
-  CMPIStatus rc;
-  CMPIObjectPath *pluginpath;
-  CMPIInstance   *plugininst;
-  CMPIData        plugindata;
-  char * clsname = metricClassName(path);
-  char * pluginname = NULL;
-
-  if (clsname) {
-    if( _debug )
-      fprintf(stderr,"::: requesting plugin for %s\n",clsname);
-    pluginpath = _pluginPath(_broker,path,NULL);
-    if (pluginpath) {
-      CMAddKey(pluginpath,"MetricDefinitionClassName",clsname,CMPI_chars);
-      if( _debug )
-	fprintf(stderr,"::: getting instance  for %s (%s)\n",clsname,
-		CMGetCharPtr(CDToString(broker,pluginpath,NULL)));
-      /* todo: this is case sensitive - should not be */
-      plugininst = CBGetInstance(broker,context,pluginpath,NULL,&rc);
-      if (plugininst) {
-	if( _debug )
-	  fprintf(stderr,"::: got instance for %s\n",clsname);
-	plugindata = CMGetProperty(plugininst,"RepositoryPluginName",&rc);
-	pluginname = plugindata.value.string ? 
-	  CMGetCharPtr(plugindata.value.string) : NULL;
-      }
-    }
-  }
-  if( _debug )
-    fprintf(stderr,"::: plugin name is %s\n",pluginname);
-  return pluginname;
-}
-
-static char * metricClassName(CMPIObjectPath *path)
-{
-  /* return class name or NULL if CIM_ (base) class */
-  CMPIStatus rc;
-  CMPIString * clsname = CMGetClassName(path,&rc);
-  char * c_clsname;
-  if (clsname) c_clsname=CMGetCharPtr(clsname);
-  if (c_clsname && strncasecmp(c_clsname,"cim_",strlen("cim_")))
-    return c_clsname;
-  else
-    return NULL;
-}
-
-static int typetable[] = {
-  -1,
-  MD_BOOL,
-  MD_CHAR16,
-  -1,
-  MD_FLOAT32,
-  MD_FLOAT64,
-  MD_SINT16,
-  MD_SINT32,
-  MD_SINT64,
-  MD_SINT8,
-  MD_STRING,
-  MD_UINT16,
-  MD_UINT32,
-  MD_UINT64,
-  MD_UINT8,
-};
-
-static CMPIObjectPath * _pluginPath(CMPIBroker * broker,
-				    CMPIObjectPath *cop,
-				    CMPIStatus *rc)
-{   
-  return CMNewObjectPath(broker,CMGetCharPtr(CMGetNameSpace(cop,NULL)),
-			 "Linux_RepositoryPlugin",rc);
-}
-
-static CMPIInstance * _makeInst(CMPIBroker * broker, 
-				RepositoryPluginDefinition *def, 
-				CMPIObjectPath *cop,
-				CMPIStatus * rc)
-{
-  CMPIObjectPath * co;
-  CMPIInstance   * ci = NULL;
-  char             idbuf[300];
-  short            dt;
-
-  fprintf(stderr,"::: make inst for cls %s\n",metricClassName(cop));
-  co = CMNewObjectPath(broker,NULL,metricClassName(cop),rc);
-  if (co) {
-    CMSetNameSpaceFromObjectPath(co,cop);
-    ci = CMNewInstance(broker,co,rc);
-    if (ci) {
-      fprintf(stderr,"::: make inst id=%d %s\n",def->rdId,def->rdName);
-      CMSetProperty(ci,"Id",makeId(idbuf,def->rdName,def->rdId),CMPI_chars);
-      CMSetProperty(ci,"Name",def->rdName,CMPI_chars);
-      for (dt=0;dt<sizeof(typetable)/sizeof(int);dt++) {
-	if (def->rdDataType==typetable[dt])
-	  break;
-      }
-      if (dt<sizeof(typetable)/sizeof(int))
-	CMSetProperty(ci,"DataType",&dt,CMPI_uint16);
-    }
-  }
-  return ci;
-}
-
-static CMPIObjectPath * _makePath(CMPIBroker * broker, 
-				  RepositoryPluginDefinition *def, 
-				  CMPIObjectPath *cop,
-				  CMPIStatus * rc)
-{
-  CMPIObjectPath * co;
-  char             idbuf[300];
-
-  if (_debug)
-    fprintf(stderr,"::: make path for cls %s\n",metricClassName(cop));
-  co = CMNewObjectPath(broker,NULL,metricClassName(cop),rc);
-  if (co) {
-    CMSetNameSpaceFromObjectPath(co,cop);
-    if (_debug)
-      fprintf(stderr,"::: make path id=%d %s\n",def->rdId,def->rdName);
-    CMAddKey(co,"Id",makeId(idbuf,def->rdName,def->rdId),CMPI_chars);
-  }
-  return co;
-}
-
-static char * makeId(char * defid, const char * name, int id)
-{
-  sprintf(defid,"%s.%d",name,id);
-  return defid;
-}
-
-static int parseId(const char * defid,
-		   char * name, int * id)
-{
-  char *nextf = strchr(defid,'.');
-  if (nextf) {
-  *nextf=0;
-  strcpy(name,defid);
-  sscanf(nextf+1,"%d",id);
-  return 0;
-  } else {
-      return -1;
-  }
-}
 
 /* ---------------------------------------------------------------------------*/
 /*              end of OSBase_MetricDefinitionProvider                      */

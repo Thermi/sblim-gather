@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricGathererProvider.c,v 1.4 2004/06/03 07:56:50 heidineu Exp $
+ * $Id: OSBase_MetricGathererProvider.c,v 1.5 2004/09/24 15:30:29 mihajlov Exp $
  *
- * Copyright (c) 2003, International Business Machines
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 

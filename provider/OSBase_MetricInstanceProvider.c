@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricInstanceProvider.c,v 1.1 2004/09/24 12:06:30 mihajlov Exp $
+ * $Id: OSBase_MetricInstanceProvider.c,v 1.2 2004/09/24 15:30:29 mihajlov Exp $
  *
- * Copyright (c) 2004, International Business Machines
+ * (C) Copyright IBM Corp. 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 

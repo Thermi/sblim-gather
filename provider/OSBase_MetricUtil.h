@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.h,v 1.1 2004/09/24 12:06:31 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.h,v 1.2 2004/09/24 15:30:29 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -50,6 +50,14 @@ char * makeMetricValueId(char * instid, const char * name, int id,
 int parseMetricValueId(const char * instid,
 		       char * name, int * id, char * resource,
 		       time_t * timestamp);
+
+/* plugin name for metric definition class name */
+int pluginForClass(CMPIBroker *broker, CMPIContext *ctx, 
+		   const CMPIObjectPath *cop, char *pluginname);
+int getMetricDefsForClass(CMPIBroker *broker, CMPIContext *ctx, 
+			  const CMPIObjectPath* cop,
+			  char ***mnames, int **mids);
+void releaseMetricDefs(char **mnames,int *mids); 
 
 /* support for instance and object path construction */
 CMPIInstance * makeMetricValueInst(CMPIBroker * broker, 
