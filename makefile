@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2004/10/20 08:15:46 mihajlov Exp $
+# $Id: makefile,v 1.10 2004/10/20 08:53:56 heidineu Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
@@ -50,7 +50,7 @@ gatherctl: LDFLAGS=-L . -L comms -L util
 gatherctl: gatherctl.o
 
 reposctl: LOADLIBES=-lrrepos -lmcserv -lgatherutil
-reposctl: LDFLAGS=-L . -L comms
+reposctl: LDFLAGS=-L . -L comms -L util
 reposctl: reposctl.o
 
 clean: $(SUBDIRS)
