@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryLocalFileSystem.c,v 1.4 2004/11/09 16:18:18 heidineu Exp $
+ * $Id: repositoryLocalFileSystem.c,v 1.5 2004/12/03 13:06:14 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -69,7 +69,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
-  metricCalcDef[1].mcDataType=MD_UINT8;
+  metricCalcDef[1].mcDataType=MD_FLOAT32;
   metricCalcDef[1].mcCalc=metricCalcAvSpacePerc;
 
   *mcnum=2;
@@ -117,6 +117,7 @@ size_t metricCalcAvSpacePerc( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
+    *(float*)v=ntohf(*(float*)v);
     return mv->mvDataLength;
   }
   return -1;

@@ -1,5 +1,5 @@
 /*
- * $Id: metricLocalFileSystem.c,v 1.6 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: metricLocalFileSystem.c,v 1.7 2004/12/03 13:06:14 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -213,7 +213,7 @@ int metricRetrAvSpacePerc( int mid,
   char          * ptr_name = NULL;
   char          * ptr_dir  = NULL;
   int             i        = 0;
-  unsigned char   size     = 0;
+  float           size     = 0;
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving AvailableSpacePercentage\n",
@@ -238,31 +238,30 @@ int metricRetrAvSpacePerc( int mid,
       
       ptr_name = _enum_fsname + (i*LFSPATHMAX);
       ptr_dir = _enum_fsdir + (i*LFSPATHMAX);
-      
+      size = 0;
       fs = (struct statfs *) malloc (sizeof (struct statfs));
       memset(fs, 0, sizeof (struct statfs) );
       if (statfs(ptr_dir, fs) == 0) {
-	if( fs->f_blocks != 0 && fs->f_bfree != 0 ) {
-	  size = ( ( (unsigned long long)fs->f_blocks - 
-		     (unsigned long long)fs->f_bfree   ) * 100 ) / 
-	         (unsigned long long)fs->f_blocks;
+	if( fs->f_blocks != 0 ) {
+	  size = (float)fs->f_bfree * 100 / 
+	    (float)fs->f_blocks;
 	}
       }
       if(fs) free(fs);
 
-      //fprintf(stderr,"[%i] ptr_name: %s ... ptr_dir: %s ... size : %i\n",i,ptr_name,ptr_dir,size);
+      /*fprintf(stderr,"[%i] ptr_name: %s ... ptr_dir: %s ... size : %f\n",i,ptr_name,ptr_dir,size);*/
       
       mv = calloc(1, sizeof(MetricValue) + 
-		     sizeof(unsigned char) + 
+		     sizeof(float) + 
 		     (strlen(ptr_name)+1) );
       if (mv) {
 	mv->mvId = mid;
 	mv->mvTimeStamp = time(NULL);
-	mv->mvDataType = MD_UINT8;
-	mv->mvDataLength = sizeof(unsigned char);
+	mv->mvDataType = MD_FLOAT32;
+	mv->mvDataLength = sizeof(float);
 	mv->mvData = (char*)mv + sizeof(MetricValue);
-	*(unsigned char*)mv->mvData = size;
-	mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned char);
+	*(float*)mv->mvData = htonf(size);
+	mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(float);
 	strcpy(mv->mvResource,ptr_name);
 	mret(mv);
       } 

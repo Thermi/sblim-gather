@@ -1,5 +1,5 @@
 /*
- * $Id: commutil.c,v 1.2 2004/11/30 13:16:50 mihajlov Exp $
+ * $Id: commutil.c,v 1.3 2004/12/03 13:06:14 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -39,18 +39,22 @@ uint64_t ntohll(uint64_t v)
 }
 #endif
 
+
+/*
+ * Note: Don't think this will work in all environments (s390,power)
+ */
 float htonf(float v) 
 {
   unsigned char *bp = (unsigned char *)&v;
   unsigned char array[sizeof(float)];
+  int           i;
 
 #if BYTE_ORDER == BIG_ENDIAN
   return v;
 #elif BYTE_ORDER == LITTLE_ENDIAN
-  array[0] = bp[3];
-  array[1] = bp[2];
-  array[2] = bp[1];
-  array[3] = bp[0];
+  for (i=0; i<sizeof(float);i++) {
+    array[i] = bp[sizeof(float)-1-i];
+  }
   return (*(float *)array);
 #else
 # error "What kind of system is this?"

@@ -1,5 +1,5 @@
 /*
- * $Id: metricIPProtocolEndpoint.c,v 1.3 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: metricIPProtocolEndpoint.c,v 1.4 2004/12/03 13:06:14 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -101,7 +101,6 @@ int metricRetrBytesSubmitted( int mid,
   FILE * fhd        = NULL;
   char * ptr        = NULL;
   char * end        = NULL;
-  char * col        = NULL;
   char   port[64];
   char   buf[60000];
   char   values[(6*sizeof(unsigned long long))+6];
@@ -132,14 +131,12 @@ int metricRetrBytesSubmitted( int mid,
 	  
 	while( (end = strchr(ptr,'\n')) != NULL ) {
 	  sscanf(ptr,
-		 "%s %lld %lld %lld %*s %*s %*s %*s %*s %lld %lld %lld",
+		 " %[^:]: %lld %lld %lld %*s %*s %*s %*s %*s %lld %lld %lld",
 		 port,
 		 &receive_byte,&receive_packets,&receive_error,
 		 &trans_byte,&trans_packets,&trans_error);
 	  
-	  col = strchr(port,':');
-	  *col = '\0';
-	  //fprintf(stderr,"[%i] port: %s \n",i,port);
+	  /*	  fprintf(stderr,"[%i] port: %s %lld %lld\n",i,port,receive_byte,receive_packets);*/
 	  
 	  memset(values,0,sizeof(values));
 	  sprintf(values,"%lld:%lld:%lld:%lld:%lld:%lld",
