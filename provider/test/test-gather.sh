@@ -77,7 +77,9 @@ then
 fi
 
 # Wait 30 seconds to make sure that enough samples are generated
-sleep 30
+echo "need to wait 40 seconds for gatherd and sampling initialization ... please stand by ... we will be back ;-) ...";
+sleep 40
+echo "... back ...";
 
 declare -a CLASSNAMES[];
 CLASSNAMES=([0]=Linux_MetricGatherer \
