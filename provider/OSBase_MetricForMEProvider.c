@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricInstanceProvider.c,v 1.3 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.1 2004/10/07 06:22:00 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -14,7 +14,7 @@
  *
  * Interface Type : Common Manageability Programming Interface ( CMPI )
  *
- * Description: Association Provider for CIM_MetricInstance
+ * Description: Association Provider for CIM_MetricForMe
  * 
  */
 
@@ -25,7 +25,7 @@
 #include <rrepos.h>
 #include "OSBase_MetricUtil.h"
 
-#define LOCALCLASSNAME "Linux_MetricInstance"
+#define LOCALCLASSNAME "Linux_MetricForME"
 
 static CMPIBroker * _broker;
 
@@ -72,12 +72,17 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
   CMPIObjectPath *co;
   CMPIInstance   *ci;
   CMPIData        iddata;
-  char            defclass[500];
   char            metricname[500];
+  char            resource[500];
+  char            systemid[500];
+  time_t          timestamp;
   int             metricid;
-  int             i;
-  ValueRequest    vr;
+  char          **metricnames;
+  char          **resources;
+  int            *metricids;
+  int             midnum, i, j;
   COMMHEAP        ch;
+  ValueRequest    vr;
 
   fprintf(stderr,"--- associatorHelper()\n");
     
@@ -86,28 +91,52 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
   /*
    * Check if the object path belongs to a supported class
    */ 
-  if (CMClassPathIsA(_broker,cop,"CIM_BaseMetricDefinition",NULL)) {
-    iddata = CMGetKey(cop,"Id",NULL);
-    /* Metric Definition - we search for Metric Values for this Id */
+  if (CMClassPathIsA(_broker,cop,"CIM_BaseMetricValue",NULL)) {
+    iddata = CMGetKey(cop,"InstanceId",NULL);
     if (iddata.value.string &&
-	parseMetricDefId(CMGetCharPtr(iddata.value.string),
-			 metricname,&metricid) == 0) {
-      if (checkRepositoryConnection()) {
-	ch=ch_init();
-	vr.vsId=metricid;
-	vr.vsResource=NULL;
+	parseMetricValueId(CMGetCharPtr(iddata.value.string),
+			   metricname,&metricid,resource,systemid,&timestamp) == 0) {
+      co = makeResourcePath(_broker,ctx,CMGetCharPtr(namesp),
+			    metricname,metricid,resource,systemid);
+      if (co) {
+	/* Todo: namespace plugin must be used */
+	CMSetNameSpaceFromObjectPath(co,cop);
+	if (names && associators) {
+	  CMReturnObjectPath(rslt,co);
+	} else if (!names && associators) {
+	  ci = CBGetInstance(_broker,ctx,co,NULL,NULL);
+	  CMReturnInstance(rslt,ci);	      
+	} else if (names) {
+	  CMReturnObjectPath(rslt,_makeRefPath(co, cop));
+	} else {
+	  CMReturnInstance(rslt,_makeRefInstance(co, cop));
+	}
+      }
+    }  
+  } else {
+    /* get all metric values for resource class */
+    midnum=getMetricIdsForResourceClass(_broker,ctx,cop,
+					&metricnames,
+					&metricids,&resources);
+    if (checkRepositoryConnection()) {
+      ch=ch_init();
+      for(i=0; i<midnum; i++) {
+	/* for all metric ids retrieve data for given resource */
+	vr.vsId=metricids[i];
+	vr.vsResource=resources[i];
 	vr.vsFrom=vr.vsTo=0;
-	if (rrepos_get(&vr,ch) == 0 ) {
-	  for (i=0; i < vr.vsNumValues; i++) {
+	if (rrepos_get(&vr,ch)==0) {
+	  for (j=0; j < vr.vsNumValues; j++) {
 	    co = makeMetricValuePath( _broker, ctx,
-				      metricname, metricid,
-				      &vr.vsValues[i], 
+				      metricnames[i], metricids[i],
+				      &vr.vsValues[j], 
 				      cop, &st );
 	    if (names && associators) {
 	      CMReturnObjectPath(rslt,co);
 	    } else if (!names && associators) {
-	      ci = makeMetricValueInst( _broker, ctx, metricname, metricid,
-					&vr.vsValues[i],
+	      ci = makeMetricValueInst( _broker, ctx, metricnames[i], 
+					metricids[i],
+					&vr.vsValues[j],
 					vr.vsDataType,
 					cop, &st );
 	      CMReturnInstance(rslt,ci);	      
@@ -118,37 +147,10 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 	    }
 	  }
 	}
-	ch_release(ch);
       }
+      ch_release(ch);
     }
-  } else if (CMClassPathIsA(_broker,cop,"CIM_BaseMetricValue",NULL)) {
-    iddata = CMGetKey(cop,"MetricDefinitionId",NULL);
-    /* Must be a metric value */
-    if (iddata.value.string &&
-	parseMetricDefId(CMGetCharPtr(iddata.value.string),
-			 metricname,&metricid) == 0) {
-      if (metricDefClassName(_broker,ctx,
-			     CMGetCharPtr(namesp),
-			     defclass,metricname,metricid) == 0) {
-	co = makeMetricDefPath(_broker,ctx,
-			       metricname,metricid,CMGetCharPtr(namesp),
-			       &st); 
-	if (names && associators) {
-	  CMReturnObjectPath(rslt,co);
-	} else if (!names && associators) {
-	  ci = makeMetricDefInst( _broker, ctx, metricname, metricid,
-				  CMGetCharPtr(namesp), &st );
-	  CMReturnInstance(rslt,ci);	      
-	} else if (names) {
-	  CMReturnObjectPath(rslt,_makeRefPath(co, cop));
-	} else {
-	  CMReturnInstance(rslt,_makeRefInstance(co, cop));
-	}
-      }
-      
-    }
-  } else {
-    fprintf(stderr,"--- unsupported class %s\n",CMGetCharPtr(clsname));
+    releaseMetricIds(metricnames,metricids,resources);
   }
   CMReturnDone(rslt);
   
@@ -159,7 +161,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
  * Instance MI Cleanup 
  * ------------------------------------------------------------------ */
 
-CMPIStatus OSBase_MetricInstanceProviderCleanup( CMPIInstanceMI * mi, 
+CMPIStatus OSBase_MetricForMEProviderCleanup( CMPIInstanceMI * mi, 
 				 CMPIContext * ctx) 
 {
   releaseMetricDefClasses();
@@ -171,7 +173,7 @@ CMPIStatus OSBase_MetricInstanceProviderCleanup( CMPIInstanceMI * mi,
  * ------------------------------------------------------------------ */
 
 
-CMPIStatus OSBase_MetricInstanceProviderEnumInstanceNames( CMPIInstanceMI * mi, 
+CMPIStatus OSBase_MetricForMEProviderEnumInstanceNames( CMPIInstanceMI * mi, 
 					   CMPIContext * ctx, 
 					   CMPIResult * rslt, 
 					   CMPIObjectPath * ref) 
@@ -179,7 +181,7 @@ CMPIStatus OSBase_MetricInstanceProviderEnumInstanceNames( CMPIInstanceMI * mi,
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
-CMPIStatus OSBase_MetricInstanceProviderEnumInstances( CMPIInstanceMI * mi, 
+CMPIStatus OSBase_MetricForMEProviderEnumInstances( CMPIInstanceMI * mi, 
 				       CMPIContext * ctx, 
 				       CMPIResult * rslt, 
 				       CMPIObjectPath * ref, 
@@ -189,7 +191,7 @@ CMPIStatus OSBase_MetricInstanceProviderEnumInstances( CMPIInstanceMI * mi,
 }
 
 
-CMPIStatus OSBase_MetricInstanceProviderGetInstance( CMPIInstanceMI * mi, 
+CMPIStatus OSBase_MetricForMEProviderGetInstance( CMPIInstanceMI * mi, 
 				     CMPIContext * ctx, 
 				     CMPIResult * rslt, 
 				     CMPIObjectPath * cop, 
@@ -198,7 +200,7 @@ CMPIStatus OSBase_MetricInstanceProviderGetInstance( CMPIInstanceMI * mi,
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
-CMPIStatus OSBase_MetricInstanceProviderCreateInstance( CMPIInstanceMI * mi, 
+CMPIStatus OSBase_MetricForMEProviderCreateInstance( CMPIInstanceMI * mi, 
 					CMPIContext * ctx, 
 					CMPIResult * rslt, 
 					CMPIObjectPath * cop, 
@@ -207,7 +209,7 @@ CMPIStatus OSBase_MetricInstanceProviderCreateInstance( CMPIInstanceMI * mi,
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
-CMPIStatus OSBase_MetricInstanceProviderSetInstance( CMPIInstanceMI * mi, 
+CMPIStatus OSBase_MetricForMEProviderSetInstance( CMPIInstanceMI * mi, 
 				     CMPIContext * ctx, 
 				     CMPIResult * rslt, 
 				     CMPIObjectPath * cop,
@@ -217,7 +219,7 @@ CMPIStatus OSBase_MetricInstanceProviderSetInstance( CMPIInstanceMI * mi,
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
-CMPIStatus OSBase_MetricInstanceProviderDeleteInstance( CMPIInstanceMI * mi, 
+CMPIStatus OSBase_MetricForMEProviderDeleteInstance( CMPIInstanceMI * mi, 
 					CMPIContext * ctx, 
 					CMPIResult * rslt, 
 					CMPIObjectPath * cop) 
@@ -225,7 +227,7 @@ CMPIStatus OSBase_MetricInstanceProviderDeleteInstance( CMPIInstanceMI * mi,
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
-CMPIStatus OSBase_MetricInstanceProviderExecQuery( CMPIInstanceMI * mi, 
+CMPIStatus OSBase_MetricForMEProviderExecQuery( CMPIInstanceMI * mi, 
 				   CMPIContext * ctx, 
 				   CMPIResult * rslt, 
 				   CMPIObjectPath * cop, 
@@ -239,7 +241,7 @@ CMPIStatus OSBase_MetricInstanceProviderExecQuery( CMPIInstanceMI * mi,
  * Association MI Cleanup 
  * ------------------------------------------------------------------ */
 
-CMPIStatus OSBase_MetricInstanceProviderAssociationCleanup( CMPIAssociationMI * mi,
+CMPIStatus OSBase_MetricForMEProviderAssociationCleanup( CMPIAssociationMI * mi,
 					      CMPIContext * ctx) 
 {
   releaseMetricDefClasses();
@@ -250,7 +252,7 @@ CMPIStatus OSBase_MetricInstanceProviderAssociationCleanup( CMPIAssociationMI * 
  * Association MI Functions
  * ------------------------------------------------------------------ */
 
-CMPIStatus OSBase_MetricInstanceProviderAssociators( CMPIAssociationMI * mi,
+CMPIStatus OSBase_MetricForMEProviderAssociators( CMPIAssociationMI * mi,
 				       CMPIContext * ctx,
 				       CMPIResult * rslt,
 				       CMPIObjectPath * cop,
@@ -263,7 +265,7 @@ CMPIStatus OSBase_MetricInstanceProviderAssociators( CMPIAssociationMI * mi,
   return associatorHelper(rslt,ctx,cop,1,0);
 }
 
-CMPIStatus OSBase_MetricInstanceProviderAssociatorNames( CMPIAssociationMI * mi,
+CMPIStatus OSBase_MetricForMEProviderAssociatorNames( CMPIAssociationMI * mi,
 					   CMPIContext * ctx,
 					   CMPIResult * rslt,
 					   CMPIObjectPath * cop,
@@ -275,7 +277,7 @@ CMPIStatus OSBase_MetricInstanceProviderAssociatorNames( CMPIAssociationMI * mi,
   return associatorHelper(rslt,ctx,cop,1,1);
 }
 
-CMPIStatus OSBase_MetricInstanceProviderReferences( CMPIAssociationMI * mi,
+CMPIStatus OSBase_MetricForMEProviderReferences( CMPIAssociationMI * mi,
 				      CMPIContext * ctx,
 				      CMPIResult * rslt,
 				      CMPIObjectPath * cop,
@@ -287,7 +289,7 @@ CMPIStatus OSBase_MetricInstanceProviderReferences( CMPIAssociationMI * mi,
 }
 
 
-CMPIStatus OSBase_MetricInstanceProviderReferenceNames( CMPIAssociationMI * mi,
+CMPIStatus OSBase_MetricForMEProviderReferenceNames( CMPIAssociationMI * mi,
 					  CMPIContext * ctx,
 					  CMPIResult * rslt,
 					  CMPIObjectPath * cop,
@@ -305,8 +307,8 @@ CMPIStatus OSBase_MetricInstanceProviderReferenceNames( CMPIAssociationMI * mi,
  *       data between calls.
  * ------------------------------------------------------------------ */
 
-CMInstanceMIStub( OSBase_MetricInstanceProvider,
-		  OSBase_MetricInstanceProvider,
+CMInstanceMIStub( OSBase_MetricForMEProvider,
+		  OSBase_MetricForMEProvider,
 		  _broker,
 		  CMNoHook);
 
@@ -314,7 +316,7 @@ CMInstanceMIStub( OSBase_MetricInstanceProvider,
  * Association MI Factory
  * ------------------------------------------------------------------ */
 
-CMAssociationMIStub( OSBase_MetricInstanceProvider,
-		     OSBase_MetricInstanceProvider,
+CMAssociationMIStub( OSBase_MetricForMEProvider,
+		     OSBase_MetricForMEProvider,
 		     _broker,
 		     CMNoHook);

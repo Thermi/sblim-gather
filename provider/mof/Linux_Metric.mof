@@ -1,5 +1,5 @@
 //
-// $Id: Linux_Metric.mof,v 1.6 2004/09/24 12:06:31 mihajlov Exp $
+// $Id: Linux_Metric.mof,v 1.7 2004/10/07 06:22:00 mihajlov Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004
 //
@@ -72,6 +72,17 @@ class Linux_MetricInstance : CIM_MetricInstance
   CIM_BaseMetricValue REF Dependent;
 };
 
+[ 
+  Association,
+  Provider("cmpi:OSBase_MetricForMEProvider"),
+  Description ("MetricForME Association for Linux")
+]
+class Linux_MetricForME : CIM_MetricForME
+{ 
+  CIM_ManagedElement REF Antecedent;
+  CIM_BaseMetricValue REF Dependent;
+};
+
 [  Description ("Plugin Control")
 ]
 class Linux_MetricPlugin : CIM_Setting
@@ -92,6 +103,8 @@ class Linux_RepositoryPlugin : CIM_Setting
   String MetricDefinitionClassName;
   [Description("Name of the repository plugin library")]
   String RepositoryPluginName; 
+  [Description("Name of the CIM name translation plugin library")]
+  String CIMTranslationPluginName; 
   [Description("Is this plugin enabled")]
   boolean Enabled; 
 };

@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.7 2004/09/30 14:39:23 mihajlov Exp $
+ * $Id: rrepos.c,v 1.8 2004/10/07 06:22:00 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -194,6 +194,11 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
 	  if (vr->vsValues[i].viResource) {
 	    vr->vsValues[i].viResource = ch_alloc(ch,strlen(vp)+1);
 	    strcpy(vr->vsValues[i].viResource,vp);
+	    vp += strlen(vp) + 1;
+	  }
+	  if (vr->vsValues[i].viSystemId) {
+	    vr->vsValues[i].viSystemId = ch_alloc(ch,strlen(vp)+1);
+	    strcpy(vr->vsValues[i].viSystemId,vp);
 	    vp += strlen(vp) + 1;
 	  }
 	}

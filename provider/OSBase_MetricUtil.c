@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.3 2004/09/27 15:53:48 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.4 2004/10/07 06:22:00 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -23,6 +23,8 @@
 #include <mrwlock.h>
 #include <cmpift.h>
 #include <cmpimacs.h>
+#include <cimplug.h>
+#include <dlfcn.h>
 
 #define PLUGINCLASSNAME "Linux_RepositoryPlugin"
 #define VALDEFCLASSNAME "Linux_MetricValueDefinition"
@@ -38,24 +40,36 @@ int checkRepositoryConnection()
 }
 
 MRWLOCK_DEFINE(MdefLock);
+MRWLOCK_DEFINE(PdefLock);
 
 static struct _MdefList {
   char * mdef_metricname;
   int    mdef_metricid;
   char * mdef_classname;
   char * mdef_pluginname;
+  char * mdef_cimpluginname;
   int    mdef_datatype;
 } * metricDefinitionList = NULL;
 
 static struct _MvalList {
   char * mval_classname;
   char * mdef_classname;
-} * metricValueList;
+} * metricValueList = NULL;
 
+static struct _PluginList {
+  char                     * plug_name;
+  void                     * plug_handle;
+  CimObjectPathFromValueId * plug_cop4id;
+  ValueIdFromCimObjectPath * plug_id4cop;
+  GetResourceClasses       * plug_getres;
+  FreeResourceClasses      * plug_freeres;
+} * pluginList = NULL;
 
 /*
  * refresh the cache of metric definition classes
  */
+
+static void removePluginList();
 
 static void removeValueList()
 {
@@ -85,9 +99,11 @@ static void removeDefinitionList()
       free(metricDefinitionList[i].mdef_metricname);
       free(metricDefinitionList[i].mdef_classname);
       free(metricDefinitionList[i].mdef_pluginname);
+      free(metricDefinitionList[i].mdef_cimpluginname);
       i++;
     }
     free(metricDefinitionList);
+    removePluginList();
     metricDefinitionList = NULL;
   }
 }
@@ -131,10 +147,10 @@ int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx,
 			    const char *namesp)
      /* TODO: rework error handling */
 {
-  CMPIData         data, plugindata;
+  CMPIData         data, plugindata, cimplugdata;
   CMPIObjectPath  *co = CMNewObjectPath(broker,namesp,PLUGINCLASSNAME,NULL);
   CMPIEnumeration *en = CBEnumInstances(broker,ctx,co,NULL,NULL);
-  char            *pname;
+  char            *pname, *cpname;
   int              rdefnum, i, totalnum;
   RepositoryPluginDefinition *rdef;
   COMMHEAP         ch;
@@ -159,9 +175,13 @@ int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx,
     data = CMGetNext(en,NULL);
     if (data.value.inst) {
       plugindata=CMGetProperty(data.value.inst,"RepositoryPluginName",NULL);
+      cimplugdata=CMGetProperty(data.value.inst,"CIMTranslationPluginName",
+				NULL);
       data = CMGetProperty(data.value.inst,"MetricDefinitionClassName",NULL);
-      if (plugindata.value.string && data.value.string) {	
+      if (plugindata.value.string && data.value.string  && 
+	  cimplugdata.value.string) {	
 	pname = CMGetCharPtr(plugindata.value.string);
+	cpname = CMGetCharPtr(cimplugdata.value.string);
 	rdefnum = rreposplugin_list(pname,&rdef,ch);
 	metricDefinitionList = realloc(metricDefinitionList,
 				       (rdefnum+totalnum+1)*sizeof(struct _MdefList));
@@ -171,6 +191,7 @@ int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx,
 	  metricDefinitionList[totalnum+i].mdef_classname = 
 	    strdup(CMGetCharPtr(data.value.string));
 	  metricDefinitionList[totalnum+i].mdef_pluginname = strdup(pname);
+	  metricDefinitionList[totalnum+i].mdef_cimpluginname = strdup(cpname);
 	  metricDefinitionList[totalnum+i].mdef_datatype = rdef[i].rdDataType;
 	}
 	/* identify last element with null name */
@@ -289,55 +310,167 @@ int metricValueClassName(CMPIBroker *broker, CMPIContext *ctx,
 
 char * makeMetricDefId(char * defid, const char * name, int id)
 {
-  /* TODO: stupid syntax, no escapes - revise */
-  sprintf(defid,"%s.%d",name,id);
-  return defid;
-}
+  char *xname = NULL, *tmp;
+  int   xidx;
 
+  if (name==NULL) {
+    return NULL;
+  }
+
+  if (strchr(name,'.')) {
+    /* escaping single dots by doubling them */
+    xname = malloc(2*strlen(name)+1);
+    xidx = 0;
+    while ((tmp=strchr(name,'.'))) {
+      memcpy(xname + xidx, name, (tmp-name));
+      xidx += (tmp-name) + 2;
+      xname[xidx-2]='.';
+      xname[xidx-1]='.';
+      name = tmp + 1;      
+    }
+    strcpy(xname+xidx,name);
+    name=xname;
+  }
+  sprintf(defid,"%s.%d",name,id);
+  if (xname) {
+    free (xname);
+  }
+  return defid;
+}    
+  
 int parseMetricDefId(const char * defid,
-			    char * name, int * id)
+		     char * name, int * id)
 {
-  char *nextf = strchr(defid,'.');
+  char *parsebuf = strdup(defid);
+  char *nextdf = strstr(parsebuf,"..");
+  char *nextf = strchr(parsebuf,'.');
+  while (nextdf && nextf == nextdf) {
+    memmove(nextdf+1,nextdf+2,strlen(nextdf+2)); /* reduce double dot */
+    nextf++;
+    nextdf = strstr(nextf,"..");
+    nextf = strchr(nextf,'.');
+  }
   if (nextf) {
-  *nextf=0;
-  strcpy(name,defid);
-  sscanf(nextf+1,"%d",id);
-  return 0;
+    *nextf=0;
+    strcpy(name,parsebuf);
+    sscanf(nextf+1,"%d",id);
+    free(parsebuf);
+    return 0;
   } else {
-      return -1;
+    free(parsebuf);
+    return -1;
   }
 }
 
 char * makeMetricValueId(char * instid, const char * name, int id,  
-				const char * resource, time_t timestamp)
+			 const char * resource, const char * systemid,
+			 time_t timestamp)
 {
-  /* TODO: stupid syntax, no escapes - revise */
-  sprintf(instid,"%s.%d.%s.%ld",name,id,resource,timestamp);
+  char *xname=NULL;
+  char *xresource=NULL;
+  char *xsystemid=NULL;
+  char *tmp;
+  int   xidx;
+
+  if (name==NULL || resource==NULL || systemid==NULL) {
+    return NULL;
+  }
+  
+  if (strchr(name,'.')) {
+    /* escaping single dots by doubling them */
+    xname = malloc(2*strlen(name)+1);
+    xidx = 0;
+    while ((tmp=strchr(name,'.'))) {
+      memcpy(xname + xidx, name, (tmp-name));
+      xidx += (tmp-name) + 2;
+      xname[xidx-2]='.';
+      xname[xidx-1]='.';
+      name = tmp + 1;      
+    }
+    strcpy(xname+xidx,name);
+    name=xname;
+  }
+  if (strchr(resource,'.')) {
+    /* escaping single dots by doubling them */
+    xresource = malloc(2*strlen(resource)+1);
+    xidx = 0;
+    while ((tmp=strchr(resource,'.'))) {
+      memcpy(xresource + xidx, resource, (tmp-resource));
+      xidx += (tmp-resource) + 2;
+      xresource[xidx-2]='.';
+      xresource[xidx-1]='.';
+      resource = tmp + 1;      
+    }
+    strcpy(xresource+xidx,resource);
+    resource=xresource;
+  }
+  if (strchr(systemid,'.')) {
+    /* escaping single dots by doubling them */
+    xsystemid = malloc(2*strlen(systemid)+1);
+    xidx = 0;
+    while ((tmp=strchr(systemid,'.'))) {
+      memcpy(xsystemid + xidx, systemid, (tmp-systemid));
+      xidx += (tmp-systemid) + 2;
+      xsystemid[xidx-2]='.';
+      xsystemid[xidx-1]='.';
+      systemid = tmp + 1;      
+    }
+    strcpy(xsystemid+xidx,systemid);
+    systemid=xsystemid;
+  }
+  sprintf(instid,"%s.%d.%s.%s.%ld",name,id,resource,systemid,timestamp);
+  if (xname) {
+    free(xname);
+  }
+  if (xresource) {
+    free(xresource);
+  }
+  if (xsystemid) {
+    free(xsystemid);
+  }
   return instid;
 }
 
+
+#define MVNUMELEMENTS 5
+
 int parseMetricValueId(const char * instid,
-			      char * name, int * id, char * resource,
-			      time_t * timestamp)
+		       char * name, int * id, char * resource,
+		       char * systemid, time_t * timestamp)
 {
-  char * nextf;
-  nextf = strchr(instid,'.');
-  if (nextf==NULL) return -1;
-  *nextf = 0;
-  sscanf(instid,"%s",name);
-  instid = nextf + 1;
-  nextf = strchr(instid,'.');
-  if (nextf==NULL) return -1;
-  *nextf = 0;
-  sscanf(instid,"%d",id);
-  instid = nextf + 1;
-  nextf = strrchr(instid,'.');
-  if (nextf==NULL) return -1;
-  *nextf = 0;
-  sscanf(instid,"%s",resource);
-  instid = nextf + 1;
-  sscanf(instid,"%ld",timestamp);
-  return 0;
+  char *parsebuf = strdup(instid);
+  char *nextdf = strstr(parsebuf,"..");
+  char *nextf = strchr(parsebuf,'.');
+  char *idxptr[MVNUMELEMENTS] = {parsebuf,NULL,NULL,NULL,NULL};
+  int   i=1;
+
+  /* get seperator positions */
+  while (nextf && i < MVNUMELEMENTS) {
+    while (nextdf && nextf == nextdf) {
+      memmove(nextdf+1,nextdf+2,strlen(nextdf+2)+1); /* reduce double dot */
+      nextf++;
+      nextdf = strstr(nextf,"..");
+      nextf = strchr(nextf,'.');
+    }
+    *nextf=0;
+    nextf++;
+    idxptr[i++]=nextf;
+    nextdf = strstr(nextf,"..");
+    nextf = strchr(nextf,'.');
+  }
+  /* fill out result parameters */
+  if (i == MVNUMELEMENTS) {
+    strcpy(name,idxptr[0]);
+    sscanf(idxptr[1],"%d",id);
+    strcpy(resource,idxptr[2]);
+    strcpy(systemid,idxptr[3]);
+    sscanf(idxptr[4],"%ld",timestamp);
+    free(parsebuf);
+    return 0;
+  } else {
+    free(parsebuf);
+    return -1;
+  }
 }
 
 static char * metricClassName(const CMPIObjectPath *path)
@@ -513,6 +646,83 @@ void releaseMetricDefs(char **mnames,int *mids)
   }
 }
 
+static CimObjectPathFromValueId * _GetCop4Id(const char *pluginname);
+static ValueIdFromCimObjectPath * _GetId4Cop(const char *pluginname);
+static GetResourceClasses * _GetGetRes(const char *pluginname);
+static FreeResourceClasses * _GetFreeRes(const char *pluginname);
+
+int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx, 
+				 const CMPIObjectPath* cop,
+				 char ***metricnames,
+				 int **mids, char ***resourceids)
+{
+  /* inefficient -- need better buffering */
+  GetResourceClasses       *getres;
+  FreeResourceClasses      *freeres;
+  ValueIdFromCimObjectPath *id4cop;
+  char                    **resclasses;
+  CMPIObjectPath           *cores;
+  int                       i=0, j, k=0;
+  char                     *classname;
+  char                     *namesp;
+  char                      resourcename[300];
+  char                      systemname[300];
+
+
+  *mids=NULL;
+  *resourceids=NULL;
+  *metricnames=NULL;
+  classname=CMGetCharPtr(CMGetClassName(cop,NULL));
+  namesp=CMGetCharPtr(CMGetNameSpace(cop,NULL));
+
+  if (metricDefinitionList==NULL) {
+    refreshMetricDefClasses(broker,ctx,namesp);
+  }
+
+  MReadLock(&MdefLock);
+  while (metricDefinitionList && metricDefinitionList[i].mdef_metricname) {
+    getres=_GetGetRes(metricDefinitionList[i].mdef_cimpluginname);
+    freeres=_GetFreeRes(metricDefinitionList[i].mdef_cimpluginname);
+    if (getres && freeres) {
+      j=0;
+      getres(&resclasses);
+      while (resclasses[j]) {
+	cores=CMNewObjectPath(broker,namesp,resclasses[j],NULL);
+	if (cores) {
+	  if (CMClassPathIsA(broker,cores,classname,NULL)) {
+	    /* this plugin is responsible for resource class */
+	    id4cop=_GetId4Cop(metricDefinitionList[i].mdef_cimpluginname);
+	    if (id4cop) {
+	      if (id4cop(cop,resourcename,
+			 sizeof(resourcename),systemname,sizeof(systemname))==0) {
+		*mids=realloc(*mids,sizeof(int)*(k+1));
+		*metricnames=realloc(*metricnames,sizeof(char*)*(k+2));
+		*resourceids=realloc(*resourceids,sizeof(char*)*(k+2));
+		(*metricnames)[k] = 
+		  strdup(metricDefinitionList[i].mdef_metricname);
+		(*metricnames)[k+1] = NULL;
+		(*mids)[k] = metricDefinitionList[i].mdef_metricid;
+		(*resourceids)[k] = strdup(resourcename);
+		k++;
+	      }
+	    }
+	    break;
+	  }
+	}
+	j++;
+      }
+      freeres(resclasses);
+    }
+    i++;
+  }
+  MReadUnlock(&MdefLock);
+  return k;
+}
+
+void releaseMetricIds(char **metricnames,int *mids, char **resourceids) 
+{
+}
+
 CMPIInstance * makeMetricValueInst(CMPIBroker * broker, 
 				   CMPIContext * ctx,
 				   const char * defname,
@@ -541,6 +751,7 @@ CMPIInstance * makeMetricValueInst(CMPIBroker * broker,
     if (ci) {
       CMSetProperty(ci,"InstanceId",
 		    makeMetricValueId(instid,defname,defid,val->viResource,
+				      val->viSystemId,
 				      val->viCaptureTime),
 		    CMPI_chars);
       CMSetProperty(ci,"MetricDefinitionId",defname,CMPI_chars);
@@ -626,7 +837,7 @@ CMPIObjectPath * makeMetricValuePath(CMPIBroker * broker,
   if (co) {
     CMAddKey(co,"InstanceId",
 	     makeMetricValueId(instid,defname,defid,val->viResource,
-			       val->viCaptureTime),
+			       val->viSystemId,val->viCaptureTime),
 	     CMPI_chars);
     /* TODO: need to add more data (for id, etc.) to value items */
     CMAddKey(co,"MetricDefinitionId",makeMetricDefId(instid,defname,defid),
@@ -713,4 +924,162 @@ CMPIInstance * makeMetricDefInst(CMPIBroker * broker,
     }
   }
   return NULL;
+}
+
+
+CMPIObjectPath * makeResourcePath(CMPIBroker * broker,
+				  CMPIContext * ctx,
+				  const char * namesp,
+				  const char * defname,
+				  int defid,
+				  const char * resourcename,
+				  const char * systemid)
+{
+  CimObjectPathFromValueId * cop4id;
+  int idx=metricDefClassIndex(broker,ctx,namesp,defname,defid);
+  if (idx >= 0 && metricDefinitionList[idx].mdef_cimpluginname) {
+    cop4id = _GetCop4Id(metricDefinitionList[idx].mdef_cimpluginname);
+    if (cop4id) {
+      return (*cop4id)(broker,resourcename,systemid);
+    }
+  }
+  return NULL;
+}
+
+static void removePluginList()
+{
+  int i;
+  /* assume lock is already done */
+  if (pluginList) {
+    i=0;
+    while(pluginList[i].plug_name) {      
+      if (pluginList[i].plug_handle) {
+	dlclose(pluginList[i].plug_handle);
+      }
+      free(pluginList[i].plug_name);
+      i++;
+    }
+    free(pluginList);
+    pluginList = NULL;
+  }
+  
+}
+static int locatePluginIndex(const char *pluginname, int alloc)
+{
+  int idx=0;
+  while (pluginList && pluginList[idx].plug_name) {
+    if (strcmp(pluginname,pluginList[idx].plug_name)==0) {
+      return idx;
+    }
+    idx++;
+  }
+  if (alloc) {
+    pluginList = realloc(pluginList,sizeof(struct _PluginList)*(idx+2));
+    pluginList[idx].plug_name=NULL;
+    pluginList[idx+1].plug_name=NULL;
+    return idx;
+  } else {
+    return -1;
+  }
+}
+
+static int dynaloadPlugin(const char *pluginname, int idx)
+{
+  pluginList[idx].plug_handle = dlopen(pluginname,RTLD_LAZY);
+  if (pluginList[idx].plug_handle) {
+    pluginList[idx].plug_cop4id = 
+      dlsym(pluginList[idx].plug_handle,COP4VALID_S);
+    pluginList[idx].plug_id4cop = 
+      dlsym(pluginList[idx].plug_handle,VALID4COP_S);
+    pluginList[idx].plug_getres = 
+      dlsym(pluginList[idx].plug_handle,GETRES_S);
+    pluginList[idx].plug_freeres = 
+      dlsym(pluginList[idx].plug_handle,FREERES_S);
+    if (pluginList[idx].plug_cop4id && pluginList[idx].plug_id4cop &&
+	pluginList[idx].plug_getres && pluginList[idx].plug_freeres) {
+      pluginList[idx].plug_name=strdup(pluginname);
+      return 0;
+    }
+    /* failed to load syms*/
+    dlclose(pluginList[idx].plug_handle);
+  }
+  pluginList[idx].plug_name=NULL;
+  pluginList[idx].plug_handle=NULL;
+  pluginList[idx].plug_cop4id=NULL;
+  pluginList[idx].plug_id4cop=NULL;
+  pluginList[idx].plug_getres=NULL;
+  pluginList[idx].plug_freeres=NULL;
+  return -1;
+}
+
+static CimObjectPathFromValueId * _GetCop4Id(const char *pluginname)
+{
+  int idx;
+  MReadLock(&PdefLock);
+  idx=locatePluginIndex(pluginname,0);
+  if (idx>=0) {
+    MReadUnlock(&PdefLock);
+  } else {
+    MReadUnlock(&PdefLock);
+    MWriteLock(&PdefLock); /* not ideal - but safe */
+    idx=locatePluginIndex(pluginname,1);
+    /* load the stuff -- in case of failure all fields are set to NULL */
+    dynaloadPlugin(pluginname,idx);
+    MWriteUnlock(&PdefLock);
+  }
+  return pluginList[idx].plug_cop4id;
+}
+
+static ValueIdFromCimObjectPath * _GetId4Cop(const char *pluginname)
+{
+  int idx;
+  MReadLock(&PdefLock);
+  idx=locatePluginIndex(pluginname,0);
+  if (idx>=0) {
+    MReadUnlock(&PdefLock);
+  } else {
+    MReadUnlock(&PdefLock);
+    MWriteLock(&PdefLock); /* not ideal - but safe */
+    idx=locatePluginIndex(pluginname,1);
+    /* load the stuff -- in case of failure all fields are set to NULL */
+    dynaloadPlugin(pluginname,idx);
+    MWriteUnlock(&PdefLock);
+  }
+  return pluginList[idx].plug_id4cop;
+}
+
+static GetResourceClasses * _GetGetRes(const char *pluginname)
+{
+  int idx;
+  MReadLock(&PdefLock);
+  idx=locatePluginIndex(pluginname,0);
+  if (idx>=0) {
+    MReadUnlock(&PdefLock);
+  } else {
+    MReadUnlock(&PdefLock);
+    MWriteLock(&PdefLock); /* not ideal - but safe */
+    idx=locatePluginIndex(pluginname,1);
+    /* load the stuff -- in case of failure all fields are set to NULL */
+    dynaloadPlugin(pluginname,idx);
+    MWriteUnlock(&PdefLock);
+  }
+  return pluginList[idx].plug_getres;
+}
+
+static FreeResourceClasses * _GetFreeRes(const char *pluginname)
+{
+  int idx;
+  MReadLock(&PdefLock);
+  idx=locatePluginIndex(pluginname,0);
+  if (idx>=0) {
+    MReadUnlock(&PdefLock);
+  } else {
+    MReadUnlock(&PdefLock);
+    MWriteLock(&PdefLock); /* not ideal - but safe */
+    idx=locatePluginIndex(pluginname,1);
+    /* load the stuff -- in case of failure all fields are set to NULL */
+    dynaloadPlugin(pluginname,idx);
+    MWriteUnlock(&PdefLock);
+  }
+  return pluginList[idx].plug_freeres;
 }

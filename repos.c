@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.5 2004/08/05 10:23:45 mihajlov Exp $
+ * $Id: repos.c,v 1.6 2004/10/07 06:22:00 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -265,6 +265,10 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	      mv[j][0].mvTimeStamp -
 	      vs->vsValues[actnum].viCaptureTime;
 	    vs->vsValues[actnum].viValueLen=100; /* TODO : calc meaningful length */
+	    vs->vsValues[actnum].viSystemId=
+	      ch_alloc(ch,strlen(mv[j][numv[j]-1].mvSystemId)+1);	    
+	    strcpy(vs->vsValues[actnum].viSystemId,
+		   mv[j][numv[j]-1].mvSystemId);
 	    vs->vsValues[actnum].viValue=
 	      ch_alloc(ch,vs->vsValues[actnum].viValueLen);
 	    if (mc->mcCalc(mv[j],
@@ -284,6 +288,10 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	      vs->vsValues[actnum+i].viCaptureTime=mv[j][i].mvTimeStamp;
 	      vs->vsValues[actnum+i].viDuration=0;
 	      vs->vsValues[actnum+i].viValueLen=100;
+	      vs->vsValues[actnum+i].viSystemId=
+		ch_alloc(ch,strlen(mv[j][i].mvSystemId)+1);	    
+	      strcpy(vs->vsValues[actnum+i].viSystemId,
+		     mv[j][i].mvSystemId);
 	      vs->vsValues[actnum+i].viValue=
 		ch_alloc(ch,vs->vsValues[actnum+i].viValueLen);
 	      if (mc->mcCalc(&mv[j][i],

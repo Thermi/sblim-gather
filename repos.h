@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.4 2004/08/02 14:23:02 mihajlov Exp $
+ * $Id: repos.h,v 1.5 2004/10/07 06:22:00 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -70,6 +70,7 @@ typedef struct _ValueItem {
   size_t viValueLen;
   char * viValue;
   char * viResource;
+  char * viSystemId;
 } ValueItem;
 
 typedef struct _ValueRequest {

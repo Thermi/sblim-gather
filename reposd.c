@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.3 2004/09/30 14:39:23 mihajlov Exp $
+ * $Id: reposd.c,v 1.4 2004/10/07 06:22:00 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -210,6 +210,16 @@ int main(int argc, char * argv[])
 		if (vp + strlen(vr->vsValues[i].viResource) + 1 < vpmax) {
 		  strcpy(vp,vr->vsValues[i].viResource);
 		  vi[i].viResource = vp;
+		  vp += strlen(vp)+1;
+		}
+	      } else {
+		comm->gc_result=-1;
+		break;
+	      }
+	      if (vr->vsValues[i].viSystemId) {
+		if (vp + strlen(vr->vsValues[i].viSystemId) + 1 < vpmax) {
+		  strcpy(vp,vr->vsValues[i].viSystemId);
+		  vi[i].viSystemId = vp;
 		  vp += strlen(vp)+1;
 		}
 	      } else {

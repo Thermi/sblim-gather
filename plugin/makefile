@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.6 2004/09/15 11:31:05 heidineu Exp $
+# $Id: makefile,v 1.7 2004/10/07 06:22:00 mihajlov Exp $
 
 # define the Hardware Platform the compile will run on
 HW=$(shell ./platform.sh)
 
-# export CFLAGS=-Wall -g
-CPPFLAGS=-I .. -D$(HW) 
+export CFLAGS=-Wall -g
+CPPFLAGS=-I .. -D$(HW) -I$(PEGASUS_ROOT)/src/Pegasus/Provider/CMPI
 LOADLIBES=
 
 SUBDIRS=
@@ -13,7 +13,8 @@ SOURCES= metricOperatingSystem.c repositoryOperatingSystem.c \
 	 metricUnixProcess.c repositoryUnixProcess.c \
 	 metricProcessor.c repositoryProcessor.c \
 	 metricNetworkPort.c repositoryNetworkPort.c \
-	 metricIPProtocolEndpoint.c repositoryIPProtocolEndpoint.c
+	 metricIPProtocolEndpoint.c repositoryIPProtocolEndpoint.c \
+	 cimplugOperatingSystem.c
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 
@@ -26,10 +27,12 @@ all: $(SUBDIRS) libmetricOperatingSystem.so librepositoryOperatingSystem.so \
 	libmetricUnixProcess.so librepositoryUnixProcess.so \
 	libmetricProcessor.so librepositoryProcessor.so \
 	libmetricNetworkPort.so librepositoryNetworkPort.so \
-	libmetricIPProtocolEndpoint.so librepositoryIPProtocolEndpoint.so
+	libmetricIPProtocolEndpoint.so librepositoryIPProtocolEndpoint.so \
+	libcimplugOperatingSystem.so
+
 
 clean: $(SUBDIRS)
-	$(RM) $(OBJECTS) libmetric*.so librepository*.so
+	$(RM) $(OBJECTS) libmetric*.so librepository*.so libcimplug*.so
 
 distclean: clean
 	rcsclean
@@ -38,6 +41,7 @@ distclean: clean
 install: all
 	/usr/bin/install libmetricOperatingSystem.so $(INSTALLROOT)/usr/lib
 	/usr/bin/install librepositoryOperatingSystem.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install libcimplugOperatingSystem.so $(INSTALLROOT)/usr/lib
 	/usr/bin/install libmetricLocalFileSystem.so $(INSTALLROOT)/usr/lib
 	/usr/bin/install librepositoryLocalFileSystem.so $(INSTALLROOT)/usr/lib
 	/usr/bin/install libmetricUnixProcess.so $(INSTALLROOT)/usr/lib
@@ -52,6 +56,7 @@ install: all
 unistall:
 	$(RM) $(INSTALLROOT)/usr/lib/libmetricOperatingSystem.so
 	$(RM) $(INSTALLROOT)/usr/lib/librepositoryOperatingSystem.so
+	$(RM) $(INSTALLROOT)/usr/lib/libcimplugOperatingSystem.so
 	$(RM) $(INSTALLROOT)/usr/lib/libmetricLocalFileSystem.so
 	$(RM) $(INSTALLROOT)/usr/lib/librepositoryLocalFileSystem.so
 	$(RM) $(INSTALLROOT)/usr/lib/libmetricUnixProcess.so

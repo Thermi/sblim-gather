@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.7 2004/09/27 15:53:48 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.8 2004/10/07 06:22:00 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -76,6 +76,7 @@ CMPIStatus OSBase_MetricValueProviderCleanup( CMPIInstanceMI * mi,
            CMPIContext * ctx) { 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI Cleanup()\n", _FILENAME, _ClassName );
+  releaseMetricDefClasses();
   CMReturn(CMPI_RC_OK);
 }
 
@@ -156,8 +157,9 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
   ValueRequest     vr;
   COMMHEAP         ch;
   int              vId;
-  char             vName[200];
-  char             vResource[200];
+  char             vName[300];
+  char             vResource[300];
+  char             vSystemId[300];
   time_t           vTimestamp;
 
   if( _debug )
@@ -165,7 +167,8 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
   
   if (checkRepositoryConnection()) {
     ch=ch_init();
-    if (parseMetricValueId(metricValueName(cop),vName,&vId,vResource,&vTimestamp) == 0) {
+    if (parseMetricValueId(metricValueName(cop),vName,&vId,vResource,vSystemId,&vTimestamp) 
+	== 0) {
   if( _debug )
     fprintf(stderr, "id criteria %s,%s, %ld\n", vName, vResource, 
 	    vTimestamp);

@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.6 2004/09/30 14:39:23 mihajlov Exp $
+ * $Id: metric.h,v 1.7 2004/10/07 06:22:00 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -116,6 +116,7 @@ typedef struct _MetricCalculationDefinition {
   int               mcAliasId;
   int               mcMetricType;
   int               mcDataType;
+  char             *mcCimPlugin;  /* CIM Name Translation Plugin */
   MetricCalculator *mcCalc;
 } MetricCalculationDefinition;
 
