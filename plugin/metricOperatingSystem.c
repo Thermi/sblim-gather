@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.8 2004/08/19 10:54:59 heidineu Exp $
+ * $Id: metricOperatingSystem.c,v 1.9 2004/09/22 12:19:27 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -405,7 +405,10 @@ int metricRetrMemorySize( int mid,
   unsigned long long totalSwapMem = 0;
   unsigned long long freeSwapMem  = 0;
   FILE               * fhd        = NULL;
+  char               * ptr        = NULL;
   char               * str        = NULL;
+  char               buf[30000];
+  size_t             bytes_read   = 0;
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving MemorySize\n",
@@ -418,19 +421,22 @@ int metricRetrMemorySize( int mid,
 	    __FILE__,__LINE__,mid);
 #endif
     if ( (fhd=fopen("/proc/meminfo","r")) != NULL ) {
-      fscanf(fhd,
-	     "%*s %*s %*s %*s %*s %*s %*s %lld %*s %lld %*s %*s %*s %*s %lld %*s %lld",
-	     &totalPhysMem,&freePhysMem,
-	     &totalSwapMem,&freeSwapMem );
+
+      bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+
+      ptr = strstr(buf,"MemTotal");
+      sscanf(ptr, "%*s %lld", &totalPhysMem);
+      ptr = strstr(buf,"MemFree");
+      sscanf(ptr, "%*s %lld", &freePhysMem);
+      ptr = strstr(buf,"SwapTotal");
+      sscanf(ptr, "%*s %lld", &totalSwapMem);
+      ptr = strstr(buf,"SwapFree");
+      sscanf(ptr, "%*s %lld", &freeSwapMem);
+
       fclose(fhd);
     }
     else { return -1; }
 
-    totalPhysMem = totalPhysMem/1024;
-    freePhysMem  = freePhysMem/1024;
-    totalSwapMem = totalSwapMem/1024;
-    freeSwapMem  = freeSwapMem/1024;
-    
     str = calloc(1, ((4*sizeof(unsigned long long))+4) );
     sprintf( str,"%lld:%lld:%lld:%lld",
 	     totalPhysMem,freePhysMem,totalSwapMem,freeSwapMem);

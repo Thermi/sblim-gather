@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.readme,v 1.5 2004/08/19 10:54:59 heidineu Exp $
+ * $Id: metricOperatingSystem.readme,v 1.6 2004/09/22 12:19:28 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -248,8 +248,9 @@ Sample Interval : 60 sec
 CIM Data Type   : string
 Units           : kByte
 
-Value Source    : the second and third line of /proc/meminfo contains the sizes
-                  of total / free physical and swap space 
+Value Source    : /proc/meminfo contains TotalVisibleMemorySize (MemTotal),
+		  FreePhysicalMemory (MemFree), SizeStoredInPagingFiles 
+		  (SwapTotal), FreeSpaceInPagingFiles (SwapFree)
 
 Syntax          : <TotalVisibleMemorySize>:<FreePhysicalMemory>:<SizeStoredInPagingFiles>:<FreeSpaceInPagingFiles>
 
