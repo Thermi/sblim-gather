@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricDefForMEProvider.c,v 1.1 2004/11/10 16:08:24 heidineu Exp $
+ * $Id: OSBase_MetricDefForMEProvider.c,v 1.2 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -34,8 +34,8 @@ static CMPIBroker * _broker;
  * no support for assocClass, resultClass, etc.
  * ------------------------------------------------------------------ */
 
-static CMPIInstance * _makeRefInstance(const CMPIObjectPath *defp,
-				       const CMPIObjectPath *valp)
+static CMPIInstance * _makeRefInstance(CMPIObjectPath *defp,
+				       CMPIObjectPath *valp)
 {
   CMPIObjectPath *co = CMNewObjectPath(_broker,NULL,LOCALCLASSNAME,NULL);
   CMPIInstance   *ci = NULL;
@@ -50,8 +50,8 @@ static CMPIInstance * _makeRefInstance(const CMPIObjectPath *defp,
   return ci;
 }
 
-static CMPIObjectPath * _makeRefPath(const CMPIObjectPath *defp,
-				       const CMPIObjectPath *valp)
+static CMPIObjectPath * _makeRefPath(CMPIObjectPath *defp,
+				     CMPIObjectPath *valp)
 {
   CMPIObjectPath *co = CMNewObjectPath(_broker,NULL,LOCALCLASSNAME,NULL);
   if (co) {

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricGathererProvider.c,v 1.5 2004/09/24 15:30:29 mihajlov Exp $
+ * $Id: OSBase_MetricGathererProvider.c,v 1.6 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -273,12 +273,12 @@ CMPIStatus OSBase_MetricGathererProviderMethodCleanup( CMPIMethodMI * mi,
 }
 
 CMPIStatus OSBase_MetricGathererProviderInvokeMethod( CMPIMethodMI * mi, 
-					      CMPIContext * ctx, 
-					      CMPIResult * rslt,
-					      CMPIObjectPath * cop,
-					      char * method,
-					      CMPIArgs * in,
-					      CMPIArgs * out)
+						      CMPIContext * ctx, 
+						      CMPIResult * rslt,
+						      CMPIObjectPath * cop,
+						      const char * method,
+						      CMPIArgs * in,
+						      CMPIArgs * out)
 {
   CMPIStatus   st = {CMPI_RC_OK,NULL};
   GatherStatus gs;

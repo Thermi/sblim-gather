@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.16 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: repos.c,v 1.17 2004/12/22 16:45:52 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -285,13 +285,10 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	   || (mc->mcMetricType&MD_RATE) 
 	   || (mc->mcMetricType&MD_AVERAGE) ) {
 	useIntervals=1;
-	if(vs->vsFrom==vs->vsTo) { 
-	  /* "point" interval */
-	  if (mc->mcMetricType&MD_INTERVAL)
-	    intervalnum = 1;
-	  else
-	    intervalnum = 2;
-	}
+	intervalnum=2;
+      } else if (vs->vsNumValues>0) {
+	/* client specified number of values per resource */
+	intervalnum=vs->vsNumValues;
       }
       if (resnum) {
 	mv = calloc(resnum, sizeof(MetricValue*));
@@ -311,7 +308,7 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	  /* here the interval-type metrics are computed - by resource */
 	  vs->vsNumValues=resnum; /* one per resource */
 	  for (j=0; j < resnum; j++) {
-	    if (intervalnum && (numv[j]<intervalnum)) {
+	    if (numv[j]<intervalnum) {
 	      numv[j] = 0;  /* this value cannot be computed */
 	    }
 	    if (numv[j]==0) {

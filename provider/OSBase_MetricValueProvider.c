@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.9 2004/11/04 09:47:04 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.10 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -309,6 +309,7 @@ static void returnPathes(CMPIBroker *_broker,
     vr.vsResource = NULL;
     vr.vsSystemId = NULL;
     vr.vsFrom = vr.vsTo = 0;
+    vr.vsNumValues=1; /* restrict to one/latest value per resource */
     if( _debug )
       fprintf( stderr, "::: getting value for id %d\n", rdef[i].rdId);
     if (rrepos_get(&vr,ch) == 0) {
@@ -349,6 +350,7 @@ static void returnInstances(CMPIBroker *_broker,
     vr.vsResource = NULL;
     vr.vsSystemId = NULL;
     vr.vsFrom = vr.vsTo = 0;
+    vr.vsNumValues=1; /* restrict to one/latest value per resource */
     if( _debug )
       fprintf( stderr, "::: getting value for id %d\n", rdef[i].rdId);
     if (rrepos_get(&vr,ch) == 0) {

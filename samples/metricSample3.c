@@ -1,5 +1,5 @@
 /*
- * $Id: metricSample3.c,v 1.4 2004/08/03 12:36:08 mihajlov Exp $
+ * $Id: metricSample3.c,v 1.5 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -24,7 +24,6 @@ static MetricDefinition metricDef;
 
 static MetricRetriever   metricRetriever;
 static MetricDeallocator metricDeallocator;
-static MetricCalculator  metricCalculator;
 
 int _DefinedMetrics (MetricRegisterId *mr,
 		     const char *pluginname,
@@ -82,16 +81,6 @@ int metricRetriever(int mid, MetricReturner mret)
     }
   }
   return numvalue;
-}
-
-size_t metricCalculator(MetricValue *mv, int mnum, void *v, size_t vlen)
-{
-  /* plain copy */
-  if (mv && vlen >=  mv->mvDataLength) {
-    *(int*)v=*(int*)mv->mvData;
-    return mv->mvDataLength;
-  }
-  return -1;
 }
 
 void metricDeallocator(void *v)

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.2 2004/09/24 15:30:29 mihajlov Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.3 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -272,7 +272,7 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderInvokeMethod( CMPIMethodMI * mi
 					      CMPIContext * ctx, 
 					      CMPIResult * rslt,
 					      CMPIObjectPath * cop,
-					      char * method,
+					      const char * method,
 					      CMPIArgs * in,
 					      CMPIArgs * out)
 {

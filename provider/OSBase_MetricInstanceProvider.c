@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricInstanceProvider.c,v 1.4 2004/11/04 09:47:03 mihajlov Exp $
+ * $Id: OSBase_MetricInstanceProvider.c,v 1.5 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -34,8 +34,8 @@ static CMPIBroker * _broker;
  * no support for assocClass, resultClass, etc.
  * ------------------------------------------------------------------ */
 
-static CMPIInstance * _makeRefInstance(const CMPIObjectPath *defp,
-				       const CMPIObjectPath *valp)
+static CMPIInstance * _makeRefInstance(CMPIObjectPath *defp,
+				       CMPIObjectPath *valp)
 {
   CMPIObjectPath *co = CMNewObjectPath(_broker,NULL,LOCALCLASSNAME,NULL);
   CMPIInstance   *ci = NULL;
@@ -50,8 +50,8 @@ static CMPIInstance * _makeRefInstance(const CMPIObjectPath *defp,
   return ci;
 }
 
-static CMPIObjectPath * _makeRefPath(const CMPIObjectPath *defp,
-				       const CMPIObjectPath *valp)
+static CMPIObjectPath * _makeRefPath(CMPIObjectPath *defp,
+				     CMPIObjectPath *valp)
 {
   CMPIObjectPath *co = CMNewObjectPath(_broker,NULL,LOCALCLASSNAME,NULL);
   if (co) {
@@ -98,6 +98,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 	vr.vsResource=NULL;
 	vr.vsSystemId=NULL;
 	vr.vsFrom=vr.vsTo=0;
+	vr.vsNumValues=1; /* restrict to one/latest value per resource */
 	if (rrepos_get(&vr,ch) == 0 ) {
 	  for (i=0; i < vr.vsNumValues; i++) {
 	    co = makeMetricValuePath( _broker, ctx,

@@ -1,5 +1,5 @@
 /*
- * $Id: cimplug.h,v 1.1 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: cimplug.h,v 1.2 2004/12/22 16:45:52 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -55,7 +55,7 @@ typedef CMPIObjectPath* (CimObjectPathFromValueId)
  */
 
 typedef int (ValueIdFromCimObjectPath)
-     (const CMPIObjectPath* cop, 
+     (CMPIObjectPath* cop, 
       char* id, size_t idlen, char* systemid, size_t systemidlen);
 
 

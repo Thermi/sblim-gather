@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryIPProtocolEndpoint.c,v 1.4 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: repositoryIPProtocolEndpoint.c,v 1.5 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -462,7 +462,6 @@ unsigned long long ip_getPacketsReceived( char * data ) {
 
 unsigned long long ip_getPacketsTransmitted( char * data ) {
   char * hlp = NULL;
-  char * end = NULL;
   char   bytes[128];
   unsigned long long val = 0;
 

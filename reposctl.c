@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.11 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: reposctl.c,v 1.12 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -128,6 +128,7 @@ int main()
       vr.vsSystemId[0]=0;
       vr.vsResource = argbuf2;
       vr.vsResource[0]=0;
+      vr.vsNumValues = 0;
       sscanf(arg,"%d %s %s %d %d ",&vr.vsId,
 	     vr.vsSystemId,vr.vsResource,&offFrom,&offTo );
       if (strlen(vr.vsSystemId)==0 || vr.vsSystemId[0]=='*') {

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.h,v 1.7 2004/12/15 07:27:25 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.h,v 1.8 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -60,16 +60,16 @@ int parseMetricValueId(const char * instid,
 
 /* plugin name for metric definition class name */
 int getPluginNamesForValueClass(CMPIBroker *broker, CMPIContext *ctx, 
-				const CMPIObjectPath *cop, char ***pluginnames);
+				CMPIObjectPath *cop, char ***pluginnames);
 void releasePluginNames(char **pluginnames);
 int getMetricDefsForClass(CMPIBroker *broker, CMPIContext *ctx, 
-			  const CMPIObjectPath* cop,
+			  CMPIObjectPath* cop,
 			  char ***mnames, int **mids);
 void releaseMetricDefs(char **mnames,int *mids); 
 
 /* resource class to metric id mapping */
 int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx, 
-				 const CMPIObjectPath* cop,
+				 CMPIObjectPath* cop,
 				 char ***metricnames,
 				 int **mids, 
 				 char ***resourceids,
@@ -86,14 +86,14 @@ CMPIInstance * makeMetricValueInst(CMPIBroker * broker,
 				   int defid,
 				   const ValueItem *val,
 				   unsigned   datatype,
-				   const CMPIObjectPath *cop,
+				   CMPIObjectPath *cop,
 				   CMPIStatus * rc);
 CMPIObjectPath * makeMetricValuePath(CMPIBroker * broker,
 				     CMPIContext * ctx,
 				     const char * defname,
 				     int defid,
 				     const ValueItem *val, 
-				     const CMPIObjectPath *cop,
+				     CMPIObjectPath *cop,
 				     CMPIStatus * rc);
 
 CMPIObjectPath * makeMetricDefPath(CMPIBroker * broker,

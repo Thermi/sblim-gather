@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.9 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.10 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -530,7 +530,7 @@ int parseMetricValueId(const char * instid,
   }
 }
 
-static char * metricClassName(const CMPIObjectPath *path)
+static char * metricClassName(CMPIObjectPath *path)
 {
   /* return class name or NULL if CIM_ (base) class */
   CMPIStatus rc;
@@ -544,7 +544,7 @@ static char * metricClassName(const CMPIObjectPath *path)
 }
 
 static int pluginForClass(CMPIBroker *broker, CMPIContext *ctx, 
-		   const CMPIObjectPath *cop, char *pluginname)
+			  CMPIObjectPath *cop, char *pluginname)
 {
   char *metricclass = metricClassName(cop);
   int   i=0;
@@ -567,7 +567,7 @@ static int pluginForClass(CMPIBroker *broker, CMPIContext *ctx,
 }
 
 int getPluginNamesForValueClass(CMPIBroker *broker, CMPIContext *ctx, 
-				const CMPIObjectPath *cop, char ***pluginnames)
+				CMPIObjectPath *cop, char ***pluginnames)
 {
   char  pluginname[500];
   char *valclassname;
@@ -644,7 +644,7 @@ void releasePluginNames(char **pluginnames)
 }
 
 int getMetricDefsForClass(CMPIBroker *broker, CMPIContext *ctx, 
-			  const CMPIObjectPath* cop,
+			  CMPIObjectPath* cop,
 			  char ***mnames, int **mids)
 {
   char pluginname[500];
@@ -709,7 +709,7 @@ static GetResourceClasses * _GetGetRes(const char *pluginname);
 static FreeResourceClasses * _GetFreeRes(const char *pluginname);
 
 int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx, 
-				 const CMPIObjectPath* cop,
+				 CMPIObjectPath* cop,
 				 char ***metricnames,
 				 int **mids, 
 				 char ***resourceids,
@@ -841,7 +841,7 @@ CMPIInstance * makeMetricValueInst(CMPIBroker * broker,
 				   int    defid,
 				   const ValueItem *val, 
 				   unsigned   datatype,
-				   const CMPIObjectPath *cop,
+				   CMPIObjectPath *cop,
 				   CMPIStatus * rc)
 {
   CMPIObjectPath * co;
@@ -878,6 +878,9 @@ CMPIInstance * makeMetricValueInst(CMPIBroker * broker,
 	CMNewDateTimeFromBinary(broker,
 				(long long)val->viDuration*1000000,
 				1, NULL);
+      if (datetime)
+	CMSetProperty(ci,"Duration",&datetime,CMPI_dateTime);
+
       valstring = val2string(broker,val,datatype);
       if (valstring)
 	CMSetProperty(ci,"MetricValue",&valstring,CMPI_string);
@@ -891,7 +894,7 @@ CMPIObjectPath * makeMetricValuePath(CMPIBroker * broker,
 				     const char * defname,
 				     int    defid,
 				     const ValueItem *val, 
-				     const CMPIObjectPath *cop,
+				     CMPIObjectPath *cop,
 				     CMPIStatus * rc)
 {
   CMPIObjectPath * co;

@@ -1,5 +1,5 @@
 /*
- * $Id: cimplugLocalFileSystem.c,v 1.1 2004/10/08 07:34:54 mihajlov Exp $
+ * $Id: cimplugLocalFileSystem.c,v 1.2 2004/12/22 16:45:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -68,7 +68,7 @@ CMPIObjectPath* COP4VALID (CMPIBroker *broker, const char *id,
   return cop;
 }
 
-int VALID4COP (const CMPIObjectPath *cop, char *id, size_t idlen,
+int VALID4COP (CMPIObjectPath *cop, char *id, size_t idlen,
 	       char *systemid, size_t systemidlen)
 {
   CMPIData    data;
