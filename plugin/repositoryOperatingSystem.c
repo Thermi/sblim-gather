@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.6 2004/08/19 10:54:59 heidineu Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.7 2004/09/13 15:26:12 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -1578,30 +1578,28 @@ unsigned long long os_getCPUTotalTime( char * data ) {
 
 float os_getCPUKernelTimePercentage( char * start, char * end ) {
 
-  float end_idle     = 0;
-  float end_total    = 0;
   float end_kernel   = 0;
-  float start_idle   = 0;
-  float start_total  = 0;
+  float end_total    = 0;
   float start_kernel = 0;
+  float start_total  = 0;
   float kernelPerc   = 0;
 
   if(!end) return -1;
 
-  end_idle   = os_getCPUIdleTime(end);
-  end_total  = os_getCPUTotalTime(end);
   end_kernel = os_getCPUKernelTime(end);
+  /* CPUTotalTime is the sum of UserTime and KernelTime */
+  end_total  = os_getCPUTotalTime(end);
 
   if( start != NULL ) {
-    start_idle   = os_getCPUIdleTime(start);
-    start_total  = os_getCPUTotalTime(start);
     start_kernel = os_getCPUKernelTime(start);
+    start_total  = os_getCPUTotalTime(start);
 
     kernelPerc = ( (end_kernel-start_kernel) / 
 		   (end_total-start_total) ) *
-      os_getTotalCPUTimePercentage(start,end) ;
+                 os_getTotalCPUTimePercentage(start,end);
   }
-  else { kernelPerc = (end_kernel*100)/(end_idle+end_total); }
+  else { kernelPerc = (end_kernel / end_total ) *
+	               os_getTotalCPUTimePercentage(NULL,end); }
 
   return kernelPerc;
 }
@@ -1610,29 +1608,27 @@ float os_getCPUKernelTimePercentage( char * start, char * end ) {
 float os_getCPUUserTimePercentage( char * start, char * end ) {
 
   float end_user    = 0;
-  float end_idle    = 0;
   float end_total   = 0;
-  float start_idle  = 0;
-  float start_total = 0;
   float start_user  = 0;
+  float start_total = 0;
   float userPerc    = 0;
 
   if(!end) return -1;
 
   end_user  = os_getCPUUserTime(end);
-  end_idle  = os_getCPUIdleTime(end);
+  /* CPUTotalTime is the sum of UserTime and KernelTime */
   end_total = os_getCPUTotalTime(end);
 
   if( start != NULL ) {
     start_user  = os_getCPUUserTime(start);
-    start_idle  = os_getCPUIdleTime(start);
     start_total = os_getCPUTotalTime(start);
 
     userPerc = ( (end_user-start_user) / 
 		 (end_total-start_total) ) *
-      os_getTotalCPUTimePercentage(start,end) ;
+               os_getTotalCPUTimePercentage(start,end);
   }
-  else { userPerc = (end_user*100)/(end_idle+end_total); }
+  else { userPerc = (end_user / end_total) *
+	            os_getTotalCPUTimePercentage(NULL,end); }
 
   return userPerc;
 }
