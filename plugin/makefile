@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2004/08/04 09:00:04 heidineu Exp $
+# $Id: makefile,v 1.6 2004/09/15 11:31:05 heidineu Exp $
 
 # define the Hardware Platform the compile will run on
 HW=$(shell ./platform.sh)
@@ -12,7 +12,8 @@ SOURCES= metricOperatingSystem.c repositoryOperatingSystem.c \
 	 metricLocalFileSystem.c repositoryLocalFileSystem.c \
 	 metricUnixProcess.c repositoryUnixProcess.c \
 	 metricProcessor.c repositoryProcessor.c \
-	 metricNetworkPort.c repositoryNetworkPort.c
+	 metricNetworkPort.c repositoryNetworkPort.c \
+	 metricIPProtocolEndpoint.c repositoryIPProtocolEndpoint.c
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 
@@ -24,7 +25,8 @@ all: $(SUBDIRS) libmetricOperatingSystem.so librepositoryOperatingSystem.so \
 	libmetricLocalFileSystem.so librepositoryLocalFileSystem.so \
 	libmetricUnixProcess.so librepositoryUnixProcess.so \
 	libmetricProcessor.so librepositoryProcessor.so \
-	libmetricNetworkPort.so librepositoryNetworkPort.so
+	libmetricNetworkPort.so librepositoryNetworkPort.so \
+	libmetricIPProtocolEndpoint.so librepositoryIPProtocolEndpoint.so
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) libmetric*.so librepository*.so
@@ -44,6 +46,8 @@ install: all
 	/usr/bin/install librepositoryProcessor.so $(INSTALLROOT)/usr/lib
 	/usr/bin/install libmetricNetworkPort.so $(INSTALLROOT)/usr/lib
 	/usr/bin/install librepositoryNetworkPort.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install libmetricIPProtocolEndpoint.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install librepositoryIPProtocolEndpoint.so $(INSTALLROOT)/usr/lib
 
 unistall:
 	$(RM) $(INSTALLROOT)/usr/lib/libmetricOperatingSystem.so
@@ -56,6 +60,8 @@ unistall:
 	$(RM) $(INSTALLROOT)/usr/lib/librepositoryProcessor.so
 	$(RM) $(INSTALLROOT)/usr/lib/libmetricNetworkPort.so
 	$(RM) $(INSTALLROOT)/usr/lib/librepositoryNetworkPort.so
+	$(RM) $(INSTALLROOT)/usr/lib/libmetricIPProtocolEndpoint.so
+	$(RM) $(INSTALLROOT)/usr/lib/librepositoryIPProtocolEndpoint.so
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
