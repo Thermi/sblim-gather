@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryLocalFileSystem.c,v 1.1 2004/08/03 12:39:11 heidineu Exp $
+ * $Id: repositoryLocalFileSystem.c,v 1.2 2004/08/04 09:00:04 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -40,10 +40,10 @@ static MetricCalculator  metricCalcAvSpacePerc;
 
 /* ---------------------------------------------------------------------------*/
 
-int _DefinedRepositoryMetrics (MetricRegisterId *mr,
+int _DefinedRepositoryMetrics( MetricRegisterId *mr,
 			       const char *pluginname,
 			       size_t *mcnum,
-			       MetricCalculationDefinition **mc) {
+			       MetricCalculationDefinition **mc ) {
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving metric calculation definitions\n",
 	  __FILE__,__LINE__);
@@ -53,14 +53,14 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
     return -1;
   }
 
-  metricCalcDef[2].mcVersion=MD_VERSION;
+  metricCalcDef[0].mcVersion=MD_VERSION;
   metricCalcDef[0].mcName="AvailableSpace";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
   metricCalcDef[0].mcMetricType=MD_RETRIEVED|MD_POINT;
   metricCalcDef[0].mcDataType=MD_UINT64;
   metricCalcDef[0].mcCalc=metricCalcAvSpace;
 
-  metricCalcDef[2].mcVersion=MD_VERSION;
+  metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="AvailableSpacePercentage";
   metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
   metricCalcDef[1].mcMetricType=MD_RETRIEVED|MD_POINT;

@@ -1,5 +1,5 @@
 /*
- * $Id: metricLocalFileSystem.c,v 1.2 2004/08/03 12:39:11 heidineu Exp $
+ * $Id: metricLocalFileSystem.c,v 1.3 2004/08/04 09:00:04 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -14,9 +14,7 @@
  * Contributors: 
  *
  * Description:
- * This shared library is a Plugin to the metrics gatherer written
- * by Viktor Mihajlovski <mihajlov@de.ibm.com>, and offers the 
- * following File System specific metrics :
+ * Metrics Gatherer Plugin of the following File System specific metrics :
  *
  * AvailableSpace
  * AvailableSpacePercentage
@@ -39,13 +37,13 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricDefinition  metricDef[2];
+static MetricDefinition metricDef[2];
 
 /* --- AvailableSpace --- */
-static MetricRetriever   metricRetrAvSpace;
+static MetricRetriever  metricRetrAvSpace;
 
 /* --- AvailableSpacePercentage --- */
-static MetricRetriever   metricRetrAvSpacePerc;
+static MetricRetriever  metricRetrAvSpacePerc;
 
 /* ---------------------------------------------------------------------------*/
 
@@ -63,14 +61,13 @@ static int    _enum_fssize = 0;
 
 static int enum_all_fs();
 static int check_enum_fs();
-static void freeResourceList(char ** list);
 
 /* ---------------------------------------------------------------------------*/
 
-int _DefinedMetrics ( MetricRegisterId *mr,
-		      const char * pluginname,
-		      size_t *mdnum,
-		      MetricDefinition **md ) {
+int _DefinedMetrics( MetricRegisterId *mr,
+		     const char * pluginname,
+		     size_t *mdnum,
+		     MetricDefinition **md ) {
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving metric definitions\n",
@@ -83,7 +80,7 @@ int _DefinedMetrics ( MetricRegisterId *mr,
 
   metricDef[0].mdVersion=MD_VERSION;
   metricDef[0].mdName="AvailableSpace";
-  metricDef[0].mdReposPluginName="plugin/librepositoryLocalFileSystem.so";
+  metricDef[0].mdReposPluginName="librepositoryLocalFileSystem.so";
   metricDef[0].mdId=mr(pluginname,metricDef[0].mdName);
   metricDef[0].mdSampleInterval=sampleInterval;
   metricDef[0].mproc=metricRetrAvSpace;
@@ -91,7 +88,7 @@ int _DefinedMetrics ( MetricRegisterId *mr,
 
   metricDef[1].mdVersion=MD_VERSION;
   metricDef[1].mdName="AvailableSpacePercentage";
-  metricDef[1].mdReposPluginName="plugin/librepositoryLocalFileSystem.so";
+  metricDef[1].mdReposPluginName="librepositoryLocalFileSystem.so";
   metricDef[1].mdId=mr(pluginname,metricDef[1].mdName);
   metricDef[1].mdSampleInterval=sampleInterval;
   metricDef[1].mproc=metricRetrAvSpacePerc;
@@ -126,20 +123,11 @@ int _StartStopMetrics (int starting) {
     fprintf(stderr,"--- %s(%i) : free file system entries\n",
 	    __FILE__,__LINE__);
 #endif
-    freeResourceList(&_enum_fsname);
-    freeResourceList(&_enum_fsdir);
+    if(_enum_fsname) free(_enum_fsname);
+    if(_enum_fsdir) free(_enum_fsdir);
   }
   
   return 0;
-}
-
-void freeResourceList(char ** list) {
-  char ** ls = list;
-  while(*ls) {
-    free(*ls);
-    ls++;
-  }
-  free(list);
 }
 
 
@@ -334,7 +322,6 @@ int enum_all_fs() {
 
   return 0;
 }
-
 
 int check_enum_fs() {  
 

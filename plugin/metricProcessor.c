@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricProcessor.c,v 1.2 2004/08/04 09:00:04 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -14,9 +14,7 @@
  * Contributors: 
  *
  * Description:
- * This shared library is a Plugin to the metrics gatherer written
- * by Viktor Mihajlovski <mihajlov@de.ibm.com>, and offers the 
- * following Processor specific metrics :
+ * Metrics Gatherer Plugin of the following Processor specific metrics :
  *
  * TotalCPUTimePercentage
  *
@@ -33,14 +31,10 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricDefinition  metricDef[1];
-
-static ResourceLister          resourceLister;
-static ResourceListDeallocator resourceListDeallocator;
+static MetricDefinition metricDef[1];
 
 /* --- TotalCPUTimePercentage --- */
-static MetricRetriever   metricRetrCPUTimePerc;
-static MetricCalculator  metricCalcCPUTimePerc;
+static MetricRetriever  metricRetrCPUTimePerc;
 
 /* ---------------------------------------------------------------------------*/
 
@@ -61,10 +55,10 @@ static int enum_all_proc();
 
 /* ---------------------------------------------------------------------------*/
 
-int _DefinedMetrics ( MetricRegisterId *mr,
-		      const char * pluginname,
-		      size_t *mdnum,
-		      MetricDefinition **md ) {
+int _DefinedMetrics( MetricRegisterId *mr,
+		     const char * pluginname,
+		     size_t *mdnum,
+		     MetricDefinition **md ) {
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving metric definitions\n",
@@ -75,16 +69,13 @@ int _DefinedMetrics ( MetricRegisterId *mr,
     return -1;
   }
 
+  metricDef[0].mdVersion=MD_VERSION;
   metricDef[0].mdName="TotalCPUTimePercentage";
+  metricDef[0].mdReposPluginName="librepositoryProcessor.so";
   metricDef[0].mdId=mr(pluginname,metricDef[0].mdName);
   metricDef[0].mdSampleInterval=60;
-  metricDef[0].mdMetricType=MD_RETRIEVED|MD_AVERAGE;
-  metricDef[0].mdDataType=MD_UINT8;
   metricDef[0].mproc=metricRetrCPUTimePerc;
   metricDef[0].mdeal=free;
-  metricDef[0].mcalc=metricCalcCPUTimePerc;
-  metricDef[0].mresl=resourceLister;
-  metricDef[0].mresldeal=resourceListDeallocator;
 
   *mdnum=1;
   *md=metricDef;
@@ -116,29 +107,9 @@ int _StartStopMetrics (int starting) {
   return 0;
 }
 
-int resourceLister(int mid, char *** list) {
-  int i = 0;
-  if (list) { 
-    *list = calloc(_enum_size+1,sizeof(char*));
-    for(;i<_enum_size;i++) {
-      (*list)[i] = strdup(_enum_proc + (i*64));
-    }
-    return _enum_size;
-  }
-  return -1;
-}
 
-void resourceListDeallocator(char ** list) {
-  char ** ls = list;
-  while(*ls) {
-    free(*ls);
-    ls++;
-  }
-  free(list);
-}
-
-
-
+/* ---------------------------------------------------------------------------*/
+/* TotalCPUTimePercentage                                                     */
 /* ---------------------------------------------------------------------------*/
 
 int metricRetrCPUTimePerc( int mid, 
@@ -176,12 +147,12 @@ int metricRetrCPUTimePerc( int mid,
 	  ptr = strchr(buf,'\n')+1;
 	  sscanf(ptr,"%*s %lld %lld %lld %lld",&val1,&val2,&val3,&val4);
 	  size = ((val1+val2+val3)*100) / (val1+val2+val3+val4);
-	  proc = _enum_proc + (i*64);
+	  proc = _enum_proc + (i*64);	  
 	  //fprintf(stderr,"[%i] proc: %s ... size : %i\n",i,proc,size);
 
 	  mv = calloc(1, sizeof(MetricValue) + 
-		      sizeof(unsigned char) + 
-		      (strlen(proc)+1) );
+		         sizeof(unsigned char) + 
+		         (strlen(proc)+1) );
 	  if (mv) {
 	    mv->mvId = mid;
 	    mv->mvTimeStamp = time(NULL);
@@ -204,30 +175,8 @@ int metricRetrCPUTimePerc( int mid,
 }
 
 
-size_t metricCalcCPUTimePerc( MetricValue *mv,   
-			      int mnum,
-			      void *v, 
-			      size_t vlen ) {
-  int total = 0;
-  int sum   = 0;
-  int i     = 0;
-
-#ifdef DEBUG
-  fprintf(stderr,"--- %s(%i) : Calculate TotalCPUTimePercentage\n",
-	  __FILE__,__LINE__);
-#endif
-  if ( mv && (vlen>=mv->mvDataLength) && (mnum>=2) ) {
-    for(;i<mnum;i++) { sum = sum + *(unsigned char*)mv->mvData; }
-    total = sum / mnum;
-    memcpy(v, &total, sizeof(unsigned char));
-    return sizeof(unsigned char);
-  }
-  return -1;
-}
-
-
 /* ---------------------------------------------------------------------------*/
-// get all processor instances
+/* get all processor instances                                                */
 /* ---------------------------------------------------------------------------*/
 
 int enum_all_proc() {  

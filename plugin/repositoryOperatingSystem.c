@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.3 2004/08/03 12:39:11 heidineu Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.4 2004/08/04 09:00:04 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -41,11 +41,7 @@
 #include <mplugin.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>     
-#include <time.h>
-
-#include <unistd.h>
-#include <sys/types.h>
+#include <string.h>
 
 /* ---------------------------------------------------------------------------*/
 
@@ -86,10 +82,10 @@ static MetricCalculator  metricCalcLoadAverage;
 
 /* ---------------------------------------------------------------------------*/
 
-int _DefinedRepositoryMetrics (MetricRegisterId *mr,
+int _DefinedRepositoryMetrics( MetricRegisterId *mr,
 			       const char *pluginname,
 			       size_t *mcnum,
-			       MetricCalculationDefinition **mc) {
+			       MetricCalculationDefinition **mc ) {
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving metric calculation definitions\n",
 	  __FILE__,__LINE__);
@@ -369,8 +365,7 @@ size_t metricCalcKernelTime( MetricValue *mv,
     }
     else { kt = k1; }
 
-    fprintf(stderr,"kernel time: %lld\n",kt);
-    
+    //fprintf(stderr,"kernel time: %lld\n",kt);
     memcpy(v,&kt,sizeof(unsigned long long));
     return sizeof(unsigned long long);
   }
@@ -873,7 +868,8 @@ size_t metricCalcPageInRate( MetricValue *mv,
 	  __FILE__,__LINE__);
 #endif
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=2) ) {
-    total = (*(unsigned long long*)mv[0].mvData - *(unsigned long long*)mv[mnum-1].mvData) / (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
+    total = (*(unsigned long long*)mv[0].mvData - *(unsigned long long*)mv[mnum-1].mvData) / 
+            (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
     memcpy(v, &total, sizeof(unsigned long long));
     return sizeof(unsigned long long);
   }
