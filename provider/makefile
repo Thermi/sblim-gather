@@ -1,9 +1,9 @@
-# $Id: makefile,v 1.3 2004/04/27 07:31:47 mihajlov Exp $
+# $Id: makefile,v 1.4 2004/04/28 11:23:20 mihajlov Exp $
 
 include setting.cmpi
 
-export CFLAGS=-Wall -g -fPIC
-CPPFLAGS=-I .. -I $(CIMOMINC)
+export CFLAGS=-Wall -g 
+CPPFLAGS=-I .. -I $(CIMOMINC) -I $(COMMONINC)
 LOADLIBES=-L .. -lrgather
 
 SUBDIRS=mof
