@@ -1,5 +1,5 @@
 /*
- * $Id: rcstest.c,v 1.3 2004/10/15 10:40:38 heidineu Exp $
+ * $Id: rcstest.c,v 1.4 2004/10/15 13:45:49 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -70,47 +70,51 @@ static void * _get_request(void * hdl)
 
 int main()
 {
-  int hdl  = -1;
-  int port = 6363;
-  int i    = 0;
+  int hdl             = -1;
+  int port            = 6363;
+  int i               = 0;
+  struct timespec req = {0,0};
+  struct timespec rem = {0,0};
 
   memset(thread_id,0,sizeof(thread_id));
 
-  if (rcs_init(&port) == 0) {
-    do {
+  if (rcs_init(&port)) {
+    return -1;;
+  }
 
-      if (hdl == -1) {
-	if (rcs_accept(&hdl) == -1) {
-	  return -1;
-	}
-      }
-
-      pthread_mutex_lock(&connect_mutex);
-
-      for(i=0;i<MAXCONN;i++) { 
-	if (clthdl[i] <= 0) {
-	  clthdl[i] = hdl;
-	  break;
-	} 
-      }
-      
-      if (pthread_create(&thread_id[i],NULL,_get_request,(void*)hdl) != 0) {
-	perror("create thread");
-	return -1;
-      }
-
-      hdl = -1;
-      //fprintf(stderr,"thread_id [%i] : %ld\n",i,thread_id[i]);
-      if (connects<MAXCONN) { connects++; }
-      else { 
-	pthread_mutex_unlock(&connect_mutex);
-	break; 
-      }
+  while (1) {
+    pthread_mutex_lock(&connect_mutex);
+    if (hdl == -1) {
+      if (rcs_accept(&hdl) == -1) { return -1;}
+    }
+    for(i=0;i<MAXCONN;i++) { 
+      if (clthdl[i] <= 0) {
+	clthdl[i] = hdl;
+	break;
+      } 
+    }
+    if (pthread_create(&thread_id[i],NULL,_get_request,(void*)hdl) != 0) {
+      perror("create thread");
+      return -1;
+    }
+    hdl = -1;
+    //fprintf(stderr,"thread_id [%i] : %ld\n",i,thread_id[i]);
+    if (connects<(MAXCONN-1)) { connects++; }
+    else {
       pthread_mutex_unlock(&connect_mutex);
-    
-    } while (1);
-    rcs_term();
-  }  
+      /* wait until at least one thread finished */
+      while (1) {
+	req.tv_sec = 0;
+	req.tv_nsec = 100;
+	nanosleep(&req,&rem);
+	pthread_mutex_lock(&connect_mutex);
+	if(connects<(MAXCONN-1)) { break; }
+	pthread_mutex_unlock(&connect_mutex);
+      }
+    }
+    pthread_mutex_unlock(&connect_mutex);
+  }
+  rcs_term();
   return 0;
 }
 
