@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricGathererProvider.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: OSBase_MetricGathererProvider.c,v 1.2 2004/02/11 15:19:59 mihajlov Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -45,7 +45,7 @@ static char * _ClassName = "Linux_MetricGatherer";
 static char * _Name = "gatherd";
 static char * _FILENAME = "OSBase_MetricGathererProvider.c";
 
-static int  _false=0;
+static char  _false=0;
 
 
 /* ---------------------------------------------------------------------------*/
@@ -100,6 +100,7 @@ CMPIStatus OSBase_MetricGathererProviderEnumInstances( CMPIInstanceMI * mi,
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
   GatherStatus   gs;
   int            ival;
+  char           boolval;
   
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI EnumInstances()\n", _FILENAME, _ClassName );
@@ -119,13 +120,15 @@ CMPIStatus OSBase_MetricGathererProviderEnumInstances( CMPIInstanceMI * mi,
       ival=0; /* unknown */
       CMSetProperty(ci,"EnabledState",&ival,CMPI_uint16);
     } else {
-      CMSetProperty(ci,"Started",&gs.gsInitialized,CMPI_boolean);
+      boolval=gs.gsInitialized;
+      CMSetProperty(ci,"Started",&boolval,CMPI_boolean);
       if (gs.gsInitialized)
 	ival=2;
       else
 	ival=0;
       CMSetProperty(ci,"EnabledState",&ival,CMPI_uint16);
-      CMSetProperty(ci,"Sampling",&gs.gsSampling,CMPI_boolean);
+      boolval=gs.gsSampling;
+      CMSetProperty(ci,"Sampling",&boolval,CMPI_boolean);
       CMSetProperty(ci,"NumberOfPlugins",&gs.gsNumPlugins,CMPI_uint16);
       CMSetProperty(ci,"NumberOfMetrics",&gs.gsNumMetrics,CMPI_uint16);
     }
@@ -148,6 +151,7 @@ CMPIStatus OSBase_MetricGathererProviderGetInstance( CMPIInstanceMI * mi,
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
   GatherStatus   gs;
   int            ival;
+  char           boolval;
 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI GetInstance()\n", _FILENAME, _ClassName );
@@ -166,13 +170,15 @@ CMPIStatus OSBase_MetricGathererProviderGetInstance( CMPIInstanceMI * mi,
       ival=0; /* unknown */
       CMSetProperty(ci,"EnabledState",&ival,CMPI_uint16);
     } else {
-      CMSetProperty(ci,"Started",&gs.gsInitialized,CMPI_boolean);
+      boolval=gs.gsInitialized;
+      CMSetProperty(ci,"Started",&boolval,CMPI_boolean);
       if (gs.gsInitialized)
 	ival=2;
       else
 	ival=0;
       CMSetProperty(ci,"EnabledState",&ival,CMPI_uint16);
-      CMSetProperty(ci,"Sampling",&gs.gsSampling,CMPI_boolean);
+      boolval=gs.gsSampling;
+      CMSetProperty(ci,"Sampling",&boolval,CMPI_boolean);
       CMSetProperty(ci,"NumberOfPlugins",&gs.gsNumPlugins,CMPI_uint16);
       CMSetProperty(ci,"NumberOfMetrics",&gs.gsNumMetrics,CMPI_uint16);
     }
