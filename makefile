@@ -1,41 +1,39 @@
-# $Id: makefile,v 1.8 2004/10/19 16:09:08 mihajlov Exp $
+# $Id: makefile,v 1.9 2004/10/20 08:15:46 mihajlov Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
-CPPFLAGS=-Icomms
+CPPFLAGS=-Icomms -Iutil
 LDLIBS=-lpthread -ldl
 
-SUBDIRS=comms samples # plugin  provider
-SOURCES=mlist.c mretr.c mplugmgr.c mreg.c mrwlock.c mreposl.c mreposp.c \
-	gather.c gatherctl.c rgather.c gatherd.c commheap.c \
-	rrepos.c repos.c reposctl.c rplugmgr.c rreg.c reposd.c gatherutil.c \
-	mcfg.c mcfgtest.c gathercfg.c mlog.c
+SUBDIRS=util comms samples # plugin  provider
+SOURCES=mlist.c mretr.c mplugmgr.c mreg.c mreposl.c mreposp.c \
+	gather.c gatherctl.c rgather.c gatherd.c \
+	rrepos.c repos.c reposctl.c rplugmgr.c rreg.c reposd.c 
+
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
-LIBRARIES=libgatherutil.so librrepos.so librepos.so libgather.so librgather.so
+LIBRARIES=librrepos.so librepos.so libgather.so librgather.so
 EXECUTABLES=gatherd gatherctl reposd reposctl
 
 include rules
 
 .PHONY: all clean distclean install uninstall $(SUBDIRS) 
 
-all: $(SUBDIRS) $(LIBRARIES) $(EXECUTABLES) mcfgtest
+all: $(SUBDIRS) $(LIBRARIES) $(EXECUTABLES)
 
-libgatherutil.so: gatherutil.o commheap.o mrwlock.o mcfg.o gathercfg.o mlog.o
-
-libgather.so: LDFLAGS=-L .
+libgather.so: LDFLAGS=-L . -L util
 libgather.so: LOADLIBES=-lrrepos -lgatherutil
 libgather.so: mlist.o mretr.o mplugmgr.o mreg.o mreposp.o gather.o
 
-librgather.so: LDFLAGS=-L . -L comms
+librgather.so: LDFLAGS=-L . -L comms -L util
 librgather.so: LOADLIBES=-lmcserv -lgatherutil
 librgather.so: rgather.o
 
-librrepos.so: LDFLAGS=-L . -L comms
+librrepos.so: LDFLAGS=-L . -L comms -L util
 librrepos.so: LOADLIBES=-lmcserv -lrcserv -lgatherutil
 librrepos.so: rrepos.o mreposl.o
 
-librepos.so: LDFLAGS=-L .
+librepos.so: LDFLAGS=-L . -L util
 librepos.so: LOADLIBES=-lgatherutil
 librepos.so: repos.o rplugmgr.o mreposl.o rplugmgr.o rreg.o
 
@@ -48,17 +46,15 @@ reposd: LDFLAGS=-L . -L comms -Xlinker -rpath-link -Xlinker .
 reposd: reposd.o
 
 gatherctl: LOADLIBES=-lrgather -lmcserv -lgatherutil
-gatherctl: LDFLAGS=-L . -L comms
+gatherctl: LDFLAGS=-L . -L comms -L util
 gatherctl: gatherctl.o
 
 reposctl: LOADLIBES=-lrrepos -lmcserv -lgatherutil
 reposctl: LDFLAGS=-L . -L comms
 reposctl: reposctl.o
 
-mcfgtest: mcfgtest.o mcfg.o
-
 clean: $(SUBDIRS)
-	$(RM) $(OBJECTS) $(LIBRARIES) $(EXECUTABLES) mcfgtest
+	$(RM) $(OBJECTS) $(LIBRARIES) $(EXECUTABLES)
 
 distclean: clean
 	rcsclean
