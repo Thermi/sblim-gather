@@ -1,5 +1,5 @@
 /*
- * $Id: rcctest.c,v 1.1 2004/10/14 14:19:33 heidineu Exp $
+ * $Id: rcctest.c,v 1.2 2004/10/14 15:54:25 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -57,8 +57,8 @@ int main()
       if (rcc_request(buf,strlen(buf))==0) {
 	fprintf(stderr,"send : %s\n",buf);
       }
-      //      sleep(3);
-      if (transactions++ == 50000) {
+      sleep(3);
+      if (transactions++ == 10) {
 	end = time(NULL);
 	fprintf(stderr,"Transactions %d in seconds %ld, rate = %ld\n",
 		transactions,end-start,transactions/(end-start));
