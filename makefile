@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2004/10/19 12:06:56 mihajlov Exp $
+# $Id: makefile,v 1.6 2004/10/19 12:18:53 mihajlov Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
@@ -67,10 +67,12 @@ distclean: clean
 install: all
 	/usr/bin/install -m755 $(EXECUTABLES)	$(INSTALLROOT)/usr/bin
 	/usr/bin/install $(LIBRARIES)		$(INSTALLROOT)/usr/lib
+	/usr/bin/install gatherd.conf		$(INSTALLROOT)/etc
 
 uninstall: $(SUBDIRS)
 	$(CD) $(INSTALLROOT)/usr/lib && $(RM) $(LIBRARIES)
 	$(CD) $(INSTALLROOT)/usr/bin && $(RM) $(EXECUTABLES)
+	$(CD) $(INSTALLROOT)/etc && $(RM) gatherd.conf
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
