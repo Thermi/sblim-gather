@@ -1,5 +1,5 @@
 //
-// $Id: Linux_Metric.mof,v 1.5 2004/08/05 10:23:46 mihajlov Exp $
+// $Id: Linux_Metric.mof,v 1.6 2004/09/24 12:06:31 mihajlov Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004
 //
@@ -59,6 +59,17 @@ class Linux_MetricRepositoryService : CIM_Service
   uint16 NumberOfPlugins;
   [Description("Number of registered metrics")]
   uint16 NumberOfMetrics;
+};
+
+[ 
+  Association,
+  Provider("cmpi:OSBase_MetricInstanceProvider"),
+  Description ("MetricInstance Association for Linux")
+]
+class Linux_MetricInstance : CIM_MetricInstance
+{ 
+  CIM_BaseMetricDefinition REF Antecedent;
+  CIM_BaseMetricValue REF Dependent;
 };
 
 [  Description ("Plugin Control")

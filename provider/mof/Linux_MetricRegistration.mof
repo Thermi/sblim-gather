@@ -1,5 +1,5 @@
 //
-// $Id: Linux_MetricRegistration.mof,v 1.2 2004/08/04 11:27:36 mihajlov Exp $
+// $Id: Linux_MetricRegistration.mof,v 1.3 2004/09/24 12:06:31 mihajlov Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004
 //
@@ -26,7 +26,6 @@
 //            concrete metric definition classes
 // ===================================================================
 
-
 instance of PG_ProviderModule
 {
    Name = "OSBase_MetricDefinitionProviderModule";
@@ -46,6 +45,12 @@ instance of PG_Provider
    Name = "OSBase_MetricDefinitionProvider";
 };
 
+// ===================================================================
+// 	Linux_MetricValue
+//      Note: The capability instances are defined by the 
+//            concrete metric definition classes
+// ===================================================================
+
 instance of PG_ProviderModule
 {
    Name = "OSBase_MetricValueProviderModule";
@@ -64,6 +69,49 @@ instance of PG_Provider
    // The provider name as referenced in the code
    Name = "OSBase_MetricValueProvider";
 };
+
+// ===================================================================
+// 	Linux_MetricInstance
+//      Note: This is a generic provider.
+// ===================================================================
+
+instance of PG_ProviderModule
+{
+   Name = "OSBase_MetricInstanceProviderModule";
+   //The library name on disk
+   Location = "OSBase_MetricInstanceProvider";
+   Vendor = "SBLIM";
+   Version = "2.0.0";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricInstanceProviderModule";
+   // The provider name as referenced in the code
+   Name = "OSBase_MetricInstanceProvider";
+};
+
+instance of PG_ProviderCapabilities
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricInstanceProviderModule";
+   //The provider name as defined in PG_Provider
+   ProviderName = "OSBase_MetricInstanceProvider";
+   CapabilityID = "2";
+   //Name of the CIM class as defined in the mof
+   ClassName = "Linux_MetricInstance";
+   Namespaces = {"root/cimv2"};
+   ProviderType = { 2, 3 }; // Instance & Association
+   SupportedProperties = NULL; // All properties
+   SupportedMethods = NULL; // All methods
+};
+
+// ===================================================================
+// 	Linux_MetricGatherer
+// ===================================================================
 
 instance of PG_ProviderModule
 {
@@ -98,6 +146,10 @@ instance of PG_ProviderCapabilities
    SupportedProperties = NULL; // All properties
    SupportedMethods = NULL; // All methods
 };
+
+// ===================================================================
+// 	Linux_MetricRepositoryService
+// ===================================================================
 
 instance of PG_ProviderModule
 {

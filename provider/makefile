@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2004/08/04 11:27:36 mihajlov Exp $
+# $Id: makefile,v 1.7 2004/09/24 12:06:31 mihajlov Exp $
 
 include setting.cmpi
 
@@ -9,7 +9,9 @@ LOADLIBES=-L .. -lrrepos -lgatherutil
 SUBDIRS=mof
 SOURCES=OSBase_MetricDefinitionProvider.c OSBase_MetricValueProvider.c \
 	OSBase_MetricGathererProvider.c \
-	OSBase_MetricRepositoryServiceProvider.c
+	OSBase_MetricRepositoryServiceProvider.c \
+	OSBase_MetricInstanceProvider.c \
+	OSBase_MetricUtil.c
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 
@@ -17,13 +19,17 @@ include ../rules
 
 .PHONY: all clean distclean $(SUBDIRS) 
 
-all: $(SUBDIRS) libOSBase_MetricDefinitionProvider.so \
+all: $(SUBDIRS) 	libOSBase_MetricUtil.so \
+	libOSBase_MetricDefinitionProvider.so \
 	libOSBase_MetricValueProvider.so \
 	libOSBase_MetricGathererProvider.so \
-	libOSBase_MetricRepositoryServiceProvider.so
+	libOSBase_MetricRepositoryServiceProvider.so \
+	libOSBase_MetricInstanceProvider.so
 
 libOSBase_MetricGathererProvider.so: LOADLIBES=-L .. -lrgather -lcmpiOSBase_Common
 libOSBase_MetricRepositoryServiceProvider.so: LDLIBS=-lcmpiOSBase_Common
+
+libOSBase_MetricInstanceProvider.so: LDLIBS=-L . -lOSBase_MetricUtil
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) libOSBase_Metric*.so
@@ -33,10 +39,12 @@ distclean: clean
 	$(RM) $(DEPFILES)
 
 install: all 
-	install libOSBase_Metric*.so $(CIMOMLIB)
+	install libOSBase_Metric*Provider.so $(CIMOMLIB)
+	install libOSBase_MetricUtil.so $(COMMONLIB)
 
 uninstall: all
-	$(RM) $(CMPILIB)/libOSBase_Metric*.so
+	$(RM) $(CIMOMLIB)/libOSBase_Metric*.so
+	$(RM) $(COMMONLIB)/libOSBase_Metric*.so
 
 $(SUBDIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)
