@@ -1,0 +1,55 @@
+# $Id: makefile,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+
+export CFLAGS=-Wall -g
+LDFLAGS=$(CFLAGS)
+CPPFLAGS=
+LOADLIBES=
+
+SUBDIRS=
+SOURCES=mcserv_unix.c mcclt_unix.c mcstest.c mcctest.c
+DEPFILES=$(SOURCES:.c=.d)
+OBJECTS=$(SOURCES:.c=.o)
+
+include ../rules
+
+.PHONY: all clean distclean install uninstall $(SUBDIRS) 
+
+all: $(SUBDIRS) libmcserv.so mcstest mcctest
+
+mcstest: LDFLAGS+=-L .
+mcstest: LDLIBS=-lmcserv
+
+mcctest: LDFLAGS+=-L .
+mcctest: LDLIBS=-lmcserv
+
+libmcserv.so: libmcserv_unix.so
+	cp $< $@
+
+libmcserv_unix.so: mcclt_unix.o mcserv_unix.o
+
+clean: $(SUBDIRS)
+	$(RM) $(OBJECTS) libmcserv.so libmcserv_unix.so mcstest mcctest 
+
+distclean: clean
+	$(RM) $(DEPFILES)
+
+install: all
+	/usr/bin/install libmcserv.so $(INSTALLROOT)/usr/local/lib
+
+uninstall:
+	$(RM) $(INSTALLROOT)/usr/local/lib/libmcserv.so
+
+$(SUBDIRS):
+	$(MAKE) -C $@ $(MAKECMDGOALS)
+
+ifeq ($(MAKECMDGOALS),clean)
+NODEPS=1
+endif
+
+ifeq ($(MAKECMDGOALS),distclean)
+NODEPS=1
+endif
+
+ifndef NODEPS
+include $(DEPFILES)
+endif

@@ -1,0 +1,5 @@
+# Makefile for LocalFileSystem Metric Installation
+
+install:	
+	cimmofl -I. -nroot/cimv2 Linux_LocalFileSystemMetric.mof
+	cimmofl -I. -nroot/PG_InterOp Linux_LocalFileSystemMetricRegistration.mof

@@ -1,0 +1,9 @@
+# $Id: env,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+#
+# CMPI related definitions
+
+CMPIINCL=$(HOME)/sblim/include
+#CMPIINCL=/usr/sniacimom/include
+
+CMPILIB=$(PEGASUS_HOME)/lib
+#CMPILIB=/usr/sniacimom/lib

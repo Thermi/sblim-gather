@@ -1,0 +1,95 @@
+/*
+ * $Id: metricUnixProcess.readme,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ *
+ * (C) Copyright IBM Corp. 2003
+ *
+ * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+ * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+ * CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+ *
+ * You can obtain a current copy of the Common Public License from
+ * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
+ *
+ * Author:       Heidi Neumann <heidineu@de.ibm.com>
+ * Contributors: 
+ *
+ * Description:
+ * README to Gatherer Plugin for Unix Process Metrics
+ *
+ */
+
+/* ---------------------------------------------------------------------------*/
+
+The Plugin offers the following 5 metrics :
+
+
+- CPUTime
+- KernelModeTime
+- UserModeTime
+- TotalCPUTime
+- ResidentSetSize
+
+
+/* ---------------------------------------------------------------------------*/
+
+CPUTime
+-------
+
+Metric Type     : Point
+Sample Interval : 30 sec
+CIM Data Type   : string
+Units           : Jiffies ( 1/100ths of a second )
+
+Value Source    : the first line of /proc/<pid>/stat contains the CPU times
+                  of this process
+
+Syntax          : <user mode>:<user mode with low priority(nice)>:<system mode>:<idle task>
+
+
+KernelModeTime
+--------------
+
+Metric Type     : Interval
+Based on Metric : CPUTime
+CIM Data Type   : uint64
+Units           : micro-seconds
+
+Value Source    : third entry of CPUTime * 10
+
+
+UserModeTime
+------------
+
+Metric Type     : Interval
+Based on Metric : CPUTime
+CIM Data Type   : uint64
+Units           : micro-seconds
+
+Value Source    : first entry of CPUTime * 10
+
+TotalCPUTime
+------------
+
+Metric Type     : Interval
+Based on Metric : CPUTime
+CIM Data Type   : uint64
+Units           : micro-seconds
+
+Value Source    : sum of ( first, third and fourth entry of CPUTime * 10 )
+
+
+/* ---------------------------------------------------------------------------*/
+
+ResidentSetSize
+---------------
+
+Metric Type     : Point
+Sample Interval : 30 sec
+CIM Data Type   : uint64
+Units           : number of pages the process has in real memory
+
+Value Source    : the 24 entry of /proc/<pid>/stat contains the resident set
+                  size of this process
+
+
+/* ---------------------------------------------------------------------------*/

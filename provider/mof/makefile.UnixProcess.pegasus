@@ -1,0 +1,5 @@
+# Makefile for UnixProcess Metric Installation
+
+install:	
+	cimmofl -I. -nroot/cimv2 Linux_UnixProcessMetric.mof
+	cimmofl -I. -nroot/PG_InterOp Linux_UnixProcessMetricRegistration.mof

@@ -1,0 +1,101 @@
+//
+// $Id: Linux_MetricRegistration.mof,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+//
+// (C) Copyright IBM Corp. 2003
+//
+// THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+// ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+// CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+//
+// You can obtain a current copy of the Common Public License from
+// http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
+//
+// Author:       Viktor Mihajlovski <mihajlov@de.ibm.com>
+// Contributors:
+//
+// Description:
+// Registration for Linux Metrics
+//
+
+
+#pragma locale ("en_US")
+
+// ===================================================================
+// 	Linux_MetricDefinition
+//      Note: The capability instances are defined by the 
+//            concrete metric definition classes
+// ===================================================================
+
+
+instance of PG_ProviderModule
+{
+   Name = "OSBase_MetricDefinitionProviderModule";
+   //The library name on disk
+   Location = "OSBase_MetricDefinitionProvider";
+   Vendor = "SBLIM";
+   Version = "2.0.0";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricDefinitionProviderModule";
+   // The provider name as referenced in the code
+   Name = "OSBase_MetricDefinitionProvider";
+};
+
+instance of PG_ProviderModule
+{
+   Name = "OSBase_MetricValueProviderModule";
+   //The library name on disk
+   Location = "OSBase_MetricValueProvider";
+   Vendor = "SBLIM";
+   Version = "2.0.0";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricValueProviderModule";
+   // The provider name as referenced in the code
+   Name = "OSBase_MetricValueProvider";
+};
+
+instance of PG_ProviderModule
+{
+   Name = "OSBase_MetricGathererProviderModule";
+   //The library name on disk
+   Location = "OSBase_MetricGathererProvider";
+   Vendor = "SBLIM";
+   Version = "2.0.0";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricGathererProviderModule";
+   // The provider name as referenced in the code
+   Name = "OSBase_MetricGathererProvider";
+};
+
+instance of PG_ProviderCapabilities
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricGathererProviderModule";
+   //The provider name as defined in PG_Provider
+   ProviderName = "OSBase_MetricGathererProvider";
+   CapabilityID = "2";
+   //Name of the CIM class as defined in the mof
+   ClassName = "Linux_MetricGatherer";
+   Namespaces = {"root/cimv2"};
+   ProviderType = { 2, 5 }; // Instance & Method
+   SupportedProperties = NULL; // All properties
+   SupportedMethods = NULL; // All methods
+};
+

@@ -1,0 +1,75 @@
+//
+// $Id: Linux_Metric.mof,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+//
+// (C) Copyright IBM Corp. 2003
+//
+// THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+// ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+// CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+//
+// You can obtain a current copy of the Common Public License from
+// http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
+//
+// Author:       Viktor Mihajlovski
+// Contributors:
+//
+// Description:
+// CIM classes for Linux Metrics
+//
+
+
+#pragma locale ("en_US")
+
+
+// -------------------------------------------------------------------
+// *******************************************************************
+// 	Classes
+// *******************************************************************
+// -------------------------------------------------------------------
+
+
+
+// ===================================================================
+// 	Linux_OperatingSystemMetricDefinition
+// ===================================================================
+
+[ Provider("cmpi:OSBase_MetricGatherer"),
+  Description ("Data Gatherer Service")
+]
+class Linux_MetricGatherer : CIM_Service
+{ 
+  [Description("Number of registered plugins")]
+  uint16 NumberOfPlugins;
+  [Description("Number of active metrics")]
+  uint16 NumberOfMetrics;
+  [Description("Sampling indicator")]
+  boolean   Sampling;
+  [Description("Method to enable sampling")]
+  boolean   StartSampling();
+  [Description("Method to disable sampling")]
+  boolean   StopSampling();
+};
+
+[  Description ("Plugin Control")
+]
+class Linux_MetricPlugin : CIM_Setting
+{
+  [Key, Description("Metric Definition Class Name")]
+  String MetricDefinitionClassName;
+  [Description("Name of the plugin library")]
+  String MetricPluginName; 
+  [Description("Is this plugin enabled")]
+  boolean Enabled; 
+};
+
+[  Description ("Definition to Value mapping")
+]
+class Linux_MetricValueDefinition : CIM_Setting
+{
+  [Key, Description("Metric Value Class Name")]
+  String MetricValueClassName;
+  [Description("Metric Definition Class Name")]
+  String MetricDefinitionClassName; 
+};
+
+

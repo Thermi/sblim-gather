@@ -1,0 +1,69 @@
+//
+// $Id: Sample.mof,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+//
+// (C) Copyright IBM Corp. 2003
+//
+// THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+// ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+// CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+//
+// You can obtain a current copy of the Common Public License from
+// http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
+//
+// Author:       Viktor Mihajlovski
+// Contributors:
+//
+// Description:
+// Sample CIM classes for Metrics
+//
+
+[ Provider("cmpi:OSBase_MetricDefinitionProvider"),
+  Description ("Class for Sample Metric Definitions")
+]
+class Linux_Sample3 : CIM_BaseMetricDefinition
+{ };
+
+instance of Linux_MetricPlugin  
+{
+	MetricDefinitionClassName = "Linux_Sample3";
+ 	MetricPluginName = "libmetricSample3.so";
+};
+
+[ Provider("cmpi:OSBase_MetricDefinitionProvider"),
+  Description ("Another Class for Sample Metric Definitions")
+]
+class Linux_Sample4 : CIM_BaseMetricDefinition
+{ };
+
+instance of Linux_MetricPlugin  
+{
+	MetricDefinitionClassName = "Linux_Sample4";
+ 	MetricPluginName = "libmetricSample4.so";
+};
+
+
+[ Provider("cmpi:OSBase_MetricValueProvider"),
+  Description ("Class for Sample Metric Value")
+]
+class Linux_Sample3Value : CIM_BaseMetricValue
+{ };
+
+
+instance of Linux_MetricValueDefinition
+{
+	MetricValueClassName = "Linux_Sample3Value";
+	MetricDefinitionClassName = "Linux_Sample3";
+};
+
+[ Provider("cmpi:OSBase_MetricValueProvider"),
+  Description ("Class for Sample Metric Value")
+]
+class Linux_Sample4Value : CIM_BaseMetricValue
+{ };
+
+
+instance of Linux_MetricValueDefinition
+{
+	MetricValueClassName = "Linux_Sample4Value";
+	MetricDefinitionClassName = "Linux_Sample4";
+};
