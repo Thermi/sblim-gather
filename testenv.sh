@@ -1,3 +1,4 @@
 # setup script - must be sourced
 PATH=$PATH:.
-export LD_LIBRARY_PATH=.:comms
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:comms:plugin
+export PATH LD_LIBRARY_PATH

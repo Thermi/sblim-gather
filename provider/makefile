@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.4 2004/04/28 11:23:20 mihajlov Exp $
+# $Id: makefile,v 1.5 2004/08/04 07:29:26 mihajlov Exp $
 
 include setting.cmpi
 
 export CFLAGS=-Wall -g 
 CPPFLAGS=-I .. -I $(CIMOMINC) -I $(COMMONINC)
-LOADLIBES=-L .. -lrgather
+LOADLIBES=-L .. -lrrepos -lgatherutil
 
 SUBDIRS=mof
 SOURCES=OSBase_MetricDefinitionProvider.c OSBase_MetricValueProvider.c \
@@ -20,7 +20,7 @@ all: $(SUBDIRS) libOSBase_MetricDefinitionProvider.so \
 	libOSBase_MetricValueProvider.so \
 	libOSBase_MetricGathererProvider.so	
 
-libOSBase_MetricGathererProvider.so: LDLIBS=-lcmpiOSBase_Common
+libOSBase_MetricGathererProvider.so: LOADLIBES=-L .. -lrgather -lcmpiOSBase_Common
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) libOSBase_Metric*.so

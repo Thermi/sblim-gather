@@ -11,7 +11,7 @@ all:
 install: 
 	echo $(MOFMAKEFILE)
 	$(MAKE) -f $(MOFMAKEFILE) install
-ifeq ($(MOFMAKEFILE),"makefile.pegasus")
+ifeq ("$(MOFMAKEFILE)","makefile.pegasus")
 	$(MAKE) -f makefile.OperatingSystem.pegasus install
 	$(MAKE) -f makefile.UnixProcess.pegasus install
 	$(MAKE) -f makefile.Processor.pegasus install

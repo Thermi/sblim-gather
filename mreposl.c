@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.3 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: mreposl.c,v 1.4 2004/08/04 07:29:26 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -123,10 +123,10 @@ int LocalMetricAdd (MetricValue *mv)
  * Behavior:
  * I) maxnum <= 0
  *    i) to <= 0: retrieve everything starting with "from"
- *    ii) i > 0: retrieve everything between "from" and "to"
- * II) actnum >0
+ *    ii) to > 0: retrieve everything between "from" and "to"
+ * II) maxnum >0
  *    i) from >= to (!=0) retrieve "maxnum" entries starting with "from"  
- *    ii) from== 0 retrieve the newest "maxnum" entries 
+ *    ii) from == 0 retrieve the newest "maxnum" entries 
  */
 
 int LocalMetricRetrieve (int mid, char *resource,

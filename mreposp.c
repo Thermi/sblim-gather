@@ -1,5 +1,5 @@
 /*
- * $Id: mreposp.c,v 1.2 2004/08/02 14:23:01 mihajlov Exp $
+ * $Id: mreposp.c,v 1.3 2004/08/04 07:29:26 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -43,7 +43,7 @@ MetricRepositoryIF *MetricRepository = &mrep;
 
 int ProxyMetricAdd (MetricValue *mv)
 {
-
+  int rc=-1;
 #ifdef NAGNAG
   /*
    * 1. Need to verify connection to repository daemon
@@ -78,7 +78,9 @@ int ProxyMetricAdd (MetricValue *mv)
 #endif
   
   MetricDefinition *md=MPR_GetMetric(mv->mvId);
-  return rrepos_put(md->mdReposPluginName,md->mdName,mv);
+  rc=rrepos_put(md->mdReposPluginName,md->mdName,mv);
+  if (md->mdeal) md->mdeal(mv);
+  return rc;
 }
 
 /*

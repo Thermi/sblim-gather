@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.3 2004/06/09 17:19:13 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.4 2004/08/04 07:29:26 mihajlov Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -25,7 +25,7 @@
 #include <string.h>
 
 #include <metric.h>
-#include <rgather.h>
+#include <rrepos.h>
 
 #include "cmpidt.h"
 #include "cmpift.h"
@@ -78,16 +78,16 @@ static int parseInstId(const char * instid,
 		       time_t * timestamp);
 
 static void returnPathes(CMPIBroker *_broker,
-			 PluginDefinition *pdef,
-			 int pdefnum,
+			 RepositoryPluginDefinition *rdef,
+			 int rdefnum,
 			 COMMHEAP *ch,
 			 CMPIObjectPath *ref,
 			 CMPIResult *rslt,
 			 CMPIStatus *rc);
 
 static void returnInstances(CMPIBroker *_broker,
-			    PluginDefinition *pdef,
-			    int pdefnum,
+			    RepositoryPluginDefinition *rdef,
+			    int rdefnum,
 			    COMMHEAP *ch,
 			    CMPIObjectPath *ref,
 			    CMPIResult *rslt,
@@ -113,8 +113,8 @@ CMPIStatus OSBase_MetricValueProviderEnumInstanceNames( CMPIInstanceMI * mi,
            CMPIResult * rslt, 
            CMPIObjectPath * ref) { 
   CMPIStatus       rc = {CMPI_RC_OK, NULL};
-  int              pdefnum;
-  PluginDefinition *pdef;
+  int              rdefnum;
+  RepositoryPluginDefinition *rdef;
   COMMHEAP         ch;
   CMPIEnumeration  *en;
   CMPIData         data;
@@ -128,8 +128,8 @@ CMPIStatus OSBase_MetricValueProviderEnumInstanceNames( CMPIInstanceMI * mi,
     ch=ch_init();
     pname = metricPluginName(_broker,ctx,ref);
     if (pname) {
-      pdefnum = rmetricplugin_list(pname,&pdef,ch);
-      returnPathes(_broker,pdef,pdefnum,ch,ref,rslt,&rc);
+      rdefnum = rreposplugin_list(pname,&rdef,ch);
+      returnPathes(_broker,rdef,rdefnum,ch,ref,rslt,&rc);
     } else {
       if( _debug )
 	fprintf( stderr, "--- searchin value definitions\n");
@@ -155,10 +155,10 @@ CMPIStatus OSBase_MetricValueProviderEnumInstanceNames( CMPIInstanceMI * mi,
 					     CMGetCharPtr(data.value.string),
 					     NULL));
 	    if (pname) {
-	      pdefnum = rmetricplugin_list(pname,&pdef,ch);
+	      rdefnum = rreposplugin_list(pname,&rdef,ch);
 	      returnPathes(_broker,
-			   pdef,
-			   pdefnum,
+			   rdef,
+			   rdefnum,
 			   ch,
 			   _pathFromName(_broker,
 					 ref,
@@ -186,8 +186,8 @@ CMPIStatus OSBase_MetricValueProviderEnumInstances( CMPIInstanceMI * mi,
            CMPIObjectPath * ref, 
            char ** properties) { 
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
-  int              pdefnum;
-  PluginDefinition *pdef;
+  int              rdefnum;
+  RepositoryPluginDefinition *rdef;
   COMMHEAP         ch;
   CMPIEnumeration  *en;
   CMPIData         data;
@@ -200,8 +200,8 @@ CMPIStatus OSBase_MetricValueProviderEnumInstances( CMPIInstanceMI * mi,
     ch=ch_init();
     pname = metricPluginName(_broker,ctx,ref);
     if (pname) {
-      pdefnum = rmetricplugin_list(pname,&pdef,ch);
-      returnInstances(_broker,pdef,pdefnum,ch,ref,rslt,&rc);
+      rdefnum = rreposplugin_list(pname,&rdef,ch);
+      returnInstances(_broker,rdef,rdefnum,ch,ref,rslt,&rc);
     } else {
       if( _debug )
 	fprintf( stderr, "--- searchin value definitions\n");
@@ -227,10 +227,10 @@ CMPIStatus OSBase_MetricValueProviderEnumInstances( CMPIInstanceMI * mi,
 					     CMGetCharPtr(data.value.string),
 					     NULL));
 	    if (pname) {
-	      pdefnum = rmetricplugin_list(pname,&pdef,ch);
+	      rdefnum = rreposplugin_list(pname,&rdef,ch);
 	      returnInstances(_broker,
-			      pdef,
-			      pdefnum,
+			      rdef,
+			      rdefnum,
 			      ch,
 			      _pathFromName(_broker,
 					    ref,
@@ -279,7 +279,7 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
     vr.vsId = vId;
     vr.vsResource = vResource;
     vr.vsFrom = vr.vsTo = vTimestamp;
-    if (rgather_get(&vr,ch)== 0) {
+    if (rrepos_get(&vr,ch)== 0) {
       if( _debug )
 	fprintf( stderr, "::: got %d values for id \n", vr.vsId);
       if (vr.vsNumValues>=1) {
@@ -385,8 +385,8 @@ CMInstanceMIStub( OSBase_MetricValueProvider,
 
 static int checkConnection()
 {
-  GatherStatus stat;
-  if (rgather_status(&stat)==0 && stat.gsInitialized)
+  RepositoryStatus stat;
+  if (rrepos_status(&stat)==0 && stat.rsInitialized)
     return 1;
   else
     return 0;
@@ -429,7 +429,7 @@ static char * metricPluginName(CMPIBroker *broker, CMPIContext *context,
     if (clsname_p) {
       if( _debug )
 	fprintf(stderr,"::: requesting definition for %s\n",clsname_p);
-      pluginpath = CMNewObjectPath(broker,NULL,"Linux_MetricPlugin",
+      pluginpath = CMNewObjectPath(broker,NULL,"Linux_RepositoryPlugin",
 				   &rc);
       if (pluginpath) {
 	CMSetNameSpaceFromObjectPath(pluginpath,path);
@@ -636,8 +636,8 @@ static int parseInstId(const char * instid,
 }
 
 static void returnPathes(CMPIBroker *_broker,
-			 PluginDefinition *pdef,
-			 int pdefnum,
+			 RepositoryPluginDefinition *rdef,
+			 int rdefnum,
 			 COMMHEAP *ch,
 			 CMPIObjectPath *ref,
 			 CMPIResult *rslt,
@@ -647,17 +647,17 @@ static void returnPathes(CMPIBroker *_broker,
   ValueRequest vr;
   CMPIObjectPath * co = NULL;
   
-  for (i=0; i < pdefnum; i++) {
-    vr.vsId = pdef[i].pdId;
+  for (i=0; i < rdefnum; i++) {
+    vr.vsId = rdef[i].rdId;
     vr.vsResource = NULL;
     vr.vsFrom = vr.vsTo = 0;
     if( _debug )
-      fprintf( stderr, "::: getting value for id %d\n", pdef[i].pdId);
-    if (rgather_get(&vr,ch) == 0) {
+      fprintf( stderr, "::: getting value for id %d\n", rdef[i].rdId);
+    if (rrepos_get(&vr,ch) == 0) {
       if( _debug )
 	fprintf( stderr, "::: got %d values for id \n", vr.vsId);
       for (j=0; j< vr.vsNumValues; j++) {
-	co = _makePath( _broker, pdef[i].pdName, pdef[i].pdId,
+	co = _makePath( _broker, rdef[i].rdName, rdef[i].rdId,
 			&vr.vsValues[j], 
 			ref, rc );
 	if( co == NULL ) {
@@ -674,8 +674,8 @@ static void returnPathes(CMPIBroker *_broker,
 }
 
 static void returnInstances(CMPIBroker *_broker,
-			    PluginDefinition *pdef,
-			    int pdefnum,
+			    RepositoryPluginDefinition *rdef,
+			    int rdefnum,
 			    COMMHEAP *ch,
 			    CMPIObjectPath *ref,
 			    CMPIResult *rslt,
@@ -685,17 +685,17 @@ static void returnInstances(CMPIBroker *_broker,
   ValueRequest vr;
   CMPIInstance * ci = NULL;
   
-  for (i=0; i < pdefnum; i++) {
-    vr.vsId = pdef[i].pdId;
+  for (i=0; i < rdefnum; i++) {
+    vr.vsId = rdef[i].rdId;
     vr.vsResource = NULL;
     vr.vsFrom = vr.vsTo = 0;
     if( _debug )
-      fprintf( stderr, "::: getting value for id %d\n", pdef[i].pdId);
-    if (rgather_get(&vr,ch) == 0) {
+      fprintf( stderr, "::: getting value for id %d\n", rdef[i].rdId);
+    if (rrepos_get(&vr,ch) == 0) {
       if( _debug )
 	fprintf( stderr, "::: got %d values for id \n", vr.vsId);
       for (j=0; j< vr.vsNumValues; j++) {
-	ci = _makeInst( _broker, pdef[i].pdName, pdef[i].pdId,
+	ci = _makeInst( _broker, rdef[i].rdName, rdef[i].rdId,
 			&vr.vsValues[j], vr.vsDataType,
 			ref, rc );
 	if( ci == NULL ) {
