@@ -1,5 +1,5 @@
 /*
- * $Id: cimplugUnixProcess.c,v 1.1 2004/10/08 07:34:54 mihajlov Exp $
+ * $Id: cimplugUnixProcess.c,v 1.2 2004/12/02 17:46:49 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -25,11 +25,12 @@
 CMPIObjectPath* COP4VALID (CMPIBroker *broker, const char *id, 
 			   const char *systemid)
 {
+  CMPIObjectPath *cop = NULL;
   if (id==NULL || systemid==NULL) {
     return NULL;
   }
 
-  CMPIObjectPath *cop = CMNewObjectPath(broker,NULL,"Linux_UnixProcess",NULL);
+  cop = CMNewObjectPath(broker,NULL,"Linux_UnixProcess",NULL);
   if (cop) {
     CMAddKey(cop,"Handle",id,CMPI_chars);
     CMAddKey(cop,"CreationClassName","Linux_UnixProcess",CMPI_chars);

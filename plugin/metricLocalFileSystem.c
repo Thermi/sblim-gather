@@ -1,5 +1,5 @@
 /*
- * $Id: metricLocalFileSystem.c,v 1.5 2004/11/09 16:18:17 heidineu Exp $
+ * $Id: metricLocalFileSystem.c,v 1.6 2004/12/02 17:46:49 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -189,9 +189,9 @@ int metricRetrAvSpace( int mid,
 	mv->mvTimeStamp = time(NULL);
 	mv->mvDataType = MD_UINT64;
 	mv->mvDataLength = sizeof(unsigned long long);
-	mv->mvData = (void*)mv + sizeof(MetricValue);
+	mv->mvData = (char*)mv + sizeof(MetricValue);
 	*(unsigned long long*)mv->mvData = htonll(size);
-	mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	strcpy(mv->mvResource,ptr_name);
 	mret(mv);
       } 
@@ -260,9 +260,9 @@ int metricRetrAvSpacePerc( int mid,
 	mv->mvTimeStamp = time(NULL);
 	mv->mvDataType = MD_UINT8;
 	mv->mvDataLength = sizeof(unsigned char);
-	mv->mvData = (void*)mv + sizeof(MetricValue);
+	mv->mvData = (char*)mv + sizeof(MetricValue);
 	*(unsigned char*)mv->mvData = size;
-	mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned char);
+	mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned char);
 	strcpy(mv->mvResource,ptr_name);
 	mret(mv);
       } 

@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.14 2004/12/01 16:13:33 mihajlov Exp $
+ * $Id: repos.c,v 1.15 2004/12/02 17:46:49 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -203,16 +203,23 @@ int reposresource_list(const char * metricid,
 		       MetricResourceId **rid,
 		       COMMHEAP ch)
 {
+  MetricCalculationDefinition *mc;
   MetricResourceId *resources=NULL;
   int resnum=0;
   int i;
+  int mid = metricid ? atoi(metricid) : -1;
+  
+  if (mid==-1 || !rid) { return -1; }
 
-  if (atoi(metricid)==-1 || !rid) { return -1; }
-
-  resnum = MetricRepository->mres_retrieve(atoi(metricid),
-					   &resources,
-					   NULL,
-					   NULL);
+  mc=RPR_GetMetric(mid);
+  if (mc && mc->mcCalc) {
+    /* see whether this is an aliased id */
+    mid = (mc->mcMetricType&MD_CALCULATED) ? mc->mcAliasId : mid;
+    resnum = MetricRepository->mres_retrieve(mid,
+					     &resources,
+					     NULL,
+					     NULL);
+  }
   if(resnum) {
     *rid = ch_alloc(ch,
 		    sizeof(MetricResourceId)*resnum);
@@ -226,7 +233,7 @@ int reposresource_list(const char * metricid,
 	     resources[i].mrid_system);
     }
     if (resources) {
-      MetricRepository->mres_release(resources);
+      MetricRepository->mres_release(mid,resources);
     }
     return resnum;
   }
@@ -373,7 +380,7 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	  }
 	}
 	if (vs->vsResource == NULL && vs->vsSystemId == NULL &&  resources) {
-	  MetricRepository->mres_release(resources);
+	  MetricRepository->mres_release(id,resources);
 	}
 	for (j=0; j < resnum; j++) {
 	  MetricRepository->mrep_release(mv[j]);
@@ -625,7 +632,7 @@ static int  matchValue(SubscriptionRequest * sr, ValueRequest * vr)
       return 1;
     }
     if (vr->vsDataType & (MD_BOOL|MD_UINT|MD_SINT)) {
-      long long ls = atoll(sr->srValue);
+      long long ls = strtoll(sr->srValue,(char**)NULL,10);
       long long lv = *(long long*)vr->vsValues->viValue;
       compstate = ls - lv; 
     } else if (vr->vsDataType & (MD_FLOAT)) {

@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.10 2004/11/09 16:18:18 heidineu Exp $
+ * $Id: metricUnixProcess.c,v 1.11 2004/12/02 17:46:49 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -236,9 +236,9 @@ int metricRetrCPUTime( int mid,
 	  mv->mvTimeStamp = time(NULL);
 	  mv->mvDataType = MD_STRING;
 	  mv->mvDataLength = (strlen(buf)+1);
-	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  mv->mvData = (char*)mv + sizeof(MetricValue);
 	  strncpy( mv->mvData, buf, strlen(buf) );	
-	  mv->mvResource = (void*)mv + sizeof(MetricValue) + (strlen(buf)+1);
+	  mv->mvResource = (char*)mv + sizeof(MetricValue) + (strlen(buf)+1);
 	  strcpy(mv->mvResource,_enum_pid+(i*64));
 	  mret(mv);
 	}
@@ -304,9 +304,9 @@ int metricRetrResSetSize( int mid,
 	  mv->mvTimeStamp = time(NULL);
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
-	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  mv->mvData = (char*)mv + sizeof(MetricValue);
 	  *(unsigned long long *)mv->mvData = htonll(size);	
-	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
 	}
@@ -369,9 +369,9 @@ int metricRetrPageInCounter( int mid,
 	  mv->mvTimeStamp = time(NULL);
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
-	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  mv->mvData = (char*)mv + sizeof(MetricValue);
 	  *(unsigned long long*)mv->mvData = htonll(page);	 
-	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
 	}	
@@ -436,9 +436,9 @@ int metricRetrPageOutCounter( int mid,
 	  mv->mvTimeStamp = time(NULL);
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
-	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  mv->mvData = (char*)mv + sizeof(MetricValue);
 	  *(unsigned long long*)mv->mvData = htonll(page);	 
-	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
 	}	
@@ -500,9 +500,9 @@ int metricRetrVirtualSize( int mid,
 	  mv->mvTimeStamp = time(NULL);
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
-	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  mv->mvData = (char*)mv + sizeof(MetricValue);
 	  *(unsigned long long *)mv->mvData = htonll(size);	
-	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
 	}
@@ -565,9 +565,9 @@ int metricRetrSharedSize( int mid,
 	  mv->mvTimeStamp = time(NULL);
 	  mv->mvDataType = MD_UINT64;
 	  mv->mvDataLength = sizeof(unsigned long long);
-	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  mv->mvData = (char*)mv + sizeof(MetricValue);
 	  *(unsigned long long *)mv->mvData = htonll(size);	
-	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
 	}

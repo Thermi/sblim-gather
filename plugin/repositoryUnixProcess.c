@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryUnixProcess.c,v 1.6 2004/11/09 16:18:18 heidineu Exp $
+ * $Id: repositoryUnixProcess.c,v 1.7 2004/12/02 17:46:49 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -1055,7 +1055,7 @@ unsigned long long getCPUUserTime( char * data ) {
   if( (hlp = strchr(data, ':')) != NULL ) {
     memset(time,0,sizeof(time));
     strncpy(time, data, (strlen(data)-strlen(hlp)) );
-    val = atoll(time)*10;
+    val = strtoll(time,(char**)NULL,10)*10;
   }
 
   return val;
@@ -1074,7 +1074,7 @@ unsigned long long getCPUKernelTime( char * data ) {
     end = strchr(hlp, ':');
     memset(time,0,sizeof(time));
     strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
-    val = atoll(time)*10;
+    val = strtoll(time,(char**)NULL,10)*10;
   }
 
   return val;
@@ -1189,7 +1189,7 @@ unsigned long long os_getCPUUserTime( char * data ) {
     end = strchr(hlp, ':');
     memset(time,0,sizeof(time));
     strncpy(time, data, (strlen(hlp)-strlen(end)) );
-    val = atoll(time)*10;
+    val = strtoll(time,(char**)NULL,10)*10;
   }
 
   return val;
@@ -1212,7 +1212,7 @@ unsigned long long os_getCPUNiceTime( char * data ) {
     end = strchr(hlp, ':');
     memset(time,0,sizeof(time));
     strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
-    val = atoll(time)*10;
+    val = strtoll(time,(char**)NULL,10)*10;
   }
 
   return val;
@@ -1237,7 +1237,7 @@ unsigned long long os_getCPUKernelTime( char * data ) {
     end = strchr(hlp, ':');
     memset(time,0,sizeof(time));
     strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
-    val = atoll(time)*10;
+    val = strtoll(time,(char**)NULL,10)*10;
   }
 
   return val;
@@ -1254,7 +1254,7 @@ unsigned long long os_getCPUIdleTime( char * data ) {
     hlp++;
     memset(time,0,sizeof(time));
     strcpy(time, hlp);
-    val = atoll(time)*10;
+    val = strtoll(time,(char**)NULL,10)*10;
   }
 
   return val;

@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.8 2004/12/01 16:13:33 mihajlov Exp $
+ * $Id: mreposl.c,v 1.9 2004/12/02 17:46:49 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -30,14 +30,12 @@
 
 /* TODO: must revise repository IF to not require resource listing */
 
-static MetricResourceId * reslist = NULL;
-static size_t  resnum = 0;
-static int findres(char *, char *);
-static void addres(char *, char *);
+static int findres(int idx, char *, char *);
+static void addres(int idx, char *, char *);
 
 int LocalMetricResources(int id, MetricResourceId ** resources, 
 			 const char * resource, const char * system);
-int LocalMetricFreeResources(MetricResourceId * resources);
+int LocalMetricFreeResources(int id, MetricResourceId * resources);
   
 
 /* Local repository functions */
@@ -80,9 +78,11 @@ typedef struct _MReposValue {
 } MReposValue;
 
 struct _MReposHdr {
-  int             mrh_id;
-  MReposValue    *mrh_first;
-  MReposCallback *mrh_cb;
+  int               mrh_id;
+  MReposValue      *mrh_first;
+  MReposCallback   *mrh_cb;
+  MetricResourceId *mrh_reslist;
+  size_t            mrh_resnum;
 } * LocalReposHeader = NULL;
 size_t LocalReposNumIds = 0;
 
@@ -108,17 +108,17 @@ int LocalMetricAdd (MetricValue *mv)
   pruneRepository();
   
   if (mv && MWriteLock(&LocalRepLock)==0) {  
-    if (findres(mv->mvResource, mv->mvSystemId)==0) {
-      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
-	      ("LocalMetricAdd adding resource %s (%d)", 
-	       mv->mvResource, mv->mvId));  
-      addres(mv->mvResource, mv->mvSystemId);
-    }
     idx=locateIndex(mv->mvId);
     if (idx==-1) {
       idx=addIndex(mv->mvId);
     }
     if (idx!=-1) {
+      if (findres(idx,mv->mvResource, mv->mvSystemId)==0) {
+	M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+		("LocalMetricAdd adding resource %s (%d)", 
+		 mv->mvResource, mv->mvId));  
+	addres(idx,mv->mvResource, mv->mvSystemId);
+      }
       mrv=malloc(sizeof(MReposValue));
       mrv->mrv_next=LocalReposHeader[idx].mrh_first;
       mrv->mrv_value=malloc(sizeof(MetricValue));
@@ -335,6 +335,8 @@ static int addIndex(int mid)
   LocalReposNumIds += 1;
   LocalReposHeader=realloc(LocalReposHeader,
 			   LocalReposNumIds*sizeof(struct _MReposHdr));
+  LocalReposHeader[LocalReposNumIds-1].mrh_reslist=NULL;
+  LocalReposHeader[LocalReposNumIds-1].mrh_resnum=0;
   LocalReposHeader[LocalReposNumIds-1].mrh_cb=NULL;			   
   LocalReposHeader[LocalReposNumIds-1].mrh_first=NULL;			   
   LocalReposHeader[LocalReposNumIds-1].mrh_id=mid;			   
@@ -403,59 +405,71 @@ static int pruneRepository()
 
 
 /* TODO: away with that */
-int findres(char *res, char *sys)
+int findres(int idx, char *res, char *sys)
 {
   size_t c;
-  for (c=0; c<resnum;c++) {
-    if (strcmp(reslist[c].mrid_resource,res)==0 && 
-	strcmp(reslist[c].mrid_system,sys)==0 )
+  for (c=0; c<LocalReposHeader[idx].mrh_resnum;c++) {
+    if (strcmp(LocalReposHeader[idx].mrh_reslist[c].mrid_resource,res)==0 && 
+	strcmp(LocalReposHeader[idx].mrh_reslist[c].mrid_system,sys)==0 )
       return 1;
   }
   return 0;
 }
 
-void addres(char *res, char *sys)
+void addres(int idx, char *res, char *sys)
 {
-  reslist = realloc(reslist,(resnum+1)*sizeof(MetricResourceId));
-  reslist[resnum].mrid_resource=strdup(res);
-  reslist[resnum].mrid_system=strdup(sys);
-  resnum ++;
+  LocalReposHeader[idx].mrh_reslist = 
+    realloc(LocalReposHeader[idx].mrh_reslist,
+	    (LocalReposHeader[idx].mrh_resnum+1)*sizeof(MetricResourceId));
+  LocalReposHeader[idx].mrh_reslist[LocalReposHeader[idx].mrh_resnum].mrid_resource=strdup(res);
+  LocalReposHeader[idx].mrh_reslist[LocalReposHeader[idx].mrh_resnum].mrid_system=strdup(sys);
+  LocalReposHeader[idx].mrh_resnum ++;
 }
 
-int LocalMetricResources(int id, MetricResourceId ** resources,
+int LocalMetricResources(int mid, MetricResourceId ** resources,
 			 const char * resource, const char * system)
 {
   int i;
   int num = 0;
   int state;
 
+  *resources = NULL;
+  int idx = locateIndex(mid);
+  if (idx == -1) {
+    return 0;
+  }
   if (resource==NULL && system==NULL) {
-    *resources = reslist;
-    return resnum;
+    *resources = LocalReposHeader[idx].mrh_reslist;
+    return LocalReposHeader[idx].mrh_resnum;
   } else {
-    *resources = NULL;
-    for (i=0; i < resnum; i++) {
+    for (i=0; i < LocalReposHeader[idx].mrh_resnum; i++) {
       state = 0;
-      if (resource && strcmp(reslist[i].mrid_resource,resource)) {
+      if (resource && 
+	  strcmp(LocalReposHeader[idx].mrh_reslist[i].mrid_resource,resource)) {
 	continue;
       }
-      if (system && strcmp(reslist[i].mrid_system,system)) {
+      if (system && 
+	  strcmp(LocalReposHeader[idx].mrh_reslist[i].mrid_system,system)) {
 	continue;
       }
       num ++;
       *resources=realloc(*resources,sizeof(MetricResourceId)*(num+1));
-      (*resources)[num-1].mrid_resource=strdup(reslist[i].mrid_resource);
-      (*resources)[num-1].mrid_system=strdup(reslist[i].mrid_system);
+      (*resources)[num-1].mrid_resource =
+	strdup(LocalReposHeader[idx].mrh_reslist[i].mrid_resource);
+      (*resources)[num-1].mrid_system = 
+	strdup(LocalReposHeader[idx].mrh_reslist[i].mrid_system);
       (*resources)[num].mrid_resource=NULL;
     }
     return num;
   }
 }
 
-int LocalMetricFreeResources(MetricResourceId * resources)
+int LocalMetricFreeResources(int mid, MetricResourceId * resources)
 {
   int i=0;
-  if (resources && resources != reslist) {
+  int idx = locateIndex(mid);
+  if (resources && idx != -1 && 
+      resources != LocalReposHeader[idx].mrh_reslist) {
     /* must free temporary resource list */
     while (resources[i].mrid_resource) {
       free (resources[i].mrid_resource);

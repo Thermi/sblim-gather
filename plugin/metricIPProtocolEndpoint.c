@@ -1,5 +1,5 @@
 /*
- * $Id: metricIPProtocolEndpoint.c,v 1.2 2004/10/08 11:06:41 mihajlov Exp $
+ * $Id: metricIPProtocolEndpoint.c,v 1.3 2004/12/02 17:46:49 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -154,9 +154,9 @@ int metricRetrBytesSubmitted( int mid,
 	    mv->mvTimeStamp = time(NULL);
 	    mv->mvDataType = MD_STRING;
 	    mv->mvDataLength = (strlen(values)+1);
-	    mv->mvData = (void*)mv + sizeof(MetricValue);
+	    mv->mvData = (char*)mv + sizeof(MetricValue);
 	    strcpy(mv->mvData,values);
-	    mv->mvResource = (void*)mv + sizeof(MetricValue) + (strlen(values)+1);
+	    mv->mvResource = (char*)mv + sizeof(MetricValue) + (strlen(values)+1);
 	    strcpy(mv->mvResource,"IPv4_");
 	    strcat(mv->mvResource,port);
 	    mret(mv);

@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryNetworkPort.c,v 1.3 2004/11/03 08:16:36 heidineu Exp $
+ * $Id: repositoryNetworkPort.c,v 1.4 2004/12/02 17:46:49 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -256,7 +256,7 @@ unsigned long long ip_getBytesReceived( char * data ) {
   if( (hlp = strchr(data, ':')) != NULL ) {
     memset(bytes,0,sizeof(bytes));
     strncpy(bytes, data, (strlen(data)-strlen(hlp)) );
-    val = atoll(bytes);
+    val = strtoll(bytes,(char**)NULL,10);
   }
 
   return val;
@@ -275,7 +275,7 @@ unsigned long long ip_getBytesTransmitted( char * data ) {
     end = strchr(hlp, ':');
     memset(bytes,0,sizeof(bytes));
     strncpy(bytes, hlp, (strlen(hlp)-strlen(end)) );
-    val = atoll(bytes);
+    val = strtoll(bytes,(char**)NULL,10);
   }
 
   return val;
@@ -295,7 +295,7 @@ unsigned long long ip_getErrorsReceived( char * data ) {
     end = strchr(hlp, ':');
     memset(bytes,0,sizeof(bytes));
     strncpy(bytes, hlp, (strlen(hlp)-strlen(end)) );
-    val = atoll(bytes);
+    val = strtoll(bytes,(char**)NULL,10);
   }
 
   return val;
@@ -317,7 +317,7 @@ unsigned long long ip_getErrorsTransmitted( char * data ) {
     end = strchr(hlp, ':');
     memset(bytes,0,sizeof(bytes));
     strncpy(bytes, hlp, (strlen(hlp)-strlen(end)) );
-    val = atoll(bytes);
+    val = strtoll(bytes,(char**)NULL,10);
   }
 
   return val;
@@ -341,7 +341,7 @@ unsigned long long ip_getPacketsReceived( char * data ) {
     end = strchr(hlp, ':');
     memset(bytes,0,sizeof(bytes));
     strncpy(bytes, hlp, (strlen(hlp)-strlen(end)) );
-    val = atoll(bytes);
+    val = strtoll(bytes,(char**)NULL,10);
   }
 
   return val;
@@ -358,7 +358,7 @@ unsigned long long ip_getPacketsTransmitted( char * data ) {
     hlp++;
     memset(bytes,0,sizeof(bytes));
     strcpy(bytes, hlp);
-    val = atoll(bytes);
+    val = strtoll(bytes,(char**)NULL,10);
   }
 
   return val;
