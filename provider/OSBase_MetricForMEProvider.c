@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricForMEProvider.c,v 1.3 2004/11/05 08:33:19 mihajlov Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.4 2004/11/05 09:34:05 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -105,7 +105,10 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 	  CMReturnObjectPath(rslt,co);
 	} else if (!names && associators) {
 	  ci = CBGetInstance(_broker,ctx,co,NULL,NULL);
-	  CMReturnInstance(rslt,ci);	      
+	  /* this can fail if the instance is not served by our CIM Server */
+	  if (ci) {
+	    CMReturnInstance(rslt,ci);	      
+	  }
 	} else if (names) {
 	  CMReturnObjectPath(rslt,_makeRefPath(co, cop));
 	} else {
