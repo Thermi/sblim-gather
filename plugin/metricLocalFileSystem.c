@@ -1,5 +1,5 @@
 /*
- * $Id: metricLocalFileSystem.c,v 1.3 2004/08/04 09:00:04 heidineu Exp $
+ * $Id: metricLocalFileSystem.c,v 1.4 2004/10/08 07:34:54 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -36,6 +36,8 @@
 #include <sys/vfs.h>
 
 /* ---------------------------------------------------------------------------*/
+
+#define LFSPATHMAX 300
 
 static MetricDefinition metricDef[2];
 
@@ -165,8 +167,8 @@ int metricRetrAvSpace( int mid,
 #endif
     for(;i<_enum_fssize;i++) {
       
-      ptr_name = _enum_fsname + (i*128);
-      ptr_dir = _enum_fsdir + (i*128);
+      ptr_name = _enum_fsname + (i*LFSPATHMAX);
+      ptr_dir = _enum_fsdir + (i*LFSPATHMAX);
       
       fs = (struct statfs *) malloc (sizeof (struct statfs));
       memset(fs, 0, sizeof (struct statfs) );
@@ -233,8 +235,8 @@ int metricRetrAvSpacePerc( int mid,
 #endif    
     for(;i<_enum_fssize;i++) {
       
-      ptr_name = _enum_fsname + (i*128);
-      ptr_dir = _enum_fsdir + (i*128);
+      ptr_name = _enum_fsname + (i*LFSPATHMAX);
+      ptr_dir = _enum_fsdir + (i*LFSPATHMAX);
       
       fs = (struct statfs *) malloc (sizeof (struct statfs));
       memset(fs, 0, sizeof (struct statfs) );
@@ -294,8 +296,8 @@ int enum_all_fs() {
     }
 
     _enum_fssize = 1;
-    _enum_fsname = calloc(_enum_fssize,128);
-    _enum_fsdir  = calloc(_enum_fssize,128);
+    _enum_fsname = calloc(_enum_fssize,LFSPATHMAX);
+    _enum_fsdir  = calloc(_enum_fssize,LFSPATHMAX);
     
     while ( ( sptr = getmntent(fhd)) != NULL ) {
       
@@ -304,14 +306,15 @@ int enum_all_fs() {
 	
 	if( i==_enum_fssize ) {
 	  _enum_fssize++;
-	  _enum_fsname = realloc(_enum_fsname,_enum_fssize*128);
-	  memset((_enum_fsname + (i*128)), 0, 128);
-	  _enum_fsdir = realloc(_enum_fsdir,_enum_fssize*128);
-	  memset((_enum_fsdir + (i*128)), 0, 128);
+	  _enum_fsname = realloc(_enum_fsname,_enum_fssize*LFSPATHMAX);
+	  memset((_enum_fsname + (i*LFSPATHMAX)), 0, LFSPATHMAX);
+	  _enum_fsdir = realloc(_enum_fsdir,_enum_fssize*LFSPATHMAX);
+	  memset((_enum_fsdir + (i*LFSPATHMAX)), 0, LFSPATHMAX);
 	}
 	
-	strcpy(_enum_fsname + (i*128),sptr->mnt_fsname);
-	strcpy(_enum_fsdir + (i*128),sptr->mnt_dir);
+	sprintf(_enum_fsname + (i*LFSPATHMAX), "%s(%s)",
+		sptr->mnt_fsname, sptr->mnt_type);
+	strcpy(_enum_fsdir + (i*LFSPATHMAX),sptr->mnt_dir);
 	i++;
       }
     }
