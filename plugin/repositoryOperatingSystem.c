@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.11 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.12 2004/12/03 14:30:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -1098,7 +1098,7 @@ size_t metricCalcLoadAverage( MetricValue *mv,
 	  __FILE__,__LINE__);
 #endif
   if ( mv && (vlen>=sizeof(float)) && (mnum>=2) ) {
-    for(;i<mnum;i++) { sum = sum + *(float*)mv[i].mvData; }
+    for(;i<mnum;i++) { sum = sum + ntohf(*(float*)mv[i].mvData); }
     total = sum / mnum;
     memcpy(v, &total, sizeof(float));
     return sizeof(float);
@@ -1145,8 +1145,9 @@ size_t metricCalcContextSwitchRate( MetricValue *mv,
 	  __FILE__,__LINE__);
 #endif
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=2) ) {
-    total = (*(unsigned long long*)mv[0].mvData - *(unsigned long long*)mv[mnum-1].mvData) / 
-            (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
+    total = (ntohll(*(unsigned long long*)mv[0].mvData) - 
+	     ntohll(*(unsigned long long*)mv[mnum-1].mvData)) / 
+      (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
     memcpy(v, &total, sizeof(unsigned long long));
     return sizeof(unsigned long long);
   }
@@ -1192,8 +1193,9 @@ size_t metricCalcHardwareInterruptRate( MetricValue *mv,
 	  __FILE__,__LINE__);
 #endif
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=2) ) {
-    total = (*(unsigned long long*)mv[0].mvData - *(unsigned long long*)mv[mnum-1].mvData) / 
-            (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
+    total = (htonll(*(unsigned long long*)mv[0].mvData) - 
+	     htonll(*(unsigned long long*)mv[mnum-1].mvData)) / 
+      (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
     memcpy(v, &total, sizeof(unsigned long long));
     return sizeof(unsigned long long);
   }

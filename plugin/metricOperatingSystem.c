@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.14 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: metricOperatingSystem.c,v 1.15 2004/12/03 14:30:59 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -530,7 +530,7 @@ int metricRetrPageInCounter( int mid,
       *(unsigned long long*)mv->mvData = htonll(in);
 
 
-      fprintf(stderr,"PageInCounter: origin %llu : converted %llu\n",in,*(unsigned long long*)mv->mvData);
+      /*fprintf(stderr,"PageInCounter: origin %llu : converted %llu\n",in,*(unsigned long long*)mv->mvData);*/
 
 
       mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
@@ -652,7 +652,7 @@ int metricRetrLoadCounter( int mid,
       *(float*)mv->mvData = htonf(load);
 
 
-      fprintf(stderr,"LoadCounter: origin %f : converted %f\n",load,*(float*)mv->mvData);
+      /*fprintf(stderr,"LoadCounter: origin %f : converted %f\n",load,*(float*)mv->mvData);*/
 
 
       mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(float);
