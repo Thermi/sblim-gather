@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.1 2004/07/09 15:20:52 mihajlov Exp $
+ * $Id: repos.h,v 1.2 2004/07/16 15:30:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -27,18 +27,16 @@ extern "C" {
 #endif
 
 int repos_init(); 
-int repos_start(); 
-int repos_stop(); 
 int repos_terminate(); 
 
 int reposplugin_add(const char *pluginname);
 int reposplugin_remove(const char *pluginname);
 
 typedef struct _RepositoryPluginDefinition {
-  int      pdId;
-  unsigned pdDataType;
-  char    *pdName; 
-  char   **pdResource; 
+  int      rdId;
+  unsigned rdDataType;
+  char    *rdName; 
+  char   **rdResource; 
 } RepositoryPluginDefinition;
 
 int reposplugin_list(const char *pluginname,
@@ -47,12 +45,11 @@ int reposplugin_list(const char *pluginname,
 
 typedef struct _RepositoryStatus {
   short    rsInitialized;
-  short    rsSampling;
   unsigned rsNumPlugins;
   unsigned rsNumMetrics;
 } RepositoryStatus;
 
-void repos_status(ReposStatus *rs); 
+void repos_status(RepositoryStatus *rs); 
 
 typedef struct _ValueItem {
   time_t viCaptureTime;

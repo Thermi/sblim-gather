@@ -1,7 +1,7 @@
 /*
- * $Id: mcclt_unix.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -27,6 +27,31 @@
 #include <unistd.h>
 
 
+static char sockname[PATH_MAX+1] = {0};
+
+
+int mcc_init(const char *commid)
+{
+  if (sockname[0]==0) {
+    if (snprintf(sockname,sizeof(sockname),MC_SOCKET,commid) > 
+	sizeof(sockname)) {
+      perror("Could not complete socket name");
+      return -1;
+    }
+    return 0;
+  }
+  return -1;
+}
+
+int mcc_term()
+{
+  if (sockname[0]) {
+    sockname[0]=0;
+    return 0;
+  }
+  return -1;
+}
+
 int mcc_request(MC_REQHDR *hdr, void *reqdata, size_t reqdatalen)
 {
   int                cltsock =-1;
@@ -39,7 +64,7 @@ int mcc_request(MC_REQHDR *hdr, void *reqdata, size_t reqdatalen)
       return -1;
     }
     sa.sun_family = AF_UNIX;
-    strcpy(sa.sun_path,MC_SOCKET);
+    strcpy(sa.sun_path,sockname);
     if (connect(cltsock,(struct sockaddr*)&sa,sizeof(struct sockaddr_un))==0) {
       sentlen = write(cltsock,hdr,sizeof(MC_REQHDR)) +
 	write(cltsock,&reqdatalen,sizeof(size_t)) +

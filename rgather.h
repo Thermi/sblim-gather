@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.h,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: rgather.h,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -41,7 +41,6 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
 		       COMMHEAP ch);
   
 int rgather_status(GatherStatus *gs); 
-int rgather_get(ValueRequest *vr, COMMHEAP ch);
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,7 @@
 /*
- * $Id: mcclt.h,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mcclt.h,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -26,6 +26,8 @@ extern "C" {
 #include <sys/types.h>  
 #include "mcdefs.h"
 
+int mcc_init(const char *commid);
+int mcc_term();
 int mcc_request(MC_REQHDR *hdr, void *reqdata, size_t reqdatalen);
 int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen);
 

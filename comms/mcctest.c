@@ -1,7 +1,7 @@
 /*
- * $Id: mcctest.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mcctest.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -34,6 +34,7 @@ int main()
   time_t start, end;
 
   start=time(NULL);
+  mcc_init("mcstest");
 
   do {
     strcpy(buf,"x");
@@ -59,5 +60,7 @@ int main()
       }
     }
   } while(1);
+
+  mcc_term();
   return 0;
 }

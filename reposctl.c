@@ -1,7 +1,7 @@
 /*
- * $Id: gatherctl.c,v 1.2 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: reposctl.c,v 1.1 2004/07/16 15:30:04 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -13,13 +13,13 @@
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
  * Contributors: 
  *
- * Description:  Gatherer Remote Controller
- * Command line interface to the gatherer daemon.
+ * Description:  Repository Remote Controller
+ * Command line interface to the repository daemon.
  *  
  */
 
 #include "metric.h"
-#include "rgather.h"
+#include "rrepos.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -29,14 +29,10 @@ static const char* commands[] = {
   "\ts\t\tstatus\n",
   "\ti\t\tinit\n",
   "\tt\t\tterminate\n",
-  "\tb\t\tstart sampling\n",
-  "\te\t\tstop sampling\n",
   "\tl plugin\tload plugin\n",
   "\tu plugin\tunload plugin\n",
   "\tv plugin\tview/list metrics for plugin\n",
   "\tq\t\tquit\n",
-  "\tk\t\tkill daemon\n",
-  "\td\t\tstart daemon\n",
   NULL
 };
 
@@ -44,16 +40,16 @@ static void printhelp();
 
 int main()
 {
-  char   cmd;
-  char  *arg;
-  char   buf[500];
-  char   argbuf[500];
-  int    quit=0;
-  int    i, j;
-  GatherStatus gs;
-  PluginDefinition *pdef;
-  int              pnum;
-  COMMHEAP commh;
+  char              cmd;
+  char             *arg;
+  char              buf[500];
+  char              argbuf[500];
+  int               quit=0;
+  int               i, j;
+  RepositoryStatus  rs;
+  int               pnum;
+  COMMHEAP          commh;
+  RepositoryPluginDefinition *rdef;
   
   while(fgets(buf,sizeof(buf),stdin)) {
     cmd = buf[0];
@@ -63,54 +59,45 @@ int main()
       printhelp();
       break;
     case 's':
-      if (rgather_status(&gs) == 0) {
-	printf("Status %sinitialized and %ssampling," 
+      if (rrepos_status(&rs) == 0) {
+	printf("Status %sinitialized," 
 	       " %d plugins and %d metrics. \n",
-	       gs.gsInitialized?"":"NOT ",
-	       gs.gsSampling?"":"NOT ",
-	       gs.gsNumPlugins, gs.gsNumMetrics);
+	       rs.rsInitialized?"":"NOT ",
+	       rs.rsNumPlugins, rs.rsNumMetrics);
       } else {
 	printf("Daemon not reachable.\n");
       }
       break;
     case 'i':
-      if(rgather_init())
+      if(rrepos_init())
 	printf("Failed\n");
       break;
     case 't':
-      if(rgather_terminate())
-	printf("Failed\n");
-      break;
-    case 'b':
-      if(rgather_start())
-	printf("Failed\n");
-      break;
-    case 'e':
-      if(rgather_stop())
+      if(rrepos_terminate())
 	printf("Failed\n");
       break;
     case 'l':
       sscanf(arg,"%s",argbuf);
-      if (rmetricplugin_add(argbuf))
+      if (rreposplugin_add(argbuf))
 	printf("Failed\n");
       break;
     case 'u':
       sscanf(arg,"%s",argbuf);
-      if (rmetricplugin_remove(argbuf))
+      if (rreposplugin_remove(argbuf))
 	printf("Failed\n");
       break;
     case 'v':
       commh=ch_init();
       sscanf(arg,"%s",argbuf);
-      pnum=rmetricplugin_list(argbuf,&pdef,commh);
+      pnum=rreposplugin_list(argbuf,&rdef,commh);
       if (pnum < 0) {
 	printf("Failed\n");
       } else {
 	for (i=0;i<pnum;i++) {
 	  printf("Plugin metric \"%s\" has id %d and data type %x\n",
-		 pdef[i].pdName, pdef[i].pdId, pdef[i].pdDataType);
-	  for (j=0;pdef[i].pdResource[j];j++) {
-	    printf("\t for resource \"%s\"\n",pdef[i].pdResource[j]);
+		 rdef[i].rdName, rdef[i].rdId, rdef[i].rdDataType);
+	  for (j=0;rdef[i].rdResource[j];j++) {
+	    printf("\t for resource \"%s\"\n",rdef[i].rdResource[j]);
 	  }
 	}
       }
@@ -118,14 +105,6 @@ int main()
       break;
     case 'q':
       quit=1;
-      break;
-    case 'k':
-      if(rgather_unload())
-	printf("Failed to unload daemon\n");
-      break;
-    case 'd':
-      if(rgather_load())
-	printf("Failed to load daemon\n");
       break;
     default:
       printhelp();

@@ -1,7 +1,7 @@
 /*
- * $Id: gatherd.c,v 1.2 2004/05/14 12:11:09 mihajlov Exp $
+ * $Id: gatherd.c,v 1.3 2004/07/16 15:30:04 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -38,19 +38,18 @@ int main(int argc, char * argv[])
   COMMHEAP     *ch;
   char          buffer[GATHERVALBUFLEN];
   size_t        bufferlen=sizeof(buffer);
-  ValueRequest *vr;
-  ValueItem    *vi;
-  void         *vp, *vpmax;
   int           i, j;
-  size_t        valreslen;
   PluginDefinition *pdef;
   
   if (argc == 1) {
     /* daemonize if no arguments are given */
-    daemon(0,0);
+    if (daemon(0,0)) {
+      perror("gatherd");
+      exit(-1);
+    }
   }
   
-  if (mcs_init()) {
+  if (mcs_init(GATHER_COMMID)) {
     return -1;
   }
   while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
@@ -144,64 +143,6 @@ int main(int argc, char * argv[])
 	}
       } else {
 	comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1;
-      }
-      ch_release(ch);
-      break;
-    case GCMD_GETVALUE:
-      /* the transmitted ValueRequest contains
-       * 1: Header
-       * 2: ResourceName
-       * 3: ValueItems
-       */
-      vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
-      vp=vr;
-      vpmax=(void*)buffer+sizeof(buffer);
-      if (vr->vsResource) {
-	/* adjust pointer to resource name */
-	vr->vsResource = (void*)vr + sizeof(ValueRequest);
-	valreslen= strlen(vr->vsResource) + 1;
-      } else {
-	valreslen = 0;
-      }
-      vi=(void*)vr+sizeof(ValueRequest)+valreslen;
-      vr->vsValues=NULL;
-      ch=ch_init();
-      comm->gc_result=metricvalue_get(vr,ch);
-      /* copy value data into transfer buffer and compute total length */
-      if (comm->gc_result != -1) {
-	if ((void*)vi+sizeof(ValueItem)*vr->vsNumValues < vpmax) {
-	  memcpy(vi,vr->vsValues,sizeof(ValueItem)*vr->vsNumValues);
-	  vp = (void*)vi + sizeof(ValueItem) * vr->vsNumValues;
-	  for (i=0;i<vr->vsNumValues;i++) {
-#ifdef DEBUG
-	    fprintf(stderr,"returning value for mid=%d, resource %s: %d\n",
-		    vr->vsId,
-		    vr->vsValues[i].viResource,
-		    *(int*)vr->vsValues[i].viValue);
-#endif
-	    if (vp + vr->vsValues[i].viValueLen < vpmax) {
-	      memcpy(vp,vr->vsValues[i].viValue,vr->vsValues[i].viValueLen);
-	      vi[i].viValue = vp;
-	      vp += vi[i].viValueLen;
-	      if (vr->vsValues[i].viResource) {
-		if (vp + strlen(vr->vsValues[i].viResource) + 1 < vpmax) {
-		  strcpy(vp,vr->vsValues[i].viResource);
-		  vi[i].viResource = vp;
-		  vp += strlen(vp)+1;
-		}
-	      } else {
-		comm->gc_result=-1;
-		break;
-	      }
-	    } else {
-	      comm->gc_result=-1;
-	      break;
-	    }
-	  }
-	} else {
-	  comm->gc_result=-1;
-	}
-	comm->gc_datalen=vp - (void*)vr;
       }
       ch_release(ch);
       break;

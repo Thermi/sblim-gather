@@ -1,5 +1,5 @@
 /*
- * $Id: mcstest.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mcstest.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -28,7 +28,7 @@ int main()
   char       buf[500];
   size_t     buflen;
   
-  if (mcs_init() == 0) {
+  if (mcs_init("mcstest") == 0) {
     do {
       buflen=sizeof(buf);
       if (mcs_getrequest(&req,buf,&buflen) == -1) {

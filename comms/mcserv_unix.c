@@ -1,7 +1,7 @@
 /*
- * $Id: mcserv_unix.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -29,9 +29,11 @@
 #include <fcntl.h>
 
 static int commhandle = -1;
-int        fdlockfile = -1;
+static int fdlockfile = -1;
+static char sockname[PATH_MAX+1] = {0};
+static char lockname[PATH_MAX+1] = {0};
 
-int mcs_init()
+int mcs_init(const char *commid)
 {
   struct sockaddr_un sa;
   if (commhandle==-1) {
@@ -40,8 +42,13 @@ int mcs_init()
       perror("Could not open socket");
       return -1;
     }
-    if (fdlockfile == -1) { 
-      fdlockfile = open(MC_LOCKFILE,O_CREAT|O_RDWR, 0664);
+    if (fdlockfile == -1) {
+      if (snprintf(lockname,sizeof(lockname),MC_LOCKFILE,commid) > 
+	  sizeof(lockname)) {
+	perror("Could not complete lockfile name");
+	return -1;
+      }
+      fdlockfile = open(lockname,O_CREAT|O_RDWR, 0664);
       if (fdlockfile==-1) {
 	perror("Could not open lockfile");
 	return -1;
@@ -51,9 +58,14 @@ int mcs_init()
       perror("lock already in use");
       return -1;
     } 
-    unlink(MC_SOCKET);
+    if (snprintf(sockname,sizeof(sockname),MC_SOCKET,commid) > 
+	sizeof(sockname)) {
+      perror("Could not complete socket name");
+      return -1;
+    }
+    unlink(sockname);
     sa.sun_family=AF_UNIX;
-    strcpy(sa.sun_path,MC_SOCKET);
+    strcpy(sa.sun_path,sockname);
     if (bind(commhandle,(struct sockaddr*)&sa,sizeof(sa))) {
       perror("Could not bind socket");
       return -1;
@@ -68,13 +80,19 @@ int mcs_term()
   if (commhandle != -1) {
     close(commhandle);
     commhandle = -1;
-    unlink (MC_SOCKET);
+    if (lockname[0]) {
+      unlink (lockname);
+      lockname[0]=0;
+    }
   }
   if (fdlockfile != -1) {
     flock(fdlockfile,LOCK_UN);
     close(fdlockfile);
     fdlockfile = -1;
-    unlink (MC_LOCKFILE);
+    if (sockname[0]) {
+      unlink (sockname);
+      sockname[0]=0;
+    }
   }
   return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.2 2004/07/09 15:20:52 mihajlov Exp $
+ * $Id: metric.h,v 1.3 2004/07/16 15:30:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -98,17 +98,27 @@ typedef struct _MetricDefinitionV1 {
 } MetricDefinitionV1;
 
 typedef struct _MetricDefinition {
-  short              version;          /* New: mandatory version */
+  short              mdVersion;          /* New: mandatory version */
   char              *mdName;           /* Metric Descriptive Name */
   char              *mdReposPluginName;/* Name of repository plugin (lib) */
   int                mdId;             /* Metric Id */
   time_t             mdSampleInterval;
   int                mdMetricType;
-  int                mdAliasId;        /* Alias for computed metrics */
+  // int                mdAliasId;        /* Alias for computed metrics */
   unsigned           mdDataType;
   MetricRetriever   *mproc;
   MetricDeallocator *mdeal;
 } MetricDefinition;
+
+typedef struct _MetricCalculationDefinition {
+  short             mcVersion;
+  char             *mcName;
+  int               mcId;
+  int               mcAliasId;
+  int               mcMetricType;
+  int               mcDataType;
+  MetricCalculator *mcCalc;
+} MetricCalculationDefinition;
 
 #ifdef __cplusplus
 }

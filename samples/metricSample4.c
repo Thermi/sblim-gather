@@ -1,5 +1,5 @@
 /*
- * $Id: metricSample4.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricSample4.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -49,29 +49,20 @@ int _DefinedMetrics (MetricRegisterId *mr,
   metricDef[0].mdDataType=MD_SINT32;
   metricDef[0].mproc=metricRetriever;
   metricDef[0].mdeal=free;
-  metricDef[0].mcalc=metricCalculator1;
-  metricDef[0].mresl=resourceLister;
-  metricDef[0].mresldeal=resourceListDeallocator;
   metricDef[1].mdName="sample4-2";
   metricDef[1].mdId=mr(pluginname,metricDef[1].mdName);
   metricDef[1].mdMetricType=MD_CALCULATED | MD_INTERVAL;
   metricDef[1].mdDataType=MD_SINT32;
-  metricDef[1].mdAliasId=metricDef[0].mdId;
+  //  metricDef[1].mdAliasId=metricDef[0].mdId;
   metricDef[1].mproc=NULL;
   metricDef[1].mdeal=NULL;
-  metricDef[1].mresl=metricDef[0].mresl;
-  metricDef[1].mresldeal=metricDef[0].mresldeal;
-  metricDef[1].mcalc=metricCalculator2;
   metricDef[2].mdName="sample4-3";
   metricDef[2].mdId=mr(pluginname,metricDef[2].mdName);
   metricDef[2].mdMetricType=MD_CALCULATED | MD_RATE    ;
   metricDef[2].mdDataType=MD_SINT32;
-  metricDef[2].mdAliasId=metricDef[0].mdId;
+  //  metricDef[2].mdAliasId=metricDef[0].mdId;
   metricDef[2].mproc=NULL;
   metricDef[2].mdeal=NULL;
-  metricDef[2].mresl=metricDef[0].mresl;
-  metricDef[2].mresldeal=metricDef[0].mresldeal;
-  metricDef[2].mcalc=metricCalculator3;
   *mdnum=3;
   *md=metricDef;
   return 0;

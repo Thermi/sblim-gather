@@ -1,7 +1,7 @@
 /*
- * $Id: mcdefs.h,v 1.1 2003/10/17 13:56:01 mihajlov Exp $ 
+ * $Id: mcdefs.h,v 1.2 2004/07/16 15:30:05 mihajlov Exp $ 
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -23,15 +23,16 @@
 extern "C" {
 #endif
   
-#define MC_SOCKET  "/tmp/.gather-socket"
-#define MC_LOCKFILE  "/tmp/.gather-lockfile"
-#define MC_IPCFILE "/tmp/.gather-ipc"
+#define MC_SOCKET  "/tmp/.%s-socket"
+#define MC_LOCKFILE  "/tmp/.%s-lockfile"
+#define MC_IPCFILE "/tmp/.%s-ipc"
 #define MC_IPCPROJ 100
 
 struct _MC_REQHDR
 {
   int            mc_handle;
   unsigned short mc_type;
+
 };
 
 typedef struct _MC_REQHDR MC_REQHDR;

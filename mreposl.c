@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mreposl.c,v 1.2 2004/07/16 15:30:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -234,7 +234,6 @@ static int pruneRepository()
   size_t           numPruned=0;
   int              i;
   MReposValue      *v, *bv;
-  MetricDefinition *mdef; 
   time_t           now=time(NULL);
 
   if (nextPrune<now) {
@@ -248,17 +247,13 @@ static int pruneRepository()
 	  v = v->mrv_next;
 	}
 	if (v && v->mrv_value->mvTimeStamp <= now - EXPIRATION_INTERVAL) {
-	  /* we are the LOCAL repository - hence we may search for defs */
-	  mdef = MPR_GetMetric(LocalReposHeader[i].mrh_id);
-	  if (mdef == NULL || mdef->mdeal == NULL)
-	    continue;
 	  if (bv==NULL)
 	    LocalReposHeader[i].mrh_first = NULL;
 	  else
 	    bv->mrv_next = NULL;
 	  /* now delete all outdated metrics*/
 	  while (v) {
-	    mdef->mdeal(v->mrv_value);
+	    free(v->mrv_value);
 	    bv=v;
 	    v=v->mrv_next;
 	    free(bv);

@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.2 2004/07/09 15:20:52 mihajlov Exp $
+ * $Id: gather.c,v 1.3 2004/07/16 15:30:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -39,10 +39,13 @@ typedef struct _PluginList {
 } PluginList;
 
 static PluginList *pluginhead=NULL;
+static size_t      pluginnum=0;
 
 static void pl_link(MetricPlugin *);
 static void pl_unlink(MetricPlugin *);
 static MetricPlugin* pl_find(const char *);
+static MetricPlugin* pl_first();
+static MetricPlugin* pl_next(const MetricPlugin*);
 
 /* Retriever Control */
 static ML_Head   *metriclist=NULL;
@@ -197,6 +200,41 @@ int metricplugin_list(const char *pluginname, PluginDefinition **pdef,
   return i;
 }
 
+int metricpluginname_list(char ***pluginname, 
+			  COMMHEAP ch)
+{
+  if (pluginname) {
+    int i=0;
+    *pluginname = ch_alloc(ch,sizeof(char*)*(pluginnum+1));
+    MetricPlugin *mp = pl_first();
+    while (mp) {
+      (*pluginname)[i]= ch_alloc(ch,strlen(mp->mpName)+1);
+      strcpy((*pluginname)[i],mp->mpName);
+      i += 1;
+      mp = pl_next(mp);
+    }
+    (*pluginname)[i]=NULL;
+    return 0;
+  }
+  return -1;
+}
+
+static MetricPlugin * pl_first()
+{
+  return pluginhead?pluginhead->plugin:NULL;
+}
+
+static MetricPlugin * pl_next(const MetricPlugin *mp)
+{
+  /* not very efficient */
+  PluginList *p = pluginhead;
+  while(p) {
+    if (p->plugin==mp)
+      return p->next->plugin;
+  }
+  return NULL;
+}
+
 static void pl_link(MetricPlugin *mp)
 {
   PluginList *p = pluginhead;
@@ -211,6 +249,7 @@ static void pl_link(MetricPlugin *mp)
   }
   p->plugin = mp;
   p->next = NULL;
+  pluginnum+=1;
 }
 
 static void pl_unlink(MetricPlugin *mp)
@@ -220,12 +259,14 @@ static void pl_unlink(MetricPlugin *mp)
   if (p && p->plugin==mp) {
     pluginhead=p->next;
     free(p);
+    pluginnum-=1;
   } else
     while (p->next) {
       if (p->next->plugin==mp) {
 	q=p->next;
 	p->next=q->next;
 	free(q);
+	pluginnum-=1;
 	break;
       }
       p=p->next;

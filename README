@@ -11,11 +11,19 @@ SBLIM Performance Data Gatherer and Provider
  http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
 
 Author: Viktor Mihajlovski <mihajlov@de.ibm.com>
-Last Change Date: 02/20/2004
+Last Change Date: 07/16/2004
 
 Changelog:
 10/17/2003	Initial Version.
 02/20/2004	Added test cases for SBLIM testsuite.
+07/16/2004	Started prototyping for version 2
+
+
+**** IMPORTANT NOTE ****
+This version of the package is a very early prototype. Do not use!
+Download a supported version from the SBLIM website instead.
+You will find it at http://oss.software.ibm.com/sblim .
+Alternatevily you can check out the GATHER_1_0_BRANCH from CVS.
 
 About this Package
 ------------------

@@ -1,7 +1,7 @@
 /*
- * $Id: repos.c,v 1.1 2004/07/09 15:20:52 mihajlov Exp $
+ * $Id: repos.c,v 1.2 2004/07/16 15:30:04 mihajlov Exp $
  *
-* (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -13,221 +13,180 @@
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
  * Contributors: 
  *
- * Description: Gatherer Library
+ * Description: Repository Library
  * 
  * Runtime Control Functions.
  * For now we don't have synchronization features as we assume only one
  * control thread.
  */
 
-#include "gather.h"
-#include "mreg.h"
-#include "mplugmgr.h"
-#include "mlist.h"
-#include "mretr.h"
+#include "repos.h"
+#include "rreg.h"
+#include "rplugmgr.h"
 #include "mrepos.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#define min(a,b) ((a) < (b) ? (a) : (b))
-
-/* Plugin Control */
+/* Plugin Control -- copied over from gather.c */
 typedef struct _PluginList {
-  MetricPlugin       *plugin;
+  RepositoryPlugin       *plugin;
   struct _PluginList *next;
 } PluginList;
 
 static PluginList *pluginhead=NULL;
+static size_t      pluginnum=0;
+static int         initialized=0;
 
-static void pl_link(MetricPlugin *);
-static void pl_unlink(MetricPlugin *);
-static MetricPlugin* pl_find(const char *);
+static void pl_link(RepositoryPlugin *);
+static void pl_unlink(RepositoryPlugin *);
+static RepositoryPlugin* pl_find(const char *);
 
-/* Retriever Control */
-static ML_Head   *metriclist=NULL;
-static MR_Handle *retriever=NULL;
-
-/* Sample Function */
-static void gather_sample(int id);
-
-/* Gatherer Interface Implementation */
-int gather_init()
+int repos_init()
 {
   /* Allocate all the data structures needed
      - plugin registry
      - retrievers 
   */
-  if (metriclist) return -1;
-  pluginhead = NULL;
-  MPR_InitRegistry();
-  metriclist = ML_Init();
-  return 0;
-}
-
-int gather_terminate()
-{
-  /* stop everything */
-  if (metriclist==NULL) return -1;
-  gather_stop();
-  while (pluginhead) {
-    metricplugin_remove(pluginhead->plugin->mpName);
-  };
-  ML_Finish(metriclist);
-  metriclist=NULL;
-  MPR_FinishRegistry();
-  return 0;
-}
-
-int gather_start()
-{
-  /* start the retrieval with one thread */
-  if (metriclist && retriever==NULL) {
-    ML_Reset(metriclist);
-    retriever=MR_Init(metriclist,1);
+  if (initialized==0) {
+    initialized=1;
+    pluginhead = NULL;
+    RPR_InitRegistry();
     return 0;
-  } else {
-    return -1;
   }
+  return -1;
 }
 
-int gather_stop()
+int repos_terminate()
 {
-  /* stop the retrieval */
-  if (retriever) {
-    MR_Finish(retriever);
-    retriever=NULL;
+  if (initialized) {
+    /* stop everything */
+    initialized=0;
+    while (pluginhead) {
+      reposplugin_remove(pluginhead->plugin->rpName);
+    };
+    RPR_FinishRegistry();
     return 0;
-  } else{
-    return -1;
   }
+  return -1;
 }
 
-void gather_status(GatherStatus *gs)
+void repos_status(RepositoryStatus *rs)
 {
-  if (gs) {
+  if (rs) {
     PluginList *p=pluginhead;
-    gs->gsNumPlugins=gs->gsNumMetrics=0;
+    rs->rsNumPlugins=rs->rsNumMetrics=0;
     while(p && p->plugin) {
-      gs->gsNumPlugins+=1;
-      gs->gsNumMetrics+=p->plugin->mpNumMetricDefs;
+      rs->rsNumPlugins+=1;
+      rs->rsNumMetrics+=p->plugin->rpNumMetricCalcDefs;
       p=p->next;
     }
-    gs->gsInitialized=metriclist!=NULL;
-    gs->gsSampling=retriever!=NULL;
+    rs->rsInitialized=initialized;
   }
 }
 
-int metricplugin_add(const char *pluginname)
+int reposplugin_add(const char *pluginname)
 {
-  MetricPlugin *mp;
-  int i;
+  RepositoryPlugin *rp;
   int status = -1;
-  if (metriclist && pluginname && pl_find(pluginname)==NULL) {
-    mp = malloc(sizeof(MetricPlugin));
+  if (pluginname && pl_find(pluginname)==NULL) {
+    rp = malloc(sizeof(RepositoryPlugin));
     /* load plugin */
-    mp->mpName = strdup(pluginname);
-    mp->mpRegister=MPR_IdForString;
-    if (MP_Load(mp)==0) {
+    rp->rpName = strdup(pluginname);
+    rp->rpRegister=RPR_IdForString;
+    if (RP_Load(rp)==0) {
       status = 0;
-      pl_link(mp);
-      /* register all metrics */
-      for (i=0;i<mp->mpNumMetricDefs;i++)
-	if (MPR_UpdateMetric(pluginname,mp->mpMetricDefs+i)==0 &&
-	    (mp->mpMetricDefs[i].mdMetricType & MD_RETRIEVED)) {	  
-	  MetricBlock *mb=MakeMB(mp->mpMetricDefs[i].mdId,
-				 gather_sample,
-				 mp->mpMetricDefs[i].mdSampleInterval);
-	  if (mb==NULL || ML_Relocate(metriclist,mb))
-	    status = -1;
-	  else if (retriever)
-	    /* notify retriever about new metrics */
-	    MR_Wakeup(retriever);
-	}
+      pl_link(rp);
     } else {
-      if(mp->mpName) free(mp->mpName);
-      if(mp) free(mp);
+      if(rp->rpName) free(rp->rpName);
+      if(rp) free(rp);
     }
   }
   return status;
 }
 
-int metricplugin_remove(const char *pluginname)
+int reposplugin_remove(const char *pluginname)
 {
-  MetricPlugin *mp;
+  RepositoryPlugin *rp;
   int i;
   int status = -1;
-  if (metriclist && pluginname) {
-    mp = pl_find(pluginname);
-    if (mp) {
+  if (pluginname) {
+    rp = pl_find(pluginname);
+    if (rp) {
       /* unregister all metrics for this plugin */
-      for (i=0;i<mp->mpNumMetricDefs;i++) {
-	if (mp->mpMetricDefs[i].mdMetricType & MD_RETRIEVED)
-	  ML_Remove(metriclist,mp->mpMetricDefs[i].mdId);
-	MPR_RemoveMetric(mp->mpMetricDefs[i].mdId);
+      for (i=0;i<rp->rpNumMetricCalcDefs;i++) {
+	RPR_RemoveMetric(rp->rpMetricCalcDefs[i].mcId);
       }
-      pl_unlink(mp);
-      MP_Unload(mp);
-      free(mp->mpName);
-      free(mp);
+      pl_unlink(rp);
+      RP_Unload(rp);
+      free(rp->rpName);
+      free(rp);
       status = 0;
     }
   }
   return status;
 }
 
-int metricplugin_list(const char *pluginname, PluginDefinition **pdef, 
-		      COMMHEAP ch)
+int reposplugin_list(const char *pluginname, 
+		     RepositoryPluginDefinition **rdef, 
+		     COMMHEAP ch)
 {
-  MetricPlugin *mp;
+  RepositoryPlugin *rp;
   int i=-1;
-  if (metriclist && pluginname && pdef) {
-    mp = pl_find(pluginname);
-    if (mp) {
-      *pdef = ch_alloc(ch,sizeof(PluginDefinition)*mp->mpNumMetricDefs);
+  if (pluginname && rdef) {
+    rp = pl_find(pluginname);
+    if (rp) {
+      *rdef = 
+	ch_alloc(ch,
+		 sizeof(RepositoryPluginDefinition)*rp->rpNumMetricCalcDefs);
       /* store all metric infos for this plugin */
-      for (i=0;i<mp->mpNumMetricDefs;i++) {
-	(*pdef)[i].pdId=mp->mpMetricDefs[i].mdId;
-	(*pdef)[i].pdDataType=mp->mpMetricDefs[i].mdDataType;
-	(*pdef)[i].pdName=mp->mpMetricDefs[i].mdName;
-	(*pdef)[i].pdResource=NULL; /* todo must specify resource listing fnc */
+      for (i=0;i<rp->rpNumMetricCalcDefs;i++) {
+	(*rdef)[i].rdId=rp->rpMetricCalcDefs[i].mcId;
+	(*rdef)[i].rdDataType=rp->rpMetricCalcDefs[i].mcDataType;
+	(*rdef)[i].rdName=rp->rpMetricCalcDefs[i].mcName;
+	(*rdef)[i].rdResource=NULL; /* todo must specify resource listing fnc */
       }
     }
   }
   return i;
 }
 
-int metricvalue_get(ValueRequest *vs, COMMHEAP ch)
+int reposvalue_put(ValueRequest *vs, COMMHEAP ch)
 {
-  MetricDefinition *md;
-  MetricValue      **mv=NULL;
-  int               i,j;
-  int               id;
-  char            **resources=NULL;
-  int               resnum=0; 
-  int              *numv=NULL;
-  int               totalnum=0;
-  int               actnum=0;
-  int               useIntervals=0;
-  int               intervalnum=0;
+  return -1;
+}
+
+int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
+{
+  MetricCalculationDefinition *mc;
+  MetricValue                **mv=NULL;
+  int                          i,j;
+  int                          id;
+  char                       **resources=NULL;
+  int                          resnum=0; 
+  int                         *numv=NULL;
+  int                          totalnum=0;
+  int                          actnum=0;
+  int                          useIntervals=0;
+  int                          intervalnum=0;
   
   if (vs) {
-    md=MPR_GetMetric(vs->vsId);
-    if (md && md->mcalc) {
-      id = (md->mdMetricType&MD_CALCULATED) ? md->mdAliasId : vs->vsId;
+    mc=RPR_GetMetric(vs->vsId);
+    if (mc && mc->mcCalc) {
+      id = (mc->mcMetricType&MD_CALCULATED) ? mc->mcAliasId : vs->vsId;
       if  (vs->vsResource) {
 	resources = &vs->vsResource;
 	resnum = 1;
-      } else if (md->mresl) {
-	resnum = md->mresl(id,&resources);
+      } else {
+	resnum = MetricRepository->mres_retrieve(id,&resources);
       }
-      if ( (md->mdMetricType&MD_INTERVAL) 
-	   || (md->mdMetricType&MD_RATE) 
-	   || (md->mdMetricType&MD_AVERAGE) ) {
+      if ( (mc->mcMetricType&MD_INTERVAL) 
+	   || (mc->mcMetricType&MD_RATE) 
+	   || (mc->mcMetricType&MD_AVERAGE) ) {
 	useIntervals=1;
 	if(vs->vsFrom==vs->vsTo) { 
 	  /* "point" interval */
-	  if (md->mdMetricType&MD_INTERVAL)
+	  if (mc->mcMetricType&MD_INTERVAL)
 	    intervalnum = 1;
 	  else
 	    intervalnum = 2;
@@ -262,7 +221,7 @@ int metricvalue_get(ValueRequest *vs, COMMHEAP ch)
 	  vs->vsNumValues=totalnum; /* all values used for point metrics */
 	}  
 	vs->vsValues=ch_alloc(ch,vs->vsNumValues*sizeof(ValueItem));
-	vs->vsDataType=md->mdDataType;
+	vs->vsDataType=mc->mcDataType;
 	for (j=0;j < resnum; j++) {
 	  if (useIntervals && numv[j] > 0) {
 	    vs->vsValues[j].viCaptureTime=mv[j][numv[j]-1].mvTimeStamp;
@@ -271,7 +230,7 @@ int metricvalue_get(ValueRequest *vs, COMMHEAP ch)
 	      vs->vsValues[j].viCaptureTime;
 	    vs->vsValues[j].viValueLen=100; /* TODO : calc meaningful length */
 	    vs->vsValues[j].viValue=ch_alloc(ch,vs->vsValues[j].viValueLen);
-	    if (md->mcalc(mv[j],
+	    if (mc->mcCalc(mv[j],
 			  numv[j],
 			  vs->vsValues[j].viValue,
 			  vs->vsValues[j].viValueLen) == -1) {
@@ -289,7 +248,7 @@ int metricvalue_get(ValueRequest *vs, COMMHEAP ch)
 	      vs->vsValues[actnum+i].viValueLen=100;
 	      vs->vsValues[actnum+i].viValue=
 		ch_alloc(ch,vs->vsValues[actnum+i].viValueLen);
-	      if (md->mcalc(&mv[j][i],
+	      if (mc->mcCalc(&mv[j][i],
 			    1,
 			    vs->vsValues[actnum+i].viValue,
 			    vs->vsValues[actnum+i].viValueLen) == -1) {
@@ -305,8 +264,8 @@ int metricvalue_get(ValueRequest *vs, COMMHEAP ch)
 	    actnum = actnum + numv[j];
 	  }
 	}
-	if (vs->vsResource == NULL && resources && md->mresldeal) {
-	  md->mresldeal(resources);
+	if (vs->vsResource == NULL && resources) {
+	  MetricRepository->mres_release(resources);
 	}
 	for (j=0; j < resnum; j++) {
 	  MetricRepository->mrep_release(mv[j]);
@@ -319,8 +278,7 @@ int metricvalue_get(ValueRequest *vs, COMMHEAP ch)
   }
   return -1;
 }
-
-static void pl_link(MetricPlugin *mp)
+static void pl_link(RepositoryPlugin *rp)
 {
   PluginList *p = pluginhead;
   if (p == NULL) {
@@ -332,46 +290,39 @@ static void pl_link(MetricPlugin *mp)
     p->next=malloc(sizeof(PluginList));
     p=p->next;
   }
-  p->plugin = mp;
+  p->plugin = rp;
   p->next = NULL;
+  pluginnum+=1;
 }
 
-static void pl_unlink(MetricPlugin *mp)
+static void pl_unlink(RepositoryPlugin *rp)
 {
   PluginList *p, *q;
   p = pluginhead;
-  if (p && p->plugin==mp) {
+  if (p && p->plugin==rp) {
     pluginhead=p->next;
     free(p);
+    pluginnum-=1;
   } else
     while (p->next) {
-      if (p->next->plugin==mp) {
+      if (p->next->plugin==rp) {
 	q=p->next;
 	p->next=q->next;
 	free(q);
+	pluginnum-=1;
 	break;
       }
       p=p->next;
     }
 }
 
-static MetricPlugin* pl_find(const char *name)
+static RepositoryPlugin* pl_find(const char *name)
 {
   PluginList *p = pluginhead;
   while(p) {
-    if (strcmp(p->plugin->mpName,name)==0)
+    if (strcmp(p->plugin->rpName,name)==0)
       break;
     p=p->next;
   }
   return p?p->plugin:NULL;
-}
-
-static void gather_sample(int id)
-{
-  MetricDefinition *md;
-  
-  md=MPR_GetMetric(id);
-  if (md && md->mproc) {
-    md->mproc(id,MetricRepository->mrep_add);
-  }
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: metricSample3.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricSample3.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -44,7 +44,6 @@ int _DefinedMetrics (MetricRegisterId *mr,
   metricDef.mdMetricType=MD_RETRIEVED;
   metricDef.mproc=metricRetriever;
   metricDef.mdeal=metricDeallocator;
-  metricDef.mcalc=metricCalculator;
   *mdnum=1;
   *md=&metricDef;
   return 0;

@@ -1,7 +1,7 @@
 /*
- * $Id: rgather.c,v 1.4 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: rrepos.c,v 1.1 2004/07/16 15:30:05 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -13,63 +13,37 @@
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
  * Contributors: 
  *
- * Description: Remote Gatherer Access Library
- * Implementation of the Remote API use to control the Gatherer. 
+ * Description: Remote Repository Access Library
+ * Implementation of the Remote API use to control the Repository
  * 
  */
 
-#include "rgather.h"
+#include "rrepos.h"
 #include "gatherc.h"
 #include "mcclt.h"
 #include <string.h>
-#include <unistd.h>
-//#include <stdlib.h>
-#include <sys/wait.h>
 
-int rgather_load()
+int rrepos_sessioncheck()
 {
-  int pid;
-  if (system("ps -C gatherd")) {
-    /* No gatherd around */
-    /*signal(SIGCHLD,SIG_IGN);*/
-    pid=fork();
-    switch(pid) {
-    case 0:
-      execlp("gatherd","gatherd",NULL);
-      exit(-1);
-      break;
-    case -1:
-      return -1;
-      break;
-    default:
-      waitpid(pid,NULL,0);
-      sleep(1); /* todo: need to make sure daemon is initialized */
-      break;
-    }
-  }
   return 0;
 }
 
-int rgather_unload()
+int rrepos_register(const PluginDefinition *rdef)
 {
-  MC_REQHDR   hdr;
-  char        xbuf[GATHERBUFLEN];
-  GATHERCOMM *comm=(GATHERCOMM*)xbuf;
-  size_t      commlen=sizeof(xbuf);
-
-  hdr.mc_type=GATHERMC_REQ;
-  comm->gc_cmd=GCMD_QUIT;
-  comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
-      mcc_response(&hdr,comm,&commlen)==0 &&
-      mcc_term()==0) {
-    return comm->gc_result;
-  } else {
-    return -1;
-  }
+  return 0;
 }
 
-int rgather_init()
+int rrepos_put(MetricValue *mv)
+{
+  return 0;
+}
+
+int rrepos_get(ValueRequest *vs, COMMHEAP ch)
+{
+  return 0;
+}
+
+int rrepos_init()
 {
   MC_REQHDR   hdr;
   char        xbuf[GATHERBUFLEN];
@@ -79,7 +53,7 @@ int rgather_init()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_INIT;
   comm->gc_datalen=0;
-  if (mcc_init(GATHER_COMMID)==0 &&
+  if (mcc_init(REPOS_COMMID) == 0 && 
       mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
@@ -88,7 +62,7 @@ int rgather_init()
   }
 }
 
-int rgather_terminate()
+int rrepos_terminate()
 {
   MC_REQHDR   hdr;
   char        xbuf[GATHERBUFLEN];
@@ -100,72 +74,36 @@ int rgather_terminate()
   comm->gc_datalen=0;
   if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0 &&
-      mcc_term()==0) {
+      mcc_term() == 0 ) {
     return comm->gc_result;
   } else {
     return -1;
   }
 }
 
-int rgather_start()
+int rrepos_status(RepositoryStatus *rs)
 {
-  MC_REQHDR   hdr;
-  char        xbuf[GATHERBUFLEN];
-  GATHERCOMM *comm=(GATHERCOMM*)xbuf;
-  size_t      commlen=sizeof(xbuf);
+  MC_REQHDR         hdr;
+  char              xbuf[GATHERBUFLEN];
+  GATHERCOMM       *comm=(GATHERCOMM*)xbuf;
+  RepositoryStatus *rsp=(RepositoryStatus*)(xbuf+sizeof(GATHERCOMM));
+  size_t            commlen=sizeof(xbuf);
 
-  hdr.mc_type=GATHERMC_REQ;
-  comm->gc_cmd=GCMD_START;
-  comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
-      mcc_response(&hdr,comm,&commlen)==0) {
-    return comm->gc_result;
-  } else {
-    return -1;
-  }
-}
-
-int rgather_stop()
-{
-  MC_REQHDR   hdr;
-  char        xbuf[GATHERBUFLEN];
-  GATHERCOMM *comm=(GATHERCOMM*)xbuf;
-  size_t      commlen=sizeof(xbuf);
-
-  hdr.mc_type=GATHERMC_REQ;
-  comm->gc_cmd=GCMD_STOP;
-  comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
-      mcc_response(&hdr,comm,&commlen)==0) {
-    return comm->gc_result;
-  } else {
-    return -1;
-  }
-}
-
-int rgather_status(GatherStatus *gs)
-{
-  MC_REQHDR     hdr;
-  char          xbuf[GATHERBUFLEN];
-  GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
-  GatherStatus *gsp=(GatherStatus*)(xbuf+sizeof(GATHERCOMM));
-  size_t        commlen=sizeof(xbuf);
-
-  if (gs) {
+  if (rs) {
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_STATUS;
     comm->gc_datalen=0;
     if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
-	commlen == sizeof(GatherStatus) + sizeof(GATHERCOMM)) {
-      *gs = *gsp;
+	commlen == sizeof(RepositoryStatus) + sizeof(GATHERCOMM)) {
+      *rs = *rsp;
       return comm->gc_result;
     } 
   }    
   return -1;
 }
 
-int rmetricplugin_add(const char *pluginname)
+int rreposplugin_add(const char *pluginname)
 {
   MC_REQHDR     hdr;
   char          xbuf[GATHERBUFLEN];
@@ -185,7 +123,7 @@ int rmetricplugin_add(const char *pluginname)
   return -1;
 }
 
-int rmetricplugin_remove(const char *pluginname)
+int rreposplugin_remove(const char *pluginname)
 {
   MC_REQHDR     hdr;
   char          xbuf[GATHERBUFLEN];
@@ -205,8 +143,9 @@ int rmetricplugin_remove(const char *pluginname)
   return -1;  
 }
 
-int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef, 
-		       COMMHEAP ch)
+int rreposplugin_list(const char *pluginname, 
+		      RepositoryPluginDefinition **rdef, 
+		      COMMHEAP ch)
 {
   MC_REQHDR     hdr;
   char          xbuf[GATHERVALBUFLEN];
@@ -215,7 +154,7 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
   int           i,j;
   char         *stringpool;
 
-  if (pluginname && *pluginname && pdef) {
+  if (pluginname && *pluginname && rdef) {
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_LISTPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
@@ -225,8 +164,8 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
       /* copy data into result buffer and adjust string pointers */
       if (comm->gc_result>0) {
-	*pdef = ch_alloc(ch,comm->gc_result*sizeof(PluginDefinition));
-	memcpy(*pdef,xbuf+sizeof(GATHERCOMM)+strlen(pluginname)+1,
+	*rdef = ch_alloc(ch,comm->gc_result*sizeof(PluginDefinition));
+	memcpy(*rdef,xbuf+sizeof(GATHERCOMM)+strlen(pluginname)+1,
 	       sizeof(PluginDefinition)*comm->gc_result);
 	stringpool=ch_alloc(ch,
 			    comm->gc_datalen - 
@@ -238,14 +177,14 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
 	       comm->gc_result*sizeof(PluginDefinition));
 	for (i=0;i<comm->gc_result;i++) {
 	  /* extract plugin name and resource names from string pool */
-	  (*pdef)[i].pdName = stringpool;
+	  (*rdef)[i].rdName = stringpool;
 	  stringpool += strlen(stringpool) + 1;
-	  (*pdef)[i].pdResource=ch_alloc(ch,sizeof(char*)*100);
+	  (*rdef)[i].rdResource=ch_alloc(ch,sizeof(char*)*100);
 	  for (j=0;strlen(stringpool)>0;j++) {
-	    (*pdef)[i].pdResource[j]=stringpool;
+	    (*rdef)[i].rdResource[j]=stringpool;
 	    stringpool += sizeof(char*) + strlen(stringpool) + 1;
 	  }
-	  (*pdef)[i].pdResource[j]=NULL;
+	  (*rdef)[i].rdResource[j]=NULL;
 	  stringpool += 1;
 	}
       }

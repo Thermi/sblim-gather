@@ -1,5 +1,5 @@
 /*
- * $Id: gather.h,v 1.2 2004/07/09 15:20:52 mihajlov Exp $
+ * $Id: gather.h,v 1.3 2004/07/16 15:30:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -44,6 +44,10 @@ typedef struct _PluginDefinition {
 int metricplugin_list(const char *pluginname,
 		      PluginDefinition **pdef, 
 		      COMMHEAP ch);
+
+
+int metricpluginname_list(char ***pluginname,
+			  COMMHEAP ch);
 
 typedef struct _GatherStatus {
   short    gsInitialized;
