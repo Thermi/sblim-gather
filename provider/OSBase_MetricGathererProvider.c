@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricGathererProvider.c,v 1.2 2004/02/11 15:19:59 mihajlov Exp $
+ * $Id: OSBase_MetricGathererProvider.c,v 1.3 2004/06/02 17:55:22 heidineu Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -99,7 +99,9 @@ CMPIStatus OSBase_MetricGathererProviderEnumInstances( CMPIInstanceMI * mi,
   CMPIInstance * ci = NULL;
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
   GatherStatus   gs;
-  int            ival;
+  short          ival;
+  short          nump;
+  short          numm;
   char           boolval;
   
   if( _debug )
@@ -129,8 +131,10 @@ CMPIStatus OSBase_MetricGathererProviderEnumInstances( CMPIInstanceMI * mi,
       CMSetProperty(ci,"EnabledState",&ival,CMPI_uint16);
       boolval=gs.gsSampling;
       CMSetProperty(ci,"Sampling",&boolval,CMPI_boolean);
-      CMSetProperty(ci,"NumberOfPlugins",&gs.gsNumPlugins,CMPI_uint16);
-      CMSetProperty(ci,"NumberOfMetrics",&gs.gsNumMetrics,CMPI_uint16);
+      nump = gs.gsNumPlugins; 
+      CMSetProperty(ci,"NumberOfPlugins",&nump,CMPI_uint16);
+      numm = gs.gsNumMetrics;
+      CMSetProperty(ci,"NumberOfMetrics",&numm,CMPI_uint16);
     }
     CMReturnInstance(rslt,ci);
   } else {
@@ -150,7 +154,9 @@ CMPIStatus OSBase_MetricGathererProviderGetInstance( CMPIInstanceMI * mi,
   CMPIInstance * ci = NULL;
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
   GatherStatus   gs;
-  int            ival;
+  short          ival;
+  short          nump;
+  short          numm;
   char           boolval;
 
   if( _debug )
@@ -179,8 +185,10 @@ CMPIStatus OSBase_MetricGathererProviderGetInstance( CMPIInstanceMI * mi,
       CMSetProperty(ci,"EnabledState",&ival,CMPI_uint16);
       boolval=gs.gsSampling;
       CMSetProperty(ci,"Sampling",&boolval,CMPI_boolean);
-      CMSetProperty(ci,"NumberOfPlugins",&gs.gsNumPlugins,CMPI_uint16);
-      CMSetProperty(ci,"NumberOfMetrics",&gs.gsNumMetrics,CMPI_uint16);
+      nump = gs.gsNumPlugins;
+      CMSetProperty(ci,"NumberOfPlugins",&numm,CMPI_uint16);
+      numm = gs.gsNumMetrics;
+      CMSetProperty(ci,"NumberOfMetrics",&numm,CMPI_uint16);
     }
     CMReturnInstance(rslt,ci);
   } else {
