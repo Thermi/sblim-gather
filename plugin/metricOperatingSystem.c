@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.9 2004/09/22 12:19:27 heidineu Exp $
+ * $Id: metricOperatingSystem.c,v 1.10 2004/09/23 13:00:37 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -38,6 +38,12 @@
 
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
+
+/* ---------------------------------------------------------------------------*/
+
+#define KERNELRELEASE(maj,min,patch) ((maj) * 10000 + (min)*1000 + (patch))
+static int kernel_release();
 
 /* ---------------------------------------------------------------------------*/
 
@@ -486,14 +492,28 @@ int metricRetrPageInCounter( int mid,
     fprintf(stderr,"--- %s(%i) : Sampling for metric PageInCounter ID %d\n",
 	    __FILE__,__LINE__,mid);
 #endif
-    if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
-      bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
-      ptr = strstr(buf,"swap");
-      sscanf(ptr, "%*s %lld", &in);
-      fclose(fhd);
-    }
-    else { return -1; }
 
+    /* kernel 2.4 or lower */
+    if(kernel_release() < 25000 ) {
+      if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
+	bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+	ptr = strstr(buf,"swap");
+	sscanf(ptr, "%*s %lld", &in);
+	fclose(fhd);
+      }
+      else { return -1; }
+    }
+    /* kernel 2.5 or higher */
+    else {
+      if ( (fhd=fopen("/proc/vmstat","r")) != NULL ) {
+	bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+	ptr = strstr(buf,"pswpin");
+	sscanf(ptr, "%*s %lld", &in);
+	fclose(fhd);
+      }
+      else { return -1; }
+    }
+    
     mv = calloc(1, sizeof(MetricValue) + 
 		   sizeof(unsigned long long) + 
 		   (strlen(resource)+1) );
@@ -538,13 +558,27 @@ int metricRetrPageOutCounter( int mid,
     fprintf(stderr,"--- %s(%i) : Sampling for metric PageOutCounter ID %d\n",
 	    __FILE__,__LINE__,mid);
 #endif
-    if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
-      bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
-      ptr = strstr(buf,"swap");
-      sscanf(ptr, "%*s %*s %lld", &out);
-      fclose(fhd);
+
+    /* kernel 2.4 or lower */
+    if(kernel_release() < 25000 ) {
+      if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
+	bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+	ptr = strstr(buf,"swap");
+	sscanf(ptr, "%*s %*s %lld", &out);
+	fclose(fhd);
+      }
+      else { return -1; }
     }
-    else { return -1; }
+    /* kernel 2.5 or higher */
+    else {
+      if ( (fhd=fopen("/proc/vmstat","r")) != NULL ) {
+	bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+	ptr = strstr(buf,"pswpout");
+	sscanf(ptr, "%*s %lld", &out);
+	fclose(fhd);
+      }
+      else { return -1; }
+    }
 
     mv = calloc(1, sizeof(MetricValue) + 
 		   sizeof(unsigned long long) + 
@@ -716,6 +750,24 @@ int metricRetrHardwareInterruptCounter( int mid,
     return 1;
   }
   return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* get Kernel Version                                                         */
+/* ---------------------------------------------------------------------------*/
+
+int kernel_release() {
+
+  struct utsname uts;
+  int major, minor, patch;
+
+  if (uname(&uts) < 0)
+    return -1;
+  if (sscanf(uts.release, "%d.%d.%d", &major, &minor, &patch) != 3)
+    return -1;
+  return KERNELRELEASE(major, minor, patch);
+
 }
 
 
