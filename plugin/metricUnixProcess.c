@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.11 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: metricUnixProcess.c,v 1.12 2004/12/23 14:40:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -265,7 +265,6 @@ int metricRetrResSetSize( int mid,
   int             i          = 0;
   unsigned long long size    = 0;
   unsigned long long rss     = 0;
-  unsigned long long rlim    = 0;
 
 
 #ifdef DEBUG
@@ -290,10 +289,10 @@ int metricRetrResSetSize( int mid,
 	strcat(buf,"/stat");
 	if( (fhd = fopen(buf,"r")) != NULL ) {
 	  fscanf(fhd,"%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s "
-		 "%*s %*s %*s %*s %*s %*s %*s %*s %*s %lld %lld",
-		 &rss, &rlim );
+		 "%*s %*s %*s %*s %*s %*s %*s %*s %*s %lld %*s",
+		 &rss);
 	  fclose(fhd);
-	  size = rss * rlim;
+	  size = rss * sysconf(_SC_PAGESIZE);
 	}
 	
 	mv = calloc( 1, sizeof(MetricValue) + 

@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.13 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.14 2004/12/23 14:40:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -131,9 +131,9 @@ static MetricCalculator metricCalcHardwareInterruptRate;
 
 
 /* unit definitions */
-static char * muMilliSeconds = "Milliseconds";
+static char * muMicroSeconds = "Microseconds";
 static char * muPagesPerSecond = "Pages per second";
-static char * muBytes = "Bytes";
+static char * muKiloBytes = "Kilobytes";
 static char * muPercent = "Percent";
 static char * muUsers = "Users";
 static char * muProcesses = "Processes";
@@ -214,7 +214,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcDataType=MD_UINT64;
   metricCalcDef[3].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[3].mcCalc=metricCalcKernelTime;
-  metricCalcDef[3].mcUnits=muMilliSeconds;
+  metricCalcDef[3].mcUnits=muMicroSeconds;
 
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="UserModeTime";
@@ -226,7 +226,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[4].mcDataType=MD_UINT64;
   metricCalcDef[4].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[4].mcCalc=metricCalcUserTime;
-  metricCalcDef[4].mcUnits=muMilliSeconds;
+  metricCalcDef[4].mcUnits=muMicroSeconds;
 
   metricCalcDef[5].mcVersion=MD_VERSION;
   metricCalcDef[5].mcName="TotalCPUTime";
@@ -238,7 +238,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcDataType=MD_UINT64;
   metricCalcDef[5].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[5].mcCalc=metricCalcTotalCPUTime;
-  metricCalcDef[5].mcUnits=muMilliSeconds;
+  metricCalcDef[5].mcUnits=muMicroSeconds;
 
   metricCalcDef[6].mcVersion=MD_VERSION;
   metricCalcDef[6].mcName="MemorySize";
@@ -248,7 +248,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[6].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[6].mcDataType=MD_STRING;
   metricCalcDef[6].mcCalc=metricCalcMemorySize;
-  metricCalcDef[6].mcUnits=muBytes;
+  metricCalcDef[6].mcUnits=muNa;
 
   metricCalcDef[7].mcVersion=MD_VERSION;
   metricCalcDef[7].mcName="TotalVisibleMemorySize";
@@ -260,7 +260,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[7].mcDataType=MD_UINT64;
   metricCalcDef[7].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[7].mcCalc=metricCalcTotalPhysMem;
-  metricCalcDef[7].mcUnits=muBytes;
+  metricCalcDef[7].mcUnits=muKiloBytes;
 
   metricCalcDef[8].mcVersion=MD_VERSION;
   metricCalcDef[8].mcName="FreePhysicalMemory";
@@ -272,7 +272,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[8].mcDataType=MD_UINT64;
   metricCalcDef[8].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[8].mcCalc=metricCalcFreePhysMem;
-  metricCalcDef[8].mcUnits=muBytes;
+  metricCalcDef[8].mcUnits=muKiloBytes;
 
   metricCalcDef[9].mcVersion=MD_VERSION;
   metricCalcDef[9].mcName="SizeStoredInPagingFiles";
@@ -284,7 +284,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[9].mcDataType=MD_UINT64;
   metricCalcDef[9].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[9].mcCalc=metricCalcTotalSwapMem;
-  metricCalcDef[9].mcUnits=muBytes;
+  metricCalcDef[9].mcUnits=muKiloBytes;
 
   metricCalcDef[10].mcVersion=MD_VERSION;
   metricCalcDef[10].mcName="FreeSpaceInPagingFiles";
@@ -296,7 +296,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[10].mcDataType=MD_UINT64;
   metricCalcDef[10].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[10].mcCalc=metricCalcFreeSwapMem;
-  metricCalcDef[10].mcUnits=muBytes;
+  metricCalcDef[10].mcUnits=muKiloBytes;
 
   metricCalcDef[11].mcVersion=MD_VERSION;
   metricCalcDef[11].mcName="TotalVirtualMemorySize";
@@ -308,7 +308,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[11].mcDataType=MD_UINT64;
   metricCalcDef[11].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[11].mcCalc=metricCalcTotalVirtMem;
-  metricCalcDef[11].mcUnits=muBytes;
+  metricCalcDef[11].mcUnits=muKiloBytes;
 
   metricCalcDef[12].mcVersion=MD_VERSION;
   metricCalcDef[12].mcName="FreeVirtualMemory";
@@ -320,7 +320,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[12].mcDataType=MD_UINT64;
   metricCalcDef[12].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[12].mcCalc=metricCalcFreeVirtMem;
-  metricCalcDef[12].mcUnits=muBytes;
+  metricCalcDef[12].mcUnits=muKiloBytes;
 
   metricCalcDef[13].mcVersion=MD_VERSION;
   metricCalcDef[13].mcName="PageInCounter";
@@ -328,7 +328,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[13].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[13].mcChangeType=MD_COUNTER;
   metricCalcDef[13].mcIsContinuous=MD_TRUE;
-  metricCalcDef[13].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[13].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[13].mcDataType=MD_UINT64;
   metricCalcDef[13].mcCalc=metricCalcPageInCounter;
   metricCalcDef[13].mcUnits=muNa;
@@ -351,7 +351,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[15].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[15].mcChangeType=MD_COUNTER;
   metricCalcDef[15].mcIsContinuous=MD_TRUE;
-  metricCalcDef[15].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[15].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[15].mcDataType=MD_FLOAT32;
   metricCalcDef[15].mcCalc=metricCalcLoadCounter;
   metricCalcDef[15].mcUnits=muNa;
@@ -493,7 +493,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[27].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[27].mcChangeType=MD_COUNTER;
   metricCalcDef[27].mcIsContinuous=MD_TRUE;
-  metricCalcDef[27].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[27].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[27].mcDataType=MD_UINT64;
   metricCalcDef[27].mcCalc=metricCalcContextSwitchCounter;
   metricCalcDef[27].mcUnits=muNa;
@@ -516,7 +516,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[29].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[29].mcChangeType=MD_COUNTER;
   metricCalcDef[29].mcIsContinuous=MD_TRUE;
-  metricCalcDef[30].mcCalculable=MD_NONCALCULABLE;
+  metricCalcDef[29].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[29].mcDataType=MD_UINT64;
   metricCalcDef[29].mcCalc=metricCalcHardwareInterruptCounter;
   metricCalcDef[29].mcUnits=muNa;
@@ -531,7 +531,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[30].mcDataType=MD_UINT64;
   metricCalcDef[30].mcAliasId=metricCalcDef[29].mcId;
   metricCalcDef[30].mcCalc=metricCalcHardwareInterruptRate;
-  metricCalcDef[30].mcUnits=muPagesPerSecond;
+  metricCalcDef[30].mcUnits=muEventsPerSecond;
 
   *mcnum=31;
   *mc=metricCalcDef;
