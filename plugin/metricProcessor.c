@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.c,v 1.3 2004/10/08 11:06:41 mihajlov Exp $
+ * $Id: metricProcessor.c,v 1.4 2004/10/08 11:08:21 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -205,11 +205,9 @@ int enum_all_proc() {
   if( pipe(fd_out)==0 && pipe(fd_err)==0 ) {
 
     fd_stdout = dup( fileno(stdout) );
-    /*    close(fileno(stdout)); */
     dup2( fd_out[1], fileno(stdout) );
 
     fd_stderr = dup( fileno(stderr) );
-    /*    close(fileno(stderr)); */
     dup2( fd_err[1], fileno(stderr) );
 
     cmd = calloc(1,(strlen(CPUINFO)+46));

@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.11 2004/10/08 11:06:41 mihajlov Exp $
+ * $Id: metricOperatingSystem.c,v 1.12 2004/10/08 11:08:21 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -221,11 +221,9 @@ int metricRetrNumOfUser( int mid,
       memset(str,0,sizeof(str));
 
       fd_stdout = dup( fileno(stdout) );
-      /*      close(fileno(stdout));*/
       dup2( fd_out[1], fileno(stdout) );
 
       fd_stderr = dup( fileno(stderr) );
-      /*      close(fileno(stderr));*/
       dup2( fd_err[1], fileno(stderr) );
 
       rc = system("who -u | wc -l");
