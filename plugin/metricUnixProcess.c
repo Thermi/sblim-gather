@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.7 2004/09/14 08:52:20 heidineu Exp $
+ * $Id: metricUnixProcess.c,v 1.8 2004/10/07 12:55:22 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -217,7 +217,7 @@ int metricRetrCPUTime( int mid,
 	strcat(buf,_enum_pid + (i*64));
 	strcat(buf,"/stat");
 	if( (fhd = fopen(buf,"r")) != NULL ) {
-	  fscanf(fhd,"%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lld %lld", 
+	  fscanf(fhd,"%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lld %lld", 
 		 &u_time,&k_time );
 	  fclose(fhd);
 	}
