@@ -57,7 +57,7 @@ pegasus_home_undefined:
 	@ exit 1
 endif
 
-CIMOMINC=$(PEGASUS_ROOT)/src/Pegasus/ProviderManager2/CMPI
+CIMOMINC=$(PEGASUS_ROOT)/src/Pegasus/Provider/CMPI
 CIMOMLIB=$(PEGASUS_HOME)/lib
 CIMOMMOF=$(PEGASUS_ROOT)/Schemas
 

@@ -1,6 +1,6 @@
-# $Id: makefile,v 1.2 2004/03/27 18:55:46 mihajlov Exp $
+# $Id: makefile,v 1.3 2004/04/27 07:29:53 mihajlov Exp $
 
-export CFLAGS=-Wall -g 
+export CFLAGS=-Wall -g  -fPIC
 CPPFLAGS=-I ..
 LOADLIBES=
 
