@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.2 2004/06/03 09:23:42 heidineu Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -620,7 +620,7 @@ static int parseInstId(const char * instid,
   *nextf = 0;
   sscanf(instid,"%d",id);
   instid = nextf + 1;
-  nextf = strchr(instid,'.');
+  nextf = strrchr(instid,'.');
   *nextf = 0;
   sscanf(instid,"%s",resource);
   instid = nextf + 1;
