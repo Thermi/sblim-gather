@@ -46,7 +46,7 @@ elif  [[ -n $USERID && -n $PASSWORD ]]; then
 fi
 
 CIMTEST=`wbemgc http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:CIM_ManagedElement 2>&1`
-if echo $CIMTEST | grep Exception > /dev/null
+if ! echo $CIMTEST | grep anaged > /dev/null
 then
     echo "Error occurred ... is the CIMOM running?"
     echo $CIMTEST
@@ -70,15 +70,15 @@ wbemcm http://${SBLIM_TESTSUITE_ACCESS}$GATHER StopService > /dev/null
 
 wbemcm http://${SBLIM_TESTSUITE_ACCESS}$GATHER StartService > /dev/null
 SAMPLING=`wbemcm http://${SBLIM_TESTSUITE_ACCESS}$GATHER StartSampling`
-if ! echo $SAMPLING | grep TRUE > /dev/null
+if ! echo $SAMPLING | grep -i TRUE > /dev/null
 then
     echo "The Metric Gather is not sampling - have to quit"
     exit -1
 fi
 
-# Wait 30 seconds to make sure that enough samples are generated
-echo "need to wait 40 seconds for gatherd and sampling initialization ... please stand by ... we will be back ;-) ...";
-sleep 40
+# Wait 60 seconds to make sure that enough samples are generated
+echo "need to wait 60 seconds for gatherd and sampling initialization ... please stand by ... we will be back ;-) ...";
+sleep 60
 echo "... back ...";
 
 declare -a CLASSNAMES[];

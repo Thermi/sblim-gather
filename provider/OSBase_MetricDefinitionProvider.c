@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricDefinitionProvider.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: OSBase_MetricDefinitionProvider.c,v 1.2 2004/06/09 17:19:13 mihajlov Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -217,7 +217,7 @@ CMPIStatus OSBase_MetricDefinitionProviderGetInstance( CMPIInstanceMI * mi,
   idData = CMGetKey(cop,"Id",NULL);
   if (idData.value.string && checkConnection()) {
     ch=ch_init();
-    parseId(CMGetCharPtr(idData.value.string),mname,&mid);
+    if (parseId(CMGetCharPtr(idData.value.string),mname,&mid) == 0) {
     pdefnum = rmetricplugin_list(metricPluginName(_broker,ctx,cop),&pdef,ch);
     for (i=0; i < pdefnum; i++) {
       if( _debug )
@@ -235,6 +235,10 @@ CMPIStatus OSBase_MetricDefinitionProviderGetInstance( CMPIInstanceMI * mi,
 	CMReturnInstance( rslt, ci );
 	break;
       }
+    }
+    } else {
+      CMSetStatusWithChars( _broker, &rc, 
+			  CMPI_RC_ERR_INVALID_PARAMETER, "Invalid Object Path Key \"Id\"" ); 
     }
     ch_release(ch);
  } else {
@@ -508,10 +512,14 @@ static int parseId(const char * defid,
 		   char * name, int * id)
 {
   char *nextf = strchr(defid,'.');
+  if (nextf) {
   *nextf=0;
   strcpy(name,defid);
   sscanf(nextf+1,"%d",id);
   return 0;
+  } else {
+      return -1;
+  }
 }
 
 /* ---------------------------------------------------------------------------*/

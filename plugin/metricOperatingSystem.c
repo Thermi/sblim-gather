@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.3 2003/12/05 13:48:53 heidineu Exp $
+ * $Id: metricOperatingSystem.c,v 1.4 2004/06/09 17:19:13 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -56,6 +56,8 @@ static MetricDefinition  metricDef[17];
 
 static ResourceLister    resourceLister;
 static ResourceListDeallocator  resourceListDeallocator;
+
+static MetricDeallocator valueDeallocator;
 
 /* --- NumberOfUsers --- */
 static MetricRetriever   metricRetrNumOfUser;
@@ -126,7 +128,7 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[0].mdMetricType=MD_RETRIEVED|MD_POINT;
   metricDef[0].mdDataType=MD_UINT32;
   metricDef[0].mproc=metricRetrNumOfUser;
-  metricDef[0].mdeal=free;
+  metricDef[0].mdeal = valueDeallocator;
   metricDef[0].mcalc=metricCalcNumOfUser;
   metricDef[0].mresl=resourceLister;
   metricDef[0].mresldeal=resourceListDeallocator;
@@ -137,7 +139,7 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[1].mdMetricType=MD_RETRIEVED|MD_POINT;
   metricDef[1].mdDataType=MD_UINT32;
   metricDef[1].mproc=metricRetrNumOfProc;
-  metricDef[1].mdeal=free;
+  metricDef[1].mdeal = valueDeallocator;
   metricDef[1].mcalc=metricCalcNumOfProc;
   metricDef[1].mresl=metricDef[0].mresl;
   metricDef[1].mresldeal=metricDef[0].mresldeal;
@@ -148,7 +150,7 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[2].mdMetricType=MD_RETRIEVED|MD_POINT;
   metricDef[2].mdDataType=MD_STRING;
   metricDef[2].mproc=metricRetrCPUTime;
-  metricDef[2].mdeal=free;
+  metricDef[2].mdeal = valueDeallocator;
   metricDef[2].mcalc=metricCalcCPUTime;
   metricDef[2].mresl=metricDef[0].mresl;
   metricDef[2].mresldeal=metricDef[0].mresldeal;
@@ -192,7 +194,7 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[6].mdMetricType=MD_RETRIEVED|MD_POINT;
   metricDef[6].mdDataType=MD_STRING;
   metricDef[6].mproc=metricRetrMemorySize;
-  metricDef[6].mdeal=free;
+  metricDef[6].mdeal = valueDeallocator;
   metricDef[6].mcalc=metricCalcMemorySize;
   metricDef[6].mresl=metricDef[0].mresl;
   metricDef[6].mresldeal=metricDef[0].mresldeal;
@@ -269,7 +271,7 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[13].mdMetricType=MD_RETRIEVED|MD_POINT;
   metricDef[13].mdDataType=MD_UINT64;
   metricDef[13].mproc=metricRetrPageInCounter;
-  metricDef[13].mdeal=free;
+  metricDef[13].mdeal = valueDeallocator;
   metricDef[13].mcalc=metricCalcPageInCounter;
   metricDef[13].mresl=metricDef[0].mresl;
   metricDef[13].mresldeal=metricDef[0].mresldeal;
@@ -291,7 +293,7 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[15].mdMetricType=MD_RETRIEVED|MD_POINT;
   metricDef[15].mdDataType=MD_FLOAT32;
   metricDef[15].mproc=metricRetrLoadCounter;
-  metricDef[15].mdeal=free;
+  metricDef[15].mdeal = valueDeallocator;
   metricDef[15].mcalc=metricCalcLoadCounter;
   metricDef[15].mresl=metricDef[0].mresl;
   metricDef[15].mresldeal=metricDef[0].mresldeal;
@@ -328,6 +330,15 @@ int resourceLister(int mid, char *** list) {
 }
 
 void resourceListDeallocator(char ** list) { 
+}
+
+void valueDeallocator(void *v)
+{
+    MetricValue* mv = (MetricValue *)v;
+    if (mv) {
+	if (mv->mvResource) free(mv->mvResource);
+	free(mv);
+    }
 }
 
 
@@ -384,7 +395,7 @@ int metricRetrNumOfUser( int mid,
     if (mv) {
       mv->mvId = mid;
       mv->mvTimeStamp = time(NULL);
-      mv->mvResource = resourceList[0];
+      mv->mvResource = strdup(resourceList[0]);
       mv->mvDataType = MD_UINT32;
       mv->mvDataLength = sizeof(unsigned long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
@@ -454,7 +465,7 @@ int metricRetrNumOfProc( int mid,
     if (mv) {
       mv->mvId = mid;
       mv->mvTimeStamp = time(NULL);
-      mv->mvResource = resourceList[0];
+      mv->mvResource = strdup(resourceList[0]);
       mv->mvDataType = MD_UINT32;
       mv->mvDataLength = sizeof(unsigned long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
@@ -542,7 +553,7 @@ int metricRetrCPUTime( int mid,
     if (mv) {
       mv->mvId = mid;
       mv->mvTimeStamp = time(NULL);
-      mv->mvResource = resourceList[0];
+      mv->mvResource = strdup(resourceList[0]);
       mv->mvDataType = MD_STRING;
       mv->mvDataLength = (strlen(ptr)-strlen(end)+1);
       mv->mvData = (void*)mv + sizeof(MetricValue);
@@ -856,7 +867,7 @@ int metricRetrMemorySize( int mid,
     if (mv) {
       mv->mvId = mid;
       mv->mvTimeStamp = time(NULL);
-      mv->mvResource = resourceList[0];
+      mv->mvResource = strdup(resourceList[0]);
       mv->mvDataType = MD_STRING;
       mv->mvDataLength = strlen(str)+1;
       mv->mvData = (void*)mv + sizeof(MetricValue);
@@ -1162,7 +1173,7 @@ int metricRetrPageInCounter( int mid,
     if (mv) {
       mv->mvId = mid;
       mv->mvTimeStamp = time(NULL);
-      mv->mvResource = resourceList[0];
+      mv->mvResource = strdup(resourceList[0]);
       mv->mvDataType = MD_UINT64;
       mv->mvDataLength = sizeof(unsigned long long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
@@ -1247,7 +1258,7 @@ int metricRetrLoadCounter( int mid,
     if (mv) {
       mv->mvId = mid;
       mv->mvTimeStamp = time(NULL);
-      mv->mvResource = resourceList[0];
+      mv->mvResource = strdup(resourceList[0]);
       mv->mvDataType = MD_FLOAT32;
       mv->mvDataLength = sizeof(float);
       mv->mvData = (void*)mv + sizeof(MetricValue);

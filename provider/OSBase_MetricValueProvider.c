@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.2 2004/06/03 09:23:42 heidineu Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.3 2004/06/09 17:19:13 mihajlov Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -271,7 +271,7 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
   
   if (checkConnection()) {
     ch=ch_init();
-    parseInstId(metricValueName(cop),vName,&vId,vResource,&vTimestamp);
+    if (parseInstId(metricValueName(cop),vName,&vId,vResource,&vTimestamp) == 0) {
   if( _debug )
     fprintf(stderr, "id criteria %s,%s, %ld\n", vName, vResource, 
 	    vTimestamp);
@@ -293,6 +293,10 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
 	}
 	CMReturnInstance( rslt, ci );
       }
+    }
+    } else {
+	CMSetStatusWithChars( _broker, &rc, 
+			      CMPI_RC_ERR_INVALID_PARAMETER, "Invalid Object Path Key \"Id\""); 
     }
     ch_release(ch);
   } else {
@@ -613,14 +617,17 @@ static int parseInstId(const char * instid,
 {
   char * nextf;
   nextf = strchr(instid,'.');
+  if (nextf==NULL) return -1;
   *nextf = 0;
   sscanf(instid,"%s",name);
   instid = nextf + 1;
   nextf = strchr(instid,'.');
+  if (nextf==NULL) return -1;
   *nextf = 0;
   sscanf(instid,"%d",id);
   instid = nextf + 1;
   nextf = strrchr(instid,'.');
+  if (nextf==NULL) return -1;
   *nextf = 0;
   sscanf(instid,"%s",resource);
   instid = nextf + 1;
