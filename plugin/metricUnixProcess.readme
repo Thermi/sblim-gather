@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.readme,v 1.4 2004/09/14 08:52:20 heidineu Exp $
+ * $Id: metricUnixProcess.readme,v 1.5 2004/09/14 10:26:28 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -60,9 +60,11 @@ CIM Data Type   : string
 Units           : Jiffies ( 1/100ths of a second )
 
 Value Source    : the first line of /proc/<pid>/stat contains the CPU times
-                  of this process
+                  of this process; the first line of /proc/stat contains the
+                  CPU times, summarized over all CPUs
 
-Syntax          : <user mode>:<user mode with low priority(nice)>:<system mode>:<idle task>
+Syntax          : <PID user mode time>:<PID kernel mode time>:<OS user mode>:
+		  <OS user mode with low priority(nice)>:<OS system mode>:<OS idle task>
 
 
 KernelModeTime
@@ -253,7 +255,8 @@ Based on Metric : PageInCounter
 CIM Data Type   : uint64
 Units           : pages per second
 
-Value Source    : PageInCounter(n)-PageInCounter(n-1) / SampleTime(n)-SampleTime(n-1)
+Value Source    : PageInCounter(n)-PageInCounter(n-1) /
+		  SampleTime(n)-SampleTime(n-1)
 
 
 /* ---------------------------------------------------------------------------*/
@@ -278,7 +281,8 @@ Based on Metric : PageOutCounter
 CIM Data Type   : uint64
 Units           : pages per second
 
-Value Source    : PageOutCounter(n)-PageOutCounter(n-1) / SampleTime(n)-SampleTime(n-1)
+Value Source    : PageOutCounter(n)-PageOutCounter(n-1) /
+		  SampleTime(n)-SampleTime(n-1)
 
 
 /* ---------------------------------------------------------------------------*/
