@@ -1,7 +1,7 @@
 SBLIM Performance Data Gatherer and Provider
 ============================================
 
-(C) Copyright IBM Corp. 2003
+(C) Copyright IBM Corp. 2003, 2004
 
  THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -11,10 +11,11 @@ SBLIM Performance Data Gatherer and Provider
  http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
 
 Author: Viktor Mihajlovski <mihajlov@de.ibm.com>
-Last Change Date: 10/17/2003
+Last Change Date: 02/20/2004
 
 Changelog:
 10/17/2003	Initial Version.
+02/20/2004	Added test cases for SBLIM testsuite.
 
 About this Package
 ------------------
@@ -41,9 +42,12 @@ In order to build, install and operate this package you will need a
 contemporary (as of this writing) Linux System, like RedHat 8 or SuSE 8.x.
 Furhter the following packages are required:
 
-Pegasus 2.2.1 (snapshot release) from http://www.openpegasus.org
-SBLIM CMPI Adapter 0.8.2 from http://oss.software.ibm.com/sblim
-SBLIM CMPI Base 1.2.1 from http://oss.software.ibm.com/sblim
+- Pegasus 2.2.1 (snapshot release) from http://www.openpegasus.org AND
+  SBLIM CMPI Adapter 0.8.2 from http://oss.software.ibm.com/sblim
+OR
+- Pegasus 2.3.2 or higher
+
+- SBLIM CMPI Base 1.2.1 or higher from http://oss.software.ibm.com/sblim
 
 Build and install the packages above according to the instructions contained
 therein before you continue.
