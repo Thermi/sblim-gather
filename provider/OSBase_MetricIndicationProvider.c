@@ -1,6 +1,6 @@
 
 /*
- * $Id: OSBase_MetricIndicationProvider.c,v 1.2 2004/12/15 07:27:25 mihajlov Exp $
+ * $Id: OSBase_MetricIndicationProvider.c,v 1.3 2004/12/15 15:12:54 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -227,14 +227,19 @@ static int responsible(CMPISelectExp * filter, CMPIObjectPath *op, SubscriptionR
 	  CMPICount pcount = CMGetPredicateCount(subcond,NULL);
 	  if (_debug)
 	    fprintf (stderr, "*** got %d predicate(s)\n",pcount);
-	  for (j=0; j<pcount; j++) {
+	  for (j=pcount-1; j>=0; j--) {
 	    CMPIPredicate * pred = CMGetPredicateAt(subcond,j,NULL);
 	    if (pred) {
 	      CMPIType   type;
 	      CMPIPredOp op;
-	      CMPIString *lhs;
-	      CMPIString *rhs;
+	      CMPIString *lhs=NULL;
+	      CMPIString *rhs=NULL;
+	      if (_debug)
+		fprintf (stderr, "*** checking predicate\n");
 	      CMGetPredicateData(pred,&type,&op,&lhs,&rhs);
+	      if (_debug)
+		fprintf (stderr, "*** lhs=%s, rhs=%s\n",CMGetCharPtr(lhs),
+			 CMGetCharPtr(rhs));
 	      if (strcasecmp("metricid",CMGetCharPtr(lhs))==0 && 
 		  op == CMPI_PredOp_Equals) {
 		/* we're in heaven :-) */
