@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2004/08/03 10:24:17 heidineu Exp $
+# $Id: makefile,v 1.4 2004/08/03 12:39:10 heidineu Exp $
 
 # define the Hardware Platform the compile will run on
 HW=$(shell ./platform.sh)
@@ -8,7 +8,8 @@ CPPFLAGS=-I .. -D$(HW)
 LOADLIBES=
 
 SUBDIRS=
-SOURCES=metricOperatingSystem.c repositoryOperatingSystem.c # metricLocalFileSystem.c metricUnixProcess.c metricProcessor.c metricNetworkPort.c
+SOURCES= metricOperatingSystem.c repositoryOperatingSystem.c \
+	 metricLocalFileSystem.c repositoryLocalFileSystem.c #metricUnixProcess.c metricProcessor.c metricNetworkPort.c
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 
@@ -16,7 +17,8 @@ include ../rules
 
 .PHONY: all clean distclean install uninstall $(SUBDIRS) 
 
-all: $(SUBDIRS) libmetricOperatingSystem.so librepositoryOperatingSystem.so #libmetricLocalFileSystem.so libmetricUnixProcess.so libmetricProcessor.so libmetricNetworkPort.so
+all: $(SUBDIRS) libmetricOperatingSystem.so librepositoryOperatingSystem.so \
+	libmetricLocalFileSystem.so librepositoryLocalFileSystem.so #libmetricUnixProcess.so libmetricProcessor.so libmetricNetworkPort.so
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) libmetric*.so librepository*.so
@@ -28,6 +30,8 @@ distclean: clean
 install: all
 	/usr/bin/install libmetricOperatingSystem.so $(INSTALLROOT)/usr/lib
 	/usr/bin/install librepositoryOperatingSystem.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install libmetricLocalFileSystem.so $(INSTALLROOT)/usr/lib
+	/usr/bin/install librepositoryLocalFileSystem.so $(INSTALLROOT)/usr/lib
 #	/usr/bin/install libmetricLocalFileSystem.so $(INSTALLROOT)/usr/lib
 #	/usr/bin/install libmetricUnixProcess.so $(INSTALLROOT)/usr/lib
 #	/usr/bin/install libmetricProcessor.so $(INSTALLROOT)/usr/lib
@@ -36,6 +40,8 @@ install: all
 unistall:
 	$(RM) $(INSTALLROOT)/usr/lib/libmetricOperatingSystem.so
 	$(RM) $(INSTALLROOT)/usr/lib/librepositoryOperatingSystem.so
+	$(RM) $(INSTALLROOT)/usr/lib/libmetricLocalFileSystem.so
+	$(RM) $(INSTALLROOT)/usr/lib/librepositoryLocalFileSystem.so
 #	$(RM) $(INSTALLROOT)/usr/lib/libmetricLocalFileSystem.so
 #	$(RM) $(INSTALLROOT)/usr/lib/libmetricUnixProcess.so
 #	$(RM) $(INSTALLROOT)/usr/lib/libmetricProcessor.so

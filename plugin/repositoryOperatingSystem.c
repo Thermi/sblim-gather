@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.2 2004/08/03 11:24:46 heidineu Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.3 2004/08/03 12:39:11 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -930,5 +930,5 @@ size_t metricCalcLoadAverage( MetricValue *mv,
 
 
 /* ---------------------------------------------------------------------------*/
-/*                    end of metricOperatingSystem.c                          */
+/*                   end of repositoryOperatingSystem.c                       */
 /* ---------------------------------------------------------------------------*/

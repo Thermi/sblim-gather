@@ -1,5 +1,5 @@
 /*
- * $Id: metricLocalFileSystem.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricLocalFileSystem.c,v 1.2 2004/08/03 12:39:11 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -41,16 +41,11 @@
 
 static MetricDefinition  metricDef[2];
 
-static ResourceLister          resourceLister;
-static ResourceListDeallocator resourceListDeallocator;
-
 /* --- AvailableSpace --- */
 static MetricRetriever   metricRetrAvSpace;
-static MetricCalculator  metricCalcAvSpace;
 
 /* --- AvailableSpacePercentage --- */
 static MetricRetriever   metricRetrAvSpacePerc;
-static MetricCalculator  metricCalcAvSpacePerc;
 
 /* ---------------------------------------------------------------------------*/
 
@@ -68,6 +63,7 @@ static int    _enum_fssize = 0;
 
 static int enum_all_fs();
 static int check_enum_fs();
+static void freeResourceList(char ** list);
 
 /* ---------------------------------------------------------------------------*/
 
@@ -85,27 +81,21 @@ int _DefinedMetrics ( MetricRegisterId *mr,
     return -1;
   }
 
+  metricDef[0].mdVersion=MD_VERSION;
   metricDef[0].mdName="AvailableSpace";
+  metricDef[0].mdReposPluginName="plugin/librepositoryLocalFileSystem.so";
   metricDef[0].mdId=mr(pluginname,metricDef[0].mdName);
   metricDef[0].mdSampleInterval=sampleInterval;
-  metricDef[0].mdMetricType=MD_RETRIEVED|MD_POINT;
-  metricDef[0].mdDataType=MD_UINT64;
   metricDef[0].mproc=metricRetrAvSpace;
   metricDef[0].mdeal=free;
-  metricDef[0].mcalc=metricCalcAvSpace;
-  metricDef[0].mresl=resourceLister;
-  metricDef[0].mresldeal=resourceListDeallocator;
 
+  metricDef[1].mdVersion=MD_VERSION;
   metricDef[1].mdName="AvailableSpacePercentage";
+  metricDef[1].mdReposPluginName="plugin/librepositoryLocalFileSystem.so";
   metricDef[1].mdId=mr(pluginname,metricDef[1].mdName);
   metricDef[1].mdSampleInterval=sampleInterval;
-  metricDef[1].mdMetricType=MD_RETRIEVED|MD_POINT;
-  metricDef[1].mdDataType=MD_UINT8;
   metricDef[1].mproc=metricRetrAvSpacePerc;
   metricDef[1].mdeal=free;
-  metricDef[1].mcalc=metricCalcAvSpacePerc;
-  metricDef[1].mresl=metricDef[0].mresl;
-  metricDef[1].mresldeal=metricDef[0].mresldeal;
 
   *mdnum=2;
   *md=metricDef;
@@ -136,26 +126,14 @@ int _StartStopMetrics (int starting) {
     fprintf(stderr,"--- %s(%i) : free file system entries\n",
 	    __FILE__,__LINE__);
 #endif
-    if(_enum_fsname) free(_enum_fsname);
-    if(_enum_fsdir)  free(_enum_fsdir);
+    freeResourceList(&_enum_fsname);
+    freeResourceList(&_enum_fsdir);
   }
   
   return 0;
 }
 
-int resourceLister(int mid, char *** list) {
-  int i = 0;
-  if (list) { 
-    *list = calloc(_enum_fssize+1,sizeof(char*));
-    for(;i<_enum_fssize;i++) {
-      (*list)[i] = strdup(_enum_fsname + (i*128));
-    }
-    return _enum_fssize;
-  }
-  return -1;
-}
-
-void resourceListDeallocator(char ** list) {
+void freeResourceList(char ** list) {
   char ** ls = list;
   while(*ls) {
     free(*ls);
@@ -165,7 +143,8 @@ void resourceListDeallocator(char ** list) {
 }
 
 
-
+/* ---------------------------------------------------------------------------*/
+/* AvailableSpace                                                             */
 /* ---------------------------------------------------------------------------*/
 
 int metricRetrAvSpace( int mid, 
@@ -232,26 +211,9 @@ int metricRetrAvSpace( int mid,
 }
 
 
-size_t metricCalcAvSpace( MetricValue *mv,   
-			  int mnum,
-			  void *v, 
-			  size_t vlen ) {
-
-#ifdef DEBUG
-  fprintf(stderr,"--- %s(%i) : Calculate AvailableSpace\n",
-	  __FILE__,__LINE__);
-#endif
-  /* plain copy */
-  if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
-    memcpy(v,mv->mvData,mv->mvDataLength);
-    return mv->mvDataLength;
-  }
-  return -1;
-}
-
-
 /* ---------------------------------------------------------------------------*/
-
+/* AvailableSpacePercentage                                                   */
+/* ---------------------------------------------------------------------------*/
 
 int metricRetrAvSpacePerc( int mid, 
 			   MetricReturner mret ) {  
@@ -320,28 +282,8 @@ int metricRetrAvSpacePerc( int mid,
 }
 
 
-size_t metricCalcAvSpacePerc( MetricValue *mv,   
-			      int mnum,
-			      void *v, 
-			      size_t vlen ) {
-
-#ifdef DEBUG
-  fprintf(stderr,"--- %s(%i) : Calculate AvailableSpacePercentage\n",
-	  __FILE__,__LINE__);
-#endif
-  /* plain copy */
-  if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
-    memcpy(v,mv->mvData,mv->mvDataLength);
-    return mv->mvDataLength;
-  }
-  return -1;
-}
-
-
-
-
 /* ---------------------------------------------------------------------------*/
-// get all file system instances, independent of their type
+/* get all file system instances, independent of their type                   */
 /* ---------------------------------------------------------------------------*/
 
 int enum_all_fs() {  
@@ -349,7 +291,6 @@ int enum_all_fs() {
   struct mntent * sptr = NULL;
   FILE * fhd           = NULL;
   int    i             = 0;  
-
 
   if (pthread_mutex_lock(&mutex)==0) {
 
@@ -412,7 +353,6 @@ int check_enum_fs() {
   }
   else { return -1; }
 }
-
 
 
 /* ---------------------------------------------------------------------------*/
