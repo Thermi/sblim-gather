@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.5 2004/08/03 10:23:54 heidineu Exp $
+ * $Id: metricOperatingSystem.c,v 1.6 2004/08/03 10:46:00 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -102,8 +102,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[0].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[0].mdId=mr(pluginname,metricDef[0].mdName);
   metricDef[0].mdSampleInterval=60;
-  metricDef[0].mdMetricType=MD_RETRIEVED|MD_POINT;
-  metricDef[0].mdDataType=MD_UINT32;
   metricDef[0].mproc=metricRetrNumOfUser;
   metricDef[0].mdeal = valueDeallocator;
 
@@ -112,8 +110,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[1].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[1].mdId=mr(pluginname,metricDef[1].mdName);
   metricDef[1].mdSampleInterval=60;
-  metricDef[1].mdMetricType=MD_RETRIEVED|MD_POINT;
-  metricDef[1].mdDataType=MD_UINT32;
   metricDef[1].mproc=metricRetrNumOfProc;
   metricDef[1].mdeal = valueDeallocator;
 
@@ -122,8 +118,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[2].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[2].mdId=mr(pluginname,metricDef[2].mdName);
   metricDef[2].mdSampleInterval=60;
-  metricDef[2].mdMetricType=MD_RETRIEVED|MD_POINT;
-  metricDef[2].mdDataType=MD_STRING;
   metricDef[2].mproc=metricRetrCPUTime;
   metricDef[2].mdeal = valueDeallocator;
 
@@ -131,8 +125,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[3].mdName="KernelModeTime";
   metricDef[3].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[3].mdId=mr(pluginname,metricDef[3].mdName);
-  metricDef[3].mdMetricType=MD_CALCULATED|MD_INTERVAL;
-  metricDef[3].mdDataType=MD_UINT64;
   metricDef[3].mproc=NULL;
   metricDef[3].mdeal=NULL;
 
@@ -140,8 +132,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[4].mdName="UserModeTime";
   metricDef[4].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[4].mdId=mr(pluginname,metricDef[4].mdName);
-  metricDef[4].mdMetricType=MD_CALCULATED|MD_INTERVAL;
-  metricDef[4].mdDataType=MD_UINT64;
   metricDef[4].mproc=NULL;
   metricDef[4].mdeal=NULL;
 
@@ -149,8 +139,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[5].mdName="TotalCPUTime";
   metricDef[5].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[5].mdId=mr(pluginname,metricDef[5].mdName);
-  metricDef[5].mdMetricType=MD_CALCULATED|MD_INTERVAL;
-  metricDef[5].mdDataType=MD_UINT64;
   metricDef[5].mproc=NULL;
   metricDef[5].mdeal=NULL;
 
@@ -159,8 +147,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[6].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[6].mdId=mr(pluginname,metricDef[6].mdName);
   metricDef[6].mdSampleInterval=60;
-  metricDef[6].mdMetricType=MD_RETRIEVED|MD_POINT;
-  metricDef[6].mdDataType=MD_STRING;
   metricDef[6].mproc=metricRetrMemorySize;
   metricDef[6].mdeal = valueDeallocator;
 
@@ -168,8 +154,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[7].mdName="TotalVisibleMemorySize";
   metricDef[7].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[7].mdId=mr(pluginname,metricDef[7].mdName);
-  metricDef[7].mdMetricType=MD_CALCULATED|MD_POINT;
-  metricDef[7].mdDataType=MD_UINT64;
   metricDef[7].mproc=NULL;
   metricDef[7].mdeal=NULL;
 
@@ -177,8 +161,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[8].mdName="FreePhysicalMemory";
   metricDef[8].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[8].mdId=mr(pluginname,metricDef[8].mdName);
-  metricDef[8].mdMetricType=MD_CALCULATED|MD_POINT;
-  metricDef[8].mdDataType=MD_UINT64;
   metricDef[8].mproc=NULL;
   metricDef[8].mdeal=NULL;
 
@@ -186,8 +168,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[9].mdName="SizeStoredInPagingFiles";
   metricDef[9].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[9].mdId=mr(pluginname,metricDef[9].mdName);
-  metricDef[9].mdMetricType=MD_CALCULATED|MD_POINT;
-  metricDef[9].mdDataType=MD_UINT64;
   metricDef[9].mproc=NULL;
   metricDef[9].mdeal=NULL;
 
@@ -195,8 +175,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[10].mdName="FreeSpaceInPagingFiles";
   metricDef[10].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[10].mdId=mr(pluginname,metricDef[10].mdName);
-  metricDef[10].mdMetricType=MD_CALCULATED|MD_POINT;
-  metricDef[10].mdDataType=MD_UINT64;
   metricDef[10].mproc=NULL;
   metricDef[10].mdeal=NULL;
 
@@ -204,8 +182,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[11].mdName="TotalVirtualMemorySize";
   metricDef[11].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[11].mdId=mr(pluginname,metricDef[11].mdName);
-  metricDef[11].mdMetricType=MD_CALCULATED|MD_POINT;
-  metricDef[11].mdDataType=MD_UINT64;
   metricDef[11].mproc=NULL;
   metricDef[11].mdeal=NULL;
 
@@ -213,8 +189,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[12].mdName="FreeVirtualMemory";
   metricDef[12].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[12].mdId=mr(pluginname,metricDef[12].mdName);
-  metricDef[12].mdMetricType=MD_CALCULATED|MD_POINT;
-  metricDef[12].mdDataType=MD_UINT64;
   metricDef[12].mproc=NULL;
   metricDef[12].mdeal=NULL;
 
@@ -223,8 +197,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[13].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[13].mdId=mr(pluginname,metricDef[13].mdName);
   metricDef[13].mdSampleInterval=60;
-  metricDef[13].mdMetricType=MD_RETRIEVED|MD_POINT;
-  metricDef[13].mdDataType=MD_UINT64;
   metricDef[13].mproc=metricRetrPageInCounter;
   metricDef[13].mdeal = valueDeallocator;
 
@@ -232,8 +204,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[14].mdName="PageInRate";
   metricDef[14].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[14].mdId=mr(pluginname,metricDef[14].mdName);
-  metricDef[14].mdMetricType=MD_CALCULATED|MD_RATE;
-  metricDef[14].mdDataType=MD_UINT64;
   metricDef[14].mproc=NULL;
   metricDef[14].mdeal=NULL;
 
@@ -242,8 +212,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[15].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[15].mdId=mr(pluginname,metricDef[15].mdName);
   metricDef[15].mdSampleInterval=60;
-  metricDef[15].mdMetricType=MD_RETRIEVED|MD_POINT;
-  metricDef[15].mdDataType=MD_FLOAT32;
   metricDef[15].mproc=metricRetrLoadCounter;
   metricDef[15].mdeal = valueDeallocator;
 
@@ -251,8 +219,6 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[16].mdName="LoadAverage";
   metricDef[16].mdReposPluginName="plugin/librepositoryOperatingSystem.so";
   metricDef[16].mdId=mr(pluginname,metricDef[16].mdName);
-  metricDef[16].mdMetricType=MD_CALCULATED|MD_AVERAGE;
-  metricDef[16].mdDataType=MD_FLOAT32;
   metricDef[16].mproc=NULL;
   metricDef[16].mdeal=NULL;
 
