@@ -93,9 +93,11 @@ CLASSNAMES=([0]=Linux_MetricGatherer \
     [8]=Linux_ProcessorMetricValue \
     [9]=Linux_UnixProcessMetricValue \
     [10]=Linux_OperatingSystemMetricValue \
+    [12]=Linux_IPProtocolEndpointMetric \
+    [11]=Linux_IPProtocolEndpointMetricValue \
     )
 
-declare -i max=10;
+declare -i max=12;
 declare -i i=0;
 
 OPTS=
