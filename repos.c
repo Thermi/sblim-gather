@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.3 2004/08/02 14:23:02 mihajlov Exp $
+ * $Id: repos.c,v 1.4 2004/08/03 10:19:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -101,6 +101,7 @@ int reposplugin_add(const char *pluginname)
 {
   RepositoryPlugin *rp;
   int status = -1;
+  int i;
   if (pluginname && pl_find(pluginname)==NULL) {
     rp = malloc(sizeof(RepositoryPlugin));
     /* load plugin */
@@ -109,6 +110,23 @@ int reposplugin_add(const char *pluginname)
     if (RP_Load(rp)==0) {
       status = 0;
       pl_link(rp);
+      /* register all metrics */
+      for (i=0;i<rp->rpNumMetricCalcDefs;i++) {
+	if (rp->rpMetricCalcDefs[i].mcVersion > 
+	    (MD_VERSION_MAJOR+MD_VERSION_MINOR_MAX)) {
+	  status=-1;
+	  break;
+	} 
+	if (RPR_UpdateMetric(pluginname,rp->rpMetricCalcDefs+i)!=0) {
+	  status = -1;
+	  break;
+	}
+      }
+      if (status<0) {
+	/* failed during registration - unload */
+	reposplugin_remove(pluginname);
+	return status;
+      }
     } else {
       if(rp->rpName) free(rp->rpName);
       if(rp) free(rp);
@@ -168,7 +186,7 @@ int reposvalue_put(const char *reposplugin, const char *metric,
 {
   int id = RPR_IdForString(reposplugin,metric);
   if (id > 0) {
-    mv->mvId=id;
+    mv->mvId=id; /* we are overwriting the caller's argument in good faith */
     return MetricRepository->mrep_add(mv);
   }
   return -1;

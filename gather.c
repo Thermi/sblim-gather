@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.4 2004/08/02 14:23:01 mihajlov Exp $
+ * $Id: gather.c,v 1.5 2004/08/03 10:19:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -142,8 +142,7 @@ int metricplugin_add(const char *pluginname)
 	  status=-1;
 	  break;
 	} 
-	if (MPR_UpdateMetric(pluginname,mp->mpMetricDefs+i)==0 &&
-	    (mp->mpMetricDefs[i].mdMetricType & MD_RETRIEVED)) {	  
+	if (MPR_UpdateMetric(pluginname,mp->mpMetricDefs+i)==0) {	  
 	  MetricBlock *mb=MakeMB(mp->mpMetricDefs[i].mdId,
 				 gather_sample,
 				 mp->mpMetricDefs[i].mdSampleInterval);
@@ -180,8 +179,7 @@ int metricplugin_remove(const char *pluginname)
     if (mp) {
       /* unregister all metrics for this plugin */
       for (i=0;i<mp->mpNumMetricDefs;i++) {
-	if (mp->mpMetricDefs[i].mdMetricType & MD_RETRIEVED)
-	  ML_Remove(metriclist,mp->mpMetricDefs[i].mdId);
+	ML_Remove(metriclist,mp->mpMetricDefs[i].mdId);
 	MPR_RemoveMetric(mp->mpMetricDefs[i].mdId);
       }
       pl_unlink(mp);
@@ -206,7 +204,6 @@ int metricplugin_list(const char *pluginname, PluginDefinition **pdef,
       /* store all metric infos for this plugin */
       for (i=0;i<mp->mpNumMetricDefs;i++) {
 	(*pdef)[i].pdId=mp->mpMetricDefs[i].mdId;
-	(*pdef)[i].pdDataType=mp->mpMetricDefs[i].mdDataType;
 	(*pdef)[i].pdName=mp->mpMetricDefs[i].mdName;
 	(*pdef)[i].pdResource=NULL; /* todo must specify resource listing fnc */
       }

@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.4 2004/08/02 14:23:01 mihajlov Exp $
+ * $Id: metric.h,v 1.5 2004/08/03 10:19:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -104,9 +104,6 @@ typedef struct _MetricDefinition {
   char              *mdReposPluginName;/* Name of repository plugin (lib) */
   int                mdId;             /* Metric Id */
   time_t             mdSampleInterval;
-  int                mdMetricType;
-  // int                mdAliasId;        /* Alias for computed metrics */
-  unsigned           mdDataType;
   MetricRetriever   *mproc;
   MetricDeallocator *mdeal;
 } MetricDefinition;

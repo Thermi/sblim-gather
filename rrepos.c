@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.3 2004/08/02 14:23:02 mihajlov Exp $
+ * $Id: rrepos.c,v 1.4 2004/08/03 10:19:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -128,8 +128,7 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
     memcpy(xbuf+dataoffs,mv,sizeof(MetricValue));
     dataoffs+=sizeof(MetricValue);
     if (mv->mvResource) {
-      memcpy(xbuf+dataoffs,mv->mvResource,
-	     strlen(mv->mvResource));
+      strcpy(xbuf+dataoffs,mv->mvResource);
       dataoffs+=strlen(mv->mvResource)+1;
     }
     memcpy(xbuf+dataoffs,mv->mvData,mv->mvDataLength);
@@ -320,17 +319,19 @@ int rreposplugin_list(const char *pluginname,
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
       /* copy data into result buffer and adjust string pointers */
       if (comm->gc_result>0) {
-	*rdef = ch_alloc(ch,comm->gc_result*sizeof(PluginDefinition));
+	*rdef = 
+	  ch_alloc(ch,comm->gc_result*sizeof(RepositoryPluginDefinition));
 	memcpy(*rdef,xbuf+sizeof(GATHERCOMM)+strlen(pluginname)+1,
-	       sizeof(PluginDefinition)*comm->gc_result);
-	stringpool=ch_alloc(ch,
-			    comm->gc_datalen - 
-			    sizeof(GATHERCOMM)+strlen(pluginname)+1+
-			    comm->gc_result*sizeof(PluginDefinition));
+	       sizeof(RepositoryPluginDefinition)*comm->gc_result);
+	stringpool=
+	  ch_alloc(ch,
+		   comm->gc_datalen - 
+		   sizeof(GATHERCOMM)+strlen(pluginname)+1+
+		   comm->gc_result*sizeof(RepositoryPluginDefinition));
 	memcpy(stringpool,xbuf+sizeof(GATHERCOMM)+strlen(pluginname)+1+
-	       comm->gc_result*sizeof(PluginDefinition),
+	       comm->gc_result*sizeof(RepositoryPluginDefinition),
 	       comm->gc_datalen - sizeof(GATHERCOMM)+strlen(pluginname)+1+
-	       comm->gc_result*sizeof(PluginDefinition));
+	       comm->gc_result*sizeof(RepositoryPluginDefinition));
 	for (i=0;i<comm->gc_result;i++) {
 	  /* extract plugin name and resource names from string pool */
 	  (*rdef)[i].rdName = stringpool;

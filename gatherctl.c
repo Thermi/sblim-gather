@@ -1,5 +1,5 @@
 /*
- * $Id: gatherctl.c,v 1.2 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: gatherctl.c,v 1.3 2004/08/03 10:19:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -107,8 +107,8 @@ int main()
 	printf("Failed\n");
       } else {
 	for (i=0;i<pnum;i++) {
-	  printf("Plugin metric \"%s\" has id %d and data type %x\n",
-		 pdef[i].pdName, pdef[i].pdId, pdef[i].pdDataType);
+	  printf("Plugin metric \"%s\" has id %d\n",
+		 pdef[i].pdName, pdef[i].pdId);
 	  for (j=0;pdef[i].pdResource[j];j++) {
 	    printf("\t for resource \"%s\"\n",pdef[i].pdResource[j]);
 	  }

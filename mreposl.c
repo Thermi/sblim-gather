@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.2 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: mreposl.c,v 1.3 2004/08/03 10:19:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -26,7 +26,21 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+
+
+/* TODO: must revise repository IF to not require resource listing */
+
+static char ** reslist = NULL;
+static size_t  resnum = 0;
+static int findres(char *);
+static void addres(char *);
+
+int LocalMetricResources(int id, char *** resources);
+int LocalMetricFreeResources(char ** resources);
   
+
+/**/
+
 int LocalMetricAdd (MetricValue *mv);
 int LocalMetricRetrieve (int mid, char *resource,
 			 MetricValue **mv, int *num, 
@@ -37,7 +51,9 @@ static MetricRepositoryIF mrep = {
   "LocalRepository",
   LocalMetricAdd,
   LocalMetricRetrieve,
-  LocalMetricRelease
+  LocalMetricRelease,
+  LocalMetricResources,
+  LocalMetricFreeResources,
 };
 
 MetricRepositoryIF *MetricRepository = &mrep;
@@ -77,6 +93,7 @@ int LocalMetricAdd (MetricValue *mv)
   pruneRepository();
   
   if (mv && MWriteLock(&LocalRepLock)==0) {  
+    if (findres(mv->mvResource)==0) addres(mv->mvResource);
     idx=locateIndex(mv->mvId);
     if (idx==-1) {
       idx=addIndex(mv->mvId);
@@ -84,7 +101,11 @@ int LocalMetricAdd (MetricValue *mv)
     if (idx!=-1) {
       mrv=malloc(sizeof(MReposValue));
       mrv->mrv_next=LocalReposHeader[idx].mrh_first;
-      mrv->mrv_value=mv;
+      mrv->mrv_value=malloc(sizeof(MetricValue));
+      memcpy(mrv->mrv_value,mv,sizeof(MetricValue));
+      mrv->mrv_value->mvResource=strdup(mv->mvResource);
+      mrv->mrv_value->mvData=malloc(mv->mvDataLength);
+      memcpy(mrv->mrv_value->mvData,mv->mvData,mv->mvDataLength);
       LocalReposHeader[idx].mrh_first=mrv;
       rc=0;
     }
@@ -253,6 +274,8 @@ static int pruneRepository()
 	    bv->mrv_next = NULL;
 	  /* now delete all outdated metrics*/
 	  while (v) {
+	    if (v->mrv_value->mvResource) free (v->mrv_value->mvResource); 
+	    free(v->mrv_value->mvData);
 	    free(v->mrv_value);
 	    bv=v;
 	    v=v->mrv_next;
@@ -265,4 +288,33 @@ static int pruneRepository()
     }
   }
   return numPruned;
+}
+
+
+/* TODO: away with that */
+int findres(char *res)
+{
+  size_t c;
+  for (c=0; c<resnum;c++) {
+    if (strcmp(reslist[c],res)==0)
+      return 1;
+  }
+  return 0;
+}
+
+void addres(char *res)
+{
+  reslist = realloc(reslist,(resnum+1)*sizeof(char*));
+  reslist[resnum++]=strdup(res);
+}
+
+int LocalMetricResources(int id, char *** resources)
+{
+  *resources = reslist;
+  return resnum;
+}
+
+int LocalMetricFreeResources(char ** resources)
+{
+  return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: repositorySample4.c,v 1.1 2004/07/23 16:26:35 mihajlov Exp $
+ * $Id: repositorySample4.c,v 1.2 2004/08/03 10:19:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -50,14 +50,14 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
   metricCalcDef[1].mcMetricType=MD_CALCULATED | MD_INTERVAL;
   metricCalcDef[1].mcDataType=MD_SINT32;
-  //  metricCalcDef[1].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[1].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[1].mcCalc=metricCalculator2;
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="sample4-3";
   metricCalcDef[2].mcId=mr(pluginname,metricCalcDef[2].mcName);
   metricCalcDef[2].mcMetricType=MD_CALCULATED | MD_RATE    ;
   metricCalcDef[2].mcDataType=MD_SINT32;
-  //  metricCalcDef[2].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[2].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[2].mcCalc=metricCalculator3;
   *mcnum=3;
   *mc=metricCalcDef;
