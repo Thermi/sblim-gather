@@ -1,5 +1,5 @@
 /*
- * $Id: rcclt_ip.c,v 1.4 2004/10/19 16:22:22 heidineu Exp $
+ * $Id: rcclt_ip.c,v 1.5 2004/10/22 12:11:20 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -20,6 +20,8 @@
 
 #include "rcclt.h"
 
+#include <mtrace.h>
+#include <merrno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -30,7 +32,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-
 
 /* ---------------------------------------------------------------------------*/
 
@@ -47,7 +48,6 @@ static void _sigpipe_h(int signal)
   _sigpipe_h_received++;
 }
 
-
 /* ---------------------------------------------------------------------------*/
 
 int rcc_init(const char *srvid, const int *portid)
@@ -55,11 +55,15 @@ int rcc_init(const char *srvid, const int *portid)
   struct hostent *srv = NULL;
   char   ip[16];
 
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,("rcc_init(%s,%d) called",srvid,*portid));
   if (srvid && portid && srvaddr.sin_port==0) {
 
     /* retrieve and set server information */
     if ((srv = gethostbyname(srvid)) == NULL) {
-      fprintf(stderr,"rcclient %s: %s\n",hstrerror(h_errno),srvid);
+      m_seterrno(MC_ERR_BADINIT);
+      m_setstrerror("rcc_init %s: %s",hstrerror(h_errno),srvid);
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("rcc_init %s: %s",hstrerror(h_errno),srvid));
       return -1; 
     }
     sprintf(ip, "%u.%u.%u.%u",
@@ -70,7 +74,10 @@ int rcc_init(const char *srvid, const int *portid)
     srvaddr.sin_family = AF_INET;
     srvaddr.sin_port   = htons(*portid);
     if (inet_aton(ip,&srvaddr.sin_addr) == 0) {
-      fprintf(stderr,"rcclient server address not valid : %s\n",inet_ntoa(srvaddr.sin_addr));
+      m_seterrno(MC_ERR_BADINIT);
+      m_setstrerror("rcc_init server address not valid: %s",inet_ntoa(srvaddr.sin_addr));
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("rcc_init server address not valid: %s",inet_ntoa(srvaddr.sin_addr)));
       return -1;
     }
 
@@ -84,7 +91,33 @@ int rcc_init(const char *srvid, const int *portid)
     connects=0;
     requests=0;
 
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
+	    ("rcc_init initialized for %s:%d",inet_ntoa(srvaddr.sin_addr),*portid));
     return 0;
+  }
+
+  m_seterrno(MC_ERR_BADINIT);
+  if (srvaddr.sin_port!=0) {
+    m_setstrerror("rcc_init client already initialized for %s",inet_ntoa(srvaddr.sin_addr));
+    M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	    ("rcc_init client already initialized for %s",inet_ntoa(srvaddr.sin_addr)));
+  }
+  else {
+    if (!srvid && !portid) {
+      m_setstrerror("rcc_init server and port not defined");
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("rcc_init server and port not defined"));
+    }
+    else if (!srvid) {
+      m_setstrerror("rcc_init server not defined");
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("rcc_init server not defined"));
+    }
+    else {
+      m_setstrerror("rcc_init port not defined");
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("rcc_init port not defined"));
+    }
   }
   return -1;
 }
@@ -94,74 +127,138 @@ int rcc_init(const char *srvid, const int *portid)
 
 int rcc_term()
 {
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,("rcc_term() called"));
   if (srvhdl > 0) {
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
+	    ("rcc_term closing socket %d for %s",
+	     srvhdl,inet_ntoa(srvaddr.sin_addr)));
     close(srvhdl);
     srvhdl = -1;
     memset(&srvaddr,0,sizeof(struct sockaddr_in));
+    M_TRACE(MTRACE_FLOW,MTRACE_COMM,("rcc_term() succeeded"));
     return 0;
   }
+  m_seterrno(MC_ERR_INVHANDLE);
+  m_setstrerror("rcc_term client already down");
+  M_TRACE(MTRACE_ERROR,MTRACE_COMM,("rcc_term client already down"));
   return -1;
 }
 
 
 /* ---------------------------------------------------------------------------*/
 
-int _rcc_connect() {
+int _rcc_connect() 
+{
+  int connhdl;
 
-  if (srvhdl > 0) { close(srvhdl); }
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,("_rcc_connect() called"));
+  if (srvhdl > 0) {
+    M_TRACE(MTRACE_FLOW,MTRACE_COMM,("_rcc_connect closing socket %d",srvhdl));
+    close(srvhdl);
+  }
 
   srvhdl=socket(PF_INET, SOCK_STREAM, 0);
   if (srvhdl==-1) {
-    perror("rcclient socket error");
+    m_seterrno(MC_ERR_NOCONNECT);
+    m_setstrerror("_rcc_connect could not create socket for %s,"
+		  " system error string: %s",
+		  inet_ntoa(srvaddr.sin_addr),strerror(errno));
+    M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	    ("_rcc_connect could not create socket for %s,"
+	     " system error string: %s",
+	     inet_ntoa(srvaddr.sin_addr),strerror(errno)));
     return -1;
   }
-  if (connect(srvhdl,(struct sockaddr*)&srvaddr,sizeof(struct sockaddr_in)) < 0) {
-    perror("rcclient connect error");
-    return -1;
+
+  connhdl = connect(srvhdl,(struct sockaddr*)&srvaddr,
+		    sizeof(struct sockaddr_in));
+ 
+  if (connhdl < 0) {
+    m_seterrno(MC_ERR_NOCONNECT);
+    m_setstrerror("_rcc_connect could not connect socket for %s,"
+		  " system error string: %s",
+		  inet_ntoa(srvaddr.sin_addr),strerror(errno));
+    M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	    ("_rcc_connect could not connect socket for %s,"
+	     " system error string: %s",
+	     inet_ntoa(srvaddr.sin_addr),strerror(errno)));
   }
+  M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("_rcc_connect opened socket %d",srvhdl));
   connects++;
-  return 0;
+  return connhdl;
 }
 
 /* ---------------------------------------------------------------------------*/
 
 int rcc_request(void *reqdata, size_t reqdatalen)
 {
-  int    sentlen;
-  size_t reqlen;
+  int    sentlen = 0;
+  size_t reqlen  = 0;
 
-  if (reqdata == NULL) return -1;
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,
+	  ("rcc_request(%p,%u) called",reqdata,reqdatalen));
+  if (reqdata == NULL) {
+    m_seterrno(MC_ERR_INVPARAM);
+    m_setstrerror("rcc_request received invalid parameter (%p)",reqdata);
+    M_TRACE(MTRACE_FLOW,MTRACE_COMM,
+	    ("rcc_request received invalid parameter (%p)",reqdata));
+    return -1;
+  }
   
   if (srvhdl <= 0) {
     if (_rcc_connect() < 0) {
-      perror("rcclient connect");
+      m_seterrno(MC_ERR_NOCONNECT);
+      m_setstrerror("rcc_request could not connect socket for %s,"
+		    " system error string: %s",
+		    inet_ntoa(srvaddr.sin_addr),strerror(errno));
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("rcc_request could not connect socket for %s,"
+	       " system error string: %s",
+	       inet_ntoa(srvaddr.sin_addr),strerror(errno)));
       return -1;
     }
   }
 
   reqlen = reqdatalen+sizeof(size_t);
+  M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("rcc_request socket %d write",srvhdl));
   sentlen = write(srvhdl,&reqdatalen,sizeof(size_t)) +
     write(srvhdl,reqdata,reqdatalen);
 
   if (sentlen <= 0) {
     if (_rcc_connect() < 0) {
-      perror("rcclient reconnect");
+      m_seterrno(MC_ERR_NOCONNECT);
+      m_setstrerror("rcc_request could not reconnect socket for %s,"
+		    " system error string: %s",
+		    inet_ntoa(srvaddr.sin_addr),strerror(errno));
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("rcc_request could not reconnect socket for %s,"
+	       " system error string: %s",
+	       inet_ntoa(srvaddr.sin_addr),strerror(errno)));
       return -1;
     }
     else {
+      M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("rcc_request socket %d retry write",srvhdl));
       sentlen = write(srvhdl,&reqdatalen,sizeof(size_t)) +
 	write(srvhdl,reqdata,reqdatalen);
     }
   }
 
   if (sentlen == reqlen) { 
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
+	    ("rcc_request on socket %d for %s succeeded, count=%d",
+	     srvhdl,inet_ntoa(srvaddr.sin_addr),requests++));
     requests++;
     return 0; 
   }
 
-  fprintf(stderr,"rcclient sendrequest error, wanted %d got %d\n",
-	  reqdatalen+sizeof(size_t), sentlen);
-  perror("rcclient send");
+  m_seterrno(MC_ERR_IOFAIL);
+  m_setstrerror("rcc_request send error, wanted %d got %d,"
+		" system error string: %s",
+		reqdatalen+sizeof(size_t),sentlen,strerror(errno));
+  M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	  ("rcc_request send error, wanted %d got %d,"
+	   " system error string: %s",
+	   reqdatalen+sizeof(size_t),sentlen,strerror(errno)));
   return -1;
 }
 

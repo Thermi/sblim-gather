@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.6 2004/10/21 15:51:18 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.7 2004/10/22 12:11:20 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -93,13 +93,14 @@ int mcc_term(int commhandle)
   if (commhandle >= 0 && commhandle < MAXCONN && 
       sockname[commhandle].sn_name[0]) {
     M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
-	    ("mcc_init closing socket %s",sockname[commhandle].sn_name));
+	    ("mcc_term closing socket %s",sockname[commhandle].sn_name));
     sockname[commhandle].sn_name[0]=0;
     if (sockname[commhandle].sn_handle > 0) {
       close(sockname[commhandle].sn_handle);
       sockname[commhandle].sn_handle=-1;
     }
     pthread_mutex_unlock(&sockname_mutex);
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_term freed handle %d",commhandle));
     return 0;
   }
   pthread_mutex_unlock(&sockname_mutex);
@@ -120,7 +121,7 @@ static int _mcc_connect(int commhandle)
   if (commhandle < MAXCONN && sockname[commhandle].sn_name[0]) {
     if (sockname[commhandle].sn_handle>0) {
       M_TRACE(MTRACE_FLOW,MTRACE_COMM,
-	      ("mcc_term closing %s",sockname[commhandle].sn_name));
+	      ("_mcc_connect closing %s",sockname[commhandle].sn_name));
       close(sockname[commhandle].sn_handle);
     }
     sockname[commhandle].sn_handle=socket(PF_UNIX,SOCK_STREAM,0);
@@ -240,6 +241,11 @@ int mcc_request(int commhandle, MC_REQHDR *hdr,
 		" system error string: %s\n",
 		reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
 		sentlen, strerror(errno));
+  M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	  ("mcc_request send error, wanted %d got %d,"
+	   " system error string: %s\n",
+	   reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
+	   sentlen, strerror(errno)));
   return -1;
 }
 

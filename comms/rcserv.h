@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv.h,v 1.1 2004/10/14 14:19:33 heidineu Exp $
+ * $Id: rcserv.h,v 1.2 2004/10/22 12:11:20 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -26,6 +26,7 @@ extern "C" {
 #endif
 
 #include <sys/types.h>
+#include "mcdefs.h"
 
 int rcs_init(const int *portid);
 int rcs_term();
