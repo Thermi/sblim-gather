@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.10 2004/10/20 09:07:12 heidineu Exp $
+ * $Id: reposd.c,v 1.11 2004/10/20 09:08:53 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -121,8 +121,6 @@ static void * _reposd_remote()
   int hdl  = -1;
   int port = 6363;
   int i    = 0;
-  struct timespec req = {0,0};
-  struct timespec rem = {0,0};
 
   if (rcs_init(&port)) { return 0; }
   memset(thread_id,0,sizeof(thread_id));
