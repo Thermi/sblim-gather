@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricGathererProvider.c,v 1.3 2004/06/02 17:55:22 heidineu Exp $
+ * $Id: OSBase_MetricGathererProvider.c,v 1.4 2004/06/03 07:56:50 heidineu Exp $
  *
  * Copyright (c) 2003, International Business Machines
  *
@@ -286,7 +286,8 @@ CMPIStatus OSBase_MetricGathererProviderInvokeMethod( CMPIMethodMI * mi,
   CMPIEnumeration * en;
   CMPIObjectPath  * copPlugin;
   int          stat;
-  
+  char         boolval;  
+
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI InvokeMethod()\n", _FILENAME, _ClassName );
 
@@ -348,7 +349,8 @@ CMPIStatus OSBase_MetricGathererProviderInvokeMethod( CMPIMethodMI * mi,
     } else {
       stat=0;
     }
-    CMReturnData(rslt,&stat,CMPI_boolean);   
+    boolval=stat;
+    CMReturnData(rslt,&boolval,CMPI_boolean);   
   } else if (strcasecmp(method,"stopsampling") ==0) {
     if( _debug )
       fprintf( stderr, "--- invoking stopsampling()\n");
@@ -360,7 +362,8 @@ CMPIStatus OSBase_MetricGathererProviderInvokeMethod( CMPIMethodMI * mi,
     } else {
       stat=0;
     }
-    CMReturnData(rslt,&stat,CMPI_boolean);   
+    boolval=stat;
+    CMReturnData(rslt,&boolval,CMPI_boolean);   
   } else {
     CMSetStatusWithChars( _broker, &st, 
 			  CMPI_RC_ERR_NOT_SUPPORTED, "CIM_ERR_NOT_SUPPORTED" ); 
