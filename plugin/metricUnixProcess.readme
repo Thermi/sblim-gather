@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.readme,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricUnixProcess.readme,v 1.2 2003/11/05 15:53:00 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -28,6 +28,8 @@ The Plugin offers the following 5 metrics :
 - UserModeTime
 - TotalCPUTime
 - ResidentSetSize
+- PageInCounter
+- PageInRate
 
 
 /* ---------------------------------------------------------------------------*/
@@ -89,7 +91,33 @@ CIM Data Type   : uint64
 Units           : number of pages the process has in real memory
 
 Value Source    : the 24 entry of /proc/<pid>/stat contains the resident set
-                  size of this process
+                  size (rss in pages) and the 25th entry contains the limit 
+		  (rlim in bytes);  ResidentSetSize = rss * rlim
+
+
+/* ---------------------------------------------------------------------------*/
+
+PageInCounter
+-------------
+
+Metric Type     : Point
+Sample Interval : 30 sec
+CIM Data Type   : uint64
+Units           : pages
+
+Value Source    : the 12th entry in /proc/<pid>/stat contains the number of 
+                  pages paged in since process start
+
+
+PageInRate
+----------
+
+Metric Type     : Rate
+Based on Metric : PageInCounter
+CIM Data Type   : uint64
+Units           : pages per second
+
+Value Source    : PageInCounter(n)-PageInCounter(n-1) / SampleTime(n)-SampleTime(n-1)
 
 
 /* ---------------------------------------------------------------------------*/

@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricUnixProcess.c,v 1.2 2003/11/05 15:53:00 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -39,7 +39,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricDefinition  metricDef[5];
+static MetricDefinition  metricDef[7];
 
 static ResourceLister          resourceLister;
 static ResourceListDeallocator resourceListDeallocator;
@@ -56,6 +56,12 @@ static MetricCalculator  metricCalcTotalCPUTime;
 /* --- ResidentSetSize --- */
 static MetricRetriever   metricRetrResSetSize;
 static MetricCalculator  metricCalcResSetSize;
+
+/* --- PageInCounter, PageInRate --- */
+static MetricRetriever   metricRetrPageInCounter;
+static MetricCalculator  metricCalcPageInCounter;
+
+static MetricCalculator  metricCalcPageInRate;
 
 /* ---------------------------------------------------------------------------*/
 
@@ -131,7 +137,29 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[4].mresl=metricDef[0].mresl;
   metricDef[4].mresldeal=metricDef[0].mresldeal;
 
-  *mdnum=5;
+  metricDef[5].mdName="PageInCounter";
+  metricDef[5].mdId=mr(pluginname,metricDef[5].mdName);
+  metricDef[5].mdSampleInterval=60;
+  metricDef[5].mdMetricType=MD_RETRIEVED|MD_POINT;
+  metricDef[5].mdDataType=MD_UINT64;
+  metricDef[5].mproc=metricRetrPageInCounter;
+  metricDef[5].mdeal=free;
+  metricDef[5].mcalc=metricCalcPageInCounter;
+  metricDef[5].mresl=metricDef[0].mresl;
+  metricDef[5].mresldeal=metricDef[0].mresldeal;
+
+  metricDef[6].mdName="PageInRate";
+  metricDef[6].mdId=mr(pluginname,metricDef[6].mdName);
+  metricDef[6].mdMetricType=MD_CALCULATED|MD_RATE;
+  metricDef[6].mdDataType=MD_UINT64;
+  metricDef[6].mdAliasId=metricDef[5].mdId;
+  metricDef[6].mproc=NULL;
+  metricDef[6].mdeal=NULL;
+  metricDef[6].mcalc=metricCalcPageInRate;
+  metricDef[6].mresl=metricDef[0].mresl;
+  metricDef[6].mresldeal=metricDef[0].mresldeal;
+
+  *mdnum=7;
   *md=metricDef;
   return 0;
 }
@@ -466,6 +494,8 @@ int metricRetrResSetSize( int mid,
   int             _enum_size = 0;
   int             i          = 0;
   unsigned long long size    = 0;
+  unsigned long long rss     = 0;
+  unsigned long long rlim    = 0;
 
 
 #ifdef DEBUG
@@ -490,9 +520,10 @@ int metricRetrResSetSize( int mid,
 	strcat(buf,"/stat");
 	if( (fhd = fopen(buf,"r")) != NULL ) {
 	  fscanf(fhd,"%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s "
-		 "%*s %*s %*s %*s %*s %*s %*s %*s %*s %lld",
-		 &size );
+		 "%*s %*s %*s %*s %*s %*s %*s %*s %*s %lld %lld",
+		 &rss, &rlim );
 	  fclose(fhd);
+	  size = rss * rlim;
 	}
 	
 	mv = calloc( 1, sizeof(MetricValue) + 
@@ -535,6 +566,104 @@ size_t metricCalcResSetSize( MetricValue *mv,
   return -1;
 }
 
+/* ---------------------------------------------------------------------------*/
+
+int metricRetrPageInCounter( int mid, 
+			     MetricReturner mret ) { 
+  MetricValue      * mv         = NULL; 
+  FILE             * fhd        = NULL;
+  char             * _enum_pid  = NULL;
+  char               buf[254];
+  int                _enum_size = 0;
+  int                i          = 0;
+  unsigned long long page = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Retrieving PageInCounter\n",
+	  __FILE__,__LINE__);
+#endif
+  if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
+  else {
+#ifdef DEBUG
+    fprintf(stderr,"--- %s(%i) : Sampling for metric PageInCounter ID %d\n",
+	    __FILE__,__LINE__,mid);
+#endif
+
+    /* get number of processes */
+    _enum_size = enum_all_pid( &_enum_pid );
+    if( _enum_size > 0 ) {
+      for(i=0;i<_enum_size;i++) {
+
+	page = 0;
+	memset(buf,0,sizeof(buf));
+	strcpy(buf,"/proc/");
+	strcat(buf,_enum_pid + (i*64));
+	strcat(buf,"/stat");
+	if( (fhd = fopen(buf,"r")) != NULL ) {
+	  fscanf(fhd,
+	     "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lld",
+	     &page);
+	  fclose(fhd);
+	}
+
+	mv = calloc( 1, sizeof(MetricValue) + 
+		     sizeof(unsigned long long) +
+		     (strlen(_enum_pid + (i*64))+1) );
+	if (mv) {
+	  mv->mvId = mid;
+	  mv->mvTimeStamp = time(NULL);
+	  mv->mvDataType = MD_UINT64;
+	  mv->mvDataLength = sizeof(unsigned long long);
+	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  *(unsigned long long*)mv->mvData = page;	 
+	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  strcpy(mv->mvResource,_enum_pid + (i*64));
+	  mret(mv);
+	}	
+      }
+      if(_enum_pid) free(_enum_pid);
+      return _enum_size;
+    }
+  }
+  return -1;
+}
+
+
+size_t metricCalcPageInCounter( MetricValue *mv,   
+				int mnum,
+				void *v, 
+				size_t vlen ) {
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PageInCounter\n",
+	  __FILE__,__LINE__);
+#endif
+  /* plain copy */
+  if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
+    memcpy(v,mv->mvData,mv->mvDataLength);
+    return mv->mvDataLength;
+  }
+  return -1;
+}
+
+
+size_t metricCalcPageInRate( MetricValue *mv,   
+			     int mnum,
+			     void *v, 
+			     size_t vlen ) {
+  unsigned long long total = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PageInRate\n",
+	  __FILE__,__LINE__);
+#endif
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=2) ) {
+    total = (*(unsigned long long*)mv[0].mvData - *(unsigned long long*)mv[mnum-1].mvData) / (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
+    memcpy(v, &total, sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
 
 
 /* ---------------------------------------------------------------------------*/
