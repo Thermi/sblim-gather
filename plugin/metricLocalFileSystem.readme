@@ -1,5 +1,5 @@
 /*
- * $Id: metricLocalFileSystem.readme,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricLocalFileSystem.readme,v 1.2 2004/08/04 09:04:02 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -20,7 +20,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-The Plugin offers the following 2 metrics :
+The Plugin offers the following metrics :
 
 - AvailableSpace
 - AvailableSpacePercentage
@@ -32,7 +32,7 @@ AvailableSpace
 --------------
 
 Metric Type     : Point
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : uint64
 Units           : Byte
 
@@ -44,7 +44,7 @@ AvailableSpacePercentage
 ------------------------
 
 Metric Type     : Point
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : uint8
 Units           : percent
 

@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.readme,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricProcessor.readme,v 1.2 2004/08/04 09:04:02 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -20,7 +20,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-The Plugin offers the following metric :
+The Plugin offers the following metrics :
 
 
 - TotalCPUTimePercentage
@@ -32,7 +32,7 @@ TotalCPUTimePercentage
 ----------------------
 
 Metric Type     : Average
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : uint8
 Units           : percent
 
