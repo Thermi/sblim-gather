@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.4 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: repos.c,v 1.5 2004/08/05 10:23:45 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -260,23 +260,25 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	vs->vsDataType=mc->mcDataType;
 	for (j=0;j < resnum; j++) {
 	  if (useIntervals && numv[j] > 0) {
-	    vs->vsValues[j].viCaptureTime=mv[j][numv[j]-1].mvTimeStamp;
-	    vs->vsValues[j].viDuration=
+	    vs->vsValues[actnum].viCaptureTime=mv[j][numv[j]-1].mvTimeStamp;
+	    vs->vsValues[actnum].viDuration=
 	      mv[j][0].mvTimeStamp -
-	      vs->vsValues[j].viCaptureTime;
-	    vs->vsValues[j].viValueLen=100; /* TODO : calc meaningful length */
-	    vs->vsValues[j].viValue=ch_alloc(ch,vs->vsValues[j].viValueLen);
+	      vs->vsValues[actnum].viCaptureTime;
+	    vs->vsValues[actnum].viValueLen=100; /* TODO : calc meaningful length */
+	    vs->vsValues[actnum].viValue=
+	      ch_alloc(ch,vs->vsValues[actnum].viValueLen);
 	    if (mc->mcCalc(mv[j],
 			  numv[j],
-			  vs->vsValues[j].viValue,
-			  vs->vsValues[j].viValueLen) == -1) {
+			  vs->vsValues[actnum].viValue,
+			  vs->vsValues[actnum].viValueLen) == -1) {
 	      /* failed to obtain value */
 	      resnum -= 1;
 	      vs->vsNumValues -= 1;
 	      continue;
 	    }	      
-	    vs->vsValues[j].viResource=ch_alloc(ch,strlen(resources[j])+1);
-	    strcpy(vs->vsValues[j].viResource,resources[j]);
+	    vs->vsValues[actnum].viResource=ch_alloc(ch,strlen(resources[j])+1);
+	    strcpy(vs->vsValues[actnum].viResource,resources[j]);
+	    actnum += 1;
 	  } else {	
 	    for (i=0; i < numv[j]; i++) {
 	      vs->vsValues[actnum+i].viCaptureTime=mv[j][i].mvTimeStamp;

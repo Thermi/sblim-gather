@@ -1,7 +1,7 @@
 /*
- * $Id: rgather.c,v 1.6 2004/08/04 11:27:36 mihajlov Exp $
+ * $Id: rgather.c,v 1.7 2004/08/05 10:23:46 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -26,12 +26,11 @@
 #include <sys/wait.h>
 
 
-static int initialized = 0;
+static int rgatherhandle=-1;
 
 #define INITCHECK() \
-if (!initialized) { \
-  mcc_init(GATHER_COMMID); \
-  initialized=0; \
+if (rgatherhandle==-1) { \
+  rgatherhandle=mcc_init(GATHER_COMMID); \
 }
 
 int rgather_load()
@@ -69,7 +68,7 @@ int rgather_unload()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_QUIT;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
   } else {
@@ -88,7 +87,7 @@ int rgather_init()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_INIT;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
   } else {
@@ -107,9 +106,9 @@ int rgather_terminate()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_TERM;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0 &&
-      mcc_term()==0) {
+      mcc_term(rgatherhandle)==0) {
     return comm->gc_result;
   } else {
     return -1;
@@ -127,7 +126,7 @@ int rgather_start()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_START;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
   } else {
@@ -146,7 +145,7 @@ int rgather_stop()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_STOP;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
   } else {
@@ -167,7 +166,7 @@ int rgather_status(GatherStatus *gs)
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_STATUS;
     comm->gc_datalen=0;
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+    if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == sizeof(GatherStatus) + sizeof(GATHERCOMM)) {
       *gs = *gsp;
@@ -190,7 +189,8 @@ int rmetricplugin_add(const char *pluginname)
     comm->gc_cmd=GCMD_ADDPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+    if (mcc_request(rgatherhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
       return comm->gc_result;
     } 
@@ -211,7 +211,8 @@ int rmetricplugin_remove(const char *pluginname)
     comm->gc_cmd=GCMD_REMPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+    if (mcc_request(rgatherhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
       return comm->gc_result;
     }
@@ -235,7 +236,8 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
     comm->gc_cmd=GCMD_LISTPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+    if (mcc_request(rgatherhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
       /* copy data into result buffer and adjust string pointers */

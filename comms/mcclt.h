@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt.h,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: mcclt.h,v 1.3 2004/08/05 10:23:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -27,8 +27,9 @@ extern "C" {
 #include "mcdefs.h"
 
 int mcc_init(const char *commid);
-int mcc_term();
-int mcc_request(MC_REQHDR *hdr, void *reqdata, size_t reqdatalen);
+int mcc_term(int commhandle);
+int mcc_request(int commhandle, MC_REQHDR *hdr, void *reqdata, 
+		size_t reqdatalen);
 int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen);
 
 #ifdef __cplusplus

@@ -1,5 +1,5 @@
 /*
- * $Id: mcctest.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: mcctest.c,v 1.3 2004/08/05 10:23:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -32,21 +32,22 @@ int main()
   char   buf[500];
   size_t buflen;
   time_t start, end;
+  int    comhdl;
 
   start=time(NULL);
-  mcc_init("mcstest");
+  comhdl = mcc_init("mcstest");
 
   do {
     strcpy(buf,"x");
     /* fgets(buf,sizeof(buf),stdin); */
     if (*buf=='q') {
       req.mc_type=0;
-      mcc_request(&req,"",0);
+      mcc_request(comhdl,&req,"",0);
       break;
     } else {
       req.mc_type=1;
       buflen=sizeof(buf);
-      if (mcc_request(&req,buf,strlen(buf))==0) {
+      if (mcc_request(comhdl,&req,buf,strlen(buf))==0) {
 	mcc_response(&req,buf,&buflen);	
 	if (transactions++ == 500000) {
 	  end = time(NULL);
@@ -61,6 +62,6 @@ int main()
     }
   } while(1);
 
-  mcc_term();
+  mcc_term(comhdl);
   return 0;
 }

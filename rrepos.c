@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.5 2004/08/04 11:27:36 mihajlov Exp $
+ * $Id: rrepos.c,v 1.6 2004/08/05 10:23:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -27,12 +27,11 @@
 #include <sys/wait.h>
 
 static RepositoryToken _RemoteToken = {sizeof(RepositoryToken),0,0};
-static int initialized=0;
+static int rreposhandle=-1;
 
 #define INITCHECK() \
-if (!initialized) { \
-  mcc_init(REPOS_COMMID); \
-  initialized=0; \
+if (rreposhandle==-1) { \
+  rreposhandle=mcc_init(REPOS_COMMID); \
 }
 
 #ifdef NAGNAG
@@ -67,7 +66,7 @@ int rrepos_sessioncheck()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_GETTOKEN;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0 &&
       commlen == sizeof(RepositoryToken) + sizeof(GATHERCOMM)) {
     if (_RemoteToken.rt_size != ntohl(rt->rt_size)) {
@@ -134,7 +133,8 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
       dataoffs+=strlen(mv->mvResource)+1;
     }
     memcpy(xbuf+dataoffs,mv->mvData,mv->mvDataLength);
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == sizeof(GATHERCOMM)) {
       return comm->gc_result;
@@ -165,7 +165,8 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
       /* empty resource is allowed */
       strcpy(xbuf+sizeof(GATHERCOMM) + sizeof(ValueRequest),vr->vsResource);
     }
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
       if (comm->gc_result==0) {
@@ -205,9 +206,8 @@ int rrepos_init()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_INIT;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
-    initialized=1;
     return comm->gc_result;
   } else {
     return -1;
@@ -225,9 +225,8 @@ int rrepos_terminate()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_TERM;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
-    initialized=0;
     return comm->gc_result;
   } else {
     return -1;
@@ -247,7 +246,7 @@ int rrepos_status(RepositoryStatus *rs)
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_STATUS;
     comm->gc_datalen=0;
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+    if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == sizeof(RepositoryStatus) + sizeof(GATHERCOMM)) {
       *rs = *rsp;
@@ -270,7 +269,8 @@ int rreposplugin_add(const char *pluginname)
     comm->gc_cmd=GCMD_ADDPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
       return comm->gc_result;
     } 
@@ -291,7 +291,8 @@ int rreposplugin_remove(const char *pluginname)
     comm->gc_cmd=GCMD_REMPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0) {
       return comm->gc_result;
     }
@@ -316,7 +317,8 @@ int rreposplugin_list(const char *pluginname,
     comm->gc_cmd=GCMD_LISTPLUGIN;
     comm->gc_datalen=strlen(pluginname)+1;
     memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    if (mcc_request(&hdr,comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
       /* copy data into result buffer and adjust string pointers */
@@ -389,7 +391,7 @@ int rrepos_unload()
   hdr.mc_type=GATHERMC_REQ;
   comm->gc_cmd=GCMD_QUIT;
   comm->gc_datalen=0;
-  if (mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+  if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     return comm->gc_result;
   } else {

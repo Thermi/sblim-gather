@@ -1,7 +1,7 @@
 //
-// $Id: Linux_UnixProcessMetric.mof,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+// $Id: Linux_UnixProcessMetric.mof,v 1.2 2004/08/05 10:23:46 mihajlov Exp $
 //
-// (C) Copyright IBM Corp. 2003
+// (C) Copyright IBM Corp. 2003, 2004
 //
 // THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
 // ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -50,6 +50,12 @@ instance of Linux_MetricPlugin
 {
 	MetricDefinitionClassName = "Linux_UnixProcessMetric";
  	MetricPluginName = "libmetricUnixProcess.so";
+};
+
+instance of Linux_RepositoryPlugin  
+{
+	MetricDefinitionClassName = "Linux_UnixProcessMetric";
+ 	RepositoryPluginName = "librepositoryUnixProcess.so";
 };
 
 

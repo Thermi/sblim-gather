@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.2 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.3 2004/08/05 10:23:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -26,45 +26,49 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define MAXCONN 10
 
-static char sockname[PATH_MAX+1] = {0};
-
+static char sockname[MAXCONN][PATH_MAX+1] = {{0}};
 
 int mcc_init(const char *commid)
 {
-  if (sockname[0]==0) {
-    if (snprintf(sockname,sizeof(sockname),MC_SOCKET,commid) > 
-	sizeof(sockname)) {
-      perror("Could not complete socket name");
-      return -1;
+  int i;
+  for (i=0; i < MAXCONN;i++) {
+    if (sockname[i][0]==0) {
+      if (snprintf(sockname[i],sizeof(sockname),MC_SOCKET,commid) > 
+	  sizeof(sockname[i])) {
+	perror("Could not complete socket name");
+	return -1;
+      }
+      return i;
     }
-    return 0;
   }
   return -1;
 }
 
-int mcc_term()
+int mcc_term(int commhandle)
 {
-  if (sockname[0]) {
-    sockname[0]=0;
+  if (commhandle >= 0 && commhandle < MAXCONN && sockname[commhandle][0]) {
+    sockname[commhandle][0]=0;
     return 0;
   }
   return -1;
 }
 
-int mcc_request(MC_REQHDR *hdr, void *reqdata, size_t reqdatalen)
+int mcc_request(int commhandle, MC_REQHDR *hdr, 
+		void *reqdata, size_t reqdatalen)
 {
   int                cltsock =-1;
   size_t             sentlen;
   struct sockaddr_un sa;
-  if (hdr && reqdata) {
+  if (commhandle >= 0 && commhandle < MAXCONN && hdr && reqdata) {
     cltsock=socket(PF_UNIX,SOCK_STREAM,0);
     if (cltsock==-1) {
       perror("socket");
       return -1;
     }
     sa.sun_family = AF_UNIX;
-    strcpy(sa.sun_path,sockname);
+    strcpy(sa.sun_path,sockname[commhandle]);
     if (connect(cltsock,(struct sockaddr*)&sa,sizeof(struct sockaddr_un))==0) {
       sentlen = write(cltsock,hdr,sizeof(MC_REQHDR)) +
 	write(cltsock,&reqdatalen,sizeof(size_t)) +
