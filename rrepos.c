@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.1 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: rrepos.c,v 1.2 2004/07/23 16:26:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -23,8 +23,25 @@
 #include "mcclt.h"
 #include <string.h>
 
+
+
 int rrepos_sessioncheck()
 {
+  MC_REQHDR   hdr;
+  char        xbuf[GATHERBUFLEN];
+  GATHERCOMM *comm=(GATHERCOMM*)xbuf;
+  size_t      commlen=sizeof(xbuf);
+
+  hdr.mc_type=GATHERMC_REQ;
+  comm->gc_cmd=GCMD_GETTOKEN;
+  comm->gc_datalen=0;
+  if (mcc_init(REPOS_COMMID) == 0 && 
+      mcc_request(&hdr,comm,sizeof(GATHERCOMM))==0 &&
+      mcc_response(&hdr,comm,&commlen)==0) {
+    return comm->gc_result;
+  } else {
+    return -1;
+  }
   return 0;
 }
 
@@ -40,6 +57,7 @@ int rrepos_put(MetricValue *mv)
 
 int rrepos_get(ValueRequest *vs, COMMHEAP ch)
 {
+  
   return 0;
 }
 

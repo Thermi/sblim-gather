@@ -1,11 +1,12 @@
-# $Id: makefile,v 1.3 2004/04/27 07:29:53 mihajlov Exp $
+# $Id: makefile,v 1.4 2004/07/23 16:26:34 mihajlov Exp $
 
 export CFLAGS=-Wall -g  -fPIC
 CPPFLAGS=-I ..
 LOADLIBES=
 
 SUBDIRS=
-SOURCES=metricSample1.c metricSample2.c metricSample3.c metricSample4.c
+SOURCES=metricSample1.c metricSample2.c metricSample3.c metricSample4.c \
+	repositorySample4.c
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 
@@ -14,7 +15,7 @@ include ../rules
 .PHONY: all clean distclean install uninstall $(SUBDIRS) 
 
 all: $(SUBDIRS) libmetricSample1.so libmetricSample2.so libmetricSample3.so \
- libmetricSample4.so
+ libmetricSample4.so  librepositorySample4.so 
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) libmetricSample*.so

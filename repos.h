@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.2 2004/07/16 15:30:04 mihajlov Exp $
+ * $Id: repos.h,v 1.3 2004/07/23 16:26:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -25,6 +25,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct _RepositoryToken {
+  unsigned long rt_size;
+  unsigned long rt1;
+  unsigned long rt2;
+} RepositoryToken;
+
+int repos_token(RepositoryToken *rt);
 
 int repos_init(); 
 int repos_terminate(); 
