@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.4 2004/08/04 09:00:04 heidineu Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.5 2004/08/06 07:58:04 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -43,42 +43,56 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <time.h>
+
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[17];
+static MetricCalculationDefinition metricCalcDef[18];
 
 /* --- NumberOfUsers --- */
-static MetricCalculator  metricCalcNumOfUser;
+static MetricCalculator metricCalcNumOfUser;
 
 /* --- NumberOfProcesses --- */
-static MetricCalculator  metricCalcNumOfProc;
+static MetricCalculator metricCalcNumOfProc;
 
 /* --- CPUTime is base for :
  * KernelModeTime, UserModeTime, TotalCPUTime --- */
-static MetricCalculator  metricCalcCPUTime;
-static MetricCalculator  metricCalcKernelTime;
-static MetricCalculator  metricCalcUserTime;
-static MetricCalculator  metricCalcTotalCPUTime;
+static MetricCalculator metricCalcCPUTime;
+static MetricCalculator metricCalcKernelTime;
+static MetricCalculator metricCalcUserTime;
+static MetricCalculator metricCalcTotalCPUTime;
+
+static MetricCalculator metricCalcIdleTimePerc;
 
 /* --- MemorySize is base for :
  * TotalVisibleMemorySize,  FreePhysicalMemory, 
  * SizeStoredInPagingFiles, FreeSpaceInPagingFiles,
  * TotalVirtualMemorySize,  FreeVirtualMemory --- */
-static MetricCalculator  metricCalcMemorySize;
-static MetricCalculator  metricCalcTotalPhysMem;
-static MetricCalculator  metricCalcFreePhysMem;
-static MetricCalculator  metricCalcTotalSwapMem;
-static MetricCalculator  metricCalcFreeSwapMem;
-static MetricCalculator  metricCalcTotalVirtMem;
-static MetricCalculator  metricCalcFreeVirtMem;
+static MetricCalculator metricCalcMemorySize;
+static MetricCalculator metricCalcTotalPhysMem;
+static MetricCalculator metricCalcFreePhysMem;
+static MetricCalculator metricCalcTotalSwapMem;
+static MetricCalculator metricCalcFreeSwapMem;
+static MetricCalculator metricCalcTotalVirtMem;
+static MetricCalculator metricCalcFreeVirtMem;
 
 /* --- PageInCounter, PageInRate --- */
-static MetricCalculator  metricCalcPageInCounter;
-static MetricCalculator  metricCalcPageInRate;
+static MetricCalculator metricCalcPageInCounter;
+static MetricCalculator metricCalcPageInRate;
 
 /* --- LoadCounter, LoadAverage --- */
-static MetricCalculator  metricCalcLoadCounter;
-static MetricCalculator  metricCalcLoadAverage;
+static MetricCalculator metricCalcLoadCounter;
+static MetricCalculator metricCalcLoadAverage;
+
+
+
+/* ---------------------------------------------------------------------------*/
+
+static unsigned long long getCPUUserTime( char * data );
+static unsigned long long getCPUNiceTime( char * data );
+static unsigned long long getCPUKernelTime( char * data );
+static unsigned long long getCPUIdleTime( char * data );
+static unsigned long long getCPUTotalTime( char * data );
 
 /* ---------------------------------------------------------------------------*/
 
@@ -225,7 +239,15 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[16].mcAliasId=metricCalcDef[15].mcId;
   metricCalcDef[16].mcCalc=metricCalcLoadAverage;
 
-  *mcnum=17;
+  metricCalcDef[17].mcVersion=MD_VERSION;
+  metricCalcDef[17].mcName="InternalViewIdlePercentage";
+  metricCalcDef[17].mcId=mr(pluginname,metricCalcDef[17].mcName);
+  metricCalcDef[17].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[17].mcDataType=MD_FLOAT32;
+  metricCalcDef[17].mcAliasId=metricCalcDef[2].mcId;
+  metricCalcDef[17].mcCalc=metricCalcIdleTimePerc;
+
+  *mcnum=18;
   *mc=metricCalcDef;
   return 0;
 }
@@ -335,33 +357,15 @@ size_t metricCalcKernelTime( MetricValue *mv,
   fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
   fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
   fprintf(stderr,"vlen : %i\n",vlen);
-  fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength);
-  fprintf(stderr,"sizeof(unsigned long long) : %i\n",sizeof(unsigned long long));  
+  fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength); 
   */
 
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
-    hlp = mv[0].mvData;
-    for( i=0; i<2; i++ ) { 
-      hlp = strchr(hlp, ':');
-      hlp++;
-    }
-    end = strchr(hlp, ':');
-    memset(k_time,0,sizeof(k_time));
-    strncpy(k_time, hlp, (strlen(hlp)-strlen(end)) );
-    k1 = atoll(k_time)*10;
 
+    k1 = getCPUKernelTime(mv[0].mvData);
     if( mnum > 1 ) {
-      hlp = mv[mnum-1].mvData;
-      for( i=0; i<2; i++ ) { 
-	hlp = strchr(hlp, ':');
-	hlp++;
-      }
-      end = strchr(hlp, ':');
-      memset(k_time,0,sizeof(k_time));
-      strncpy(k_time, hlp, (strlen(hlp)-strlen(end)) );
-      k2 = atoll(k_time)*10;
-      
-      kt = (k1-k2)/2;
+      k2 = getCPUKernelTime(mv[mnum-1].mvData);
+      kt = k1-k2;
     }
     else { kt = k1; }
 
@@ -381,9 +385,6 @@ size_t metricCalcUserTime( MetricValue *mv,
 			   int mnum,
 			   void *v, 
 			   size_t vlen ) {
-  char * hlp = NULL;
-  char * end = NULL;
-  char   u_time[sizeof(unsigned long long)+1];
   unsigned long long ut = 0;
   unsigned long long u1 = 0;
   unsigned long long u2 = 0;
@@ -402,32 +403,15 @@ size_t metricCalcUserTime( MetricValue *mv,
   fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
   fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
   fprintf(stderr,"vlen : %i\n",vlen);
-  fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength);
-  fprintf(stderr,"sizeof(unsigned long long) : %i\n",sizeof(unsigned long long));  
+  fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength); 
   */
 
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
-    hlp = mv[0].mvData;
-    end = strchr(hlp, ':');
-    memset(u_time,0,sizeof(u_time));
-    strncpy(u_time, hlp, (strlen(hlp)-strlen(end)) );
-    u1 = atoll(u_time)*10;
-    /*
-    fprintf(stderr,"u_time : %s\n",u_time);
-    fprintf(stderr,"u1 : %lld\n",u1);
-    */
 
+    u1 = getCPUUserTime(mv[0].mvData);
     if( mnum > 1 ) {
-      hlp = mv[mnum-1].mvData;
-      end = strchr(hlp, ':');
-      memset(u_time,0,sizeof(u_time));
-      strncpy(u_time, hlp, (strlen(hlp)-strlen(end)) );
-      u2 = atoll(u_time)*10;
-      /*
-      fprintf(stderr,"u_time : %s\n",u_time);
-      fprintf(stderr,"u2 : %lld\n",u2);
-      */
-      ut = (u1-u2)/2;
+      u2 = getCPUUserTime(mv[mnum-1].mvData);
+      ut = u1-u2;
     }
     else { ut = u1; }
 
@@ -447,18 +431,8 @@ size_t metricCalcTotalCPUTime( MetricValue *mv,
 			       int mnum,
 			       void *v, 
 			       size_t vlen ) {
-  char * hlp = NULL;
-  char * end = NULL;
-  char   u_time[sizeof(unsigned long long)+1];
-  char   k_time[sizeof(unsigned long long)+1];
-  char   i_time[sizeof(unsigned long long)+1];
-  int    i   = 0;
-  unsigned long long u1 = 0;
-  unsigned long long u2 = 0;
-  unsigned long long k1 = 0;
-  unsigned long long k2 = 0;
-  unsigned long long i1 = 0;
-  unsigned long long i2 = 0;
+  unsigned long long t1    = 0;
+  unsigned long long t2    = 0;
   unsigned long long total = 0;
 
 #ifdef DEBUG
@@ -478,55 +452,16 @@ size_t metricCalcTotalCPUTime( MetricValue *mv,
   fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
   fprintf(stderr,"vlen : %i\n",vlen);
   fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength);
-  fprintf(stderr,"sizeof(unsigned long long) : %i\n",sizeof(unsigned long long));  
   */
 
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
-    hlp = mv[0].mvData;
-    end = strchr(hlp, ':');
-    memset(u_time,0,sizeof(u_time));
-    strncpy(u_time, hlp, (strlen(hlp)-strlen(end)) );
-    u1 = atoll(u_time)*10;
 
-    for( i=0; i<2; i++ ) { 
-      hlp = strchr(hlp, ':');
-      hlp++;
-    }
-    end = strchr(hlp, ':');
-    memset(k_time,0,sizeof(k_time));
-    strncpy(k_time, hlp, (strlen(hlp)-strlen(end)) );
-    k1 = atoll(k_time)*10;
-
-    hlp = end+1;
-    memset(i_time,0,sizeof(i_time));
-    strncpy(i_time, hlp, strlen(hlp) );
-    i1 = atoll(i_time)*10;
-
-
+    t1 = getCPUTotalTime(mv[0].mvData);
     if( mnum > 1 ) {
-      hlp = mv[mnum-1].mvData;
-      end = strchr(hlp, ':');
-      memset(u_time,0,sizeof(u_time));
-      strncpy(u_time, hlp, (strlen(hlp)-strlen(end)) );
-      u2 = atoll(u_time)*10;
-
-      for( i=0; i<2; i++ ) { 
-	hlp = strchr(hlp, ':');
-	hlp++;
-      }
-      end = strchr(hlp, ':');
-      memset(k_time,0,sizeof(k_time));
-      strncpy(k_time, hlp, (strlen(hlp)-strlen(end)) );
-      k2 = atoll(k_time)*10;
-
-      hlp = end+1;
-      memset(i_time,0,sizeof(i_time));
-      strncpy(i_time, hlp, strlen(hlp) );
-      i2 = atoll(i_time)*10;
-      
-      total = ((u1-u2)+(k1-k2)+(i1-i2))/2;
+      t2 = getCPUTotalTime(mv[mnum-1].mvData);
+      total = t1-t2;
     }
-    else { total = u1+k1+i1; }
+    else { total = t1; }
     
     //fprintf(stderr,"total time: %lld\n",total);
     memcpy(v,&total,sizeof(unsigned long long));
@@ -922,6 +857,148 @@ size_t metricCalcLoadAverage( MetricValue *mv,
     return sizeof(float);
   }
   return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* InternalViewIdlePercentage                                                 */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcIdleTimePerc( MetricValue *mv,   
+			       int mnum,
+			       void *v, 
+			       size_t vlen ) {
+  unsigned long long i1 = 0;
+  unsigned long long i2 = 0;
+  unsigned long long t1 = 0;
+  unsigned long long t2 = 0;
+  float              ip = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate InternalViewIdlePercentage\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * InternalViewIdlePercentage is based on the fourth entry of the CPUTime 
+   * value and needs to be multiplied by 10 to get microseconds
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  fprintf(stderr,"vlen : %i\n",vlen);
+  fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength);
+  fprintf(stderr,"sizeof(unsigned long long) : %i\n",sizeof(unsigned long long));  
+  */
+
+  if ( mv && (vlen>=sizeof(float)) && (mnum>=1) ) {
+
+    i1 = getCPUIdleTime(mv[0].mvData);
+    t1 = getCPUTotalTime(mv[0].mvData);
+
+    if( mnum > 1 ) {
+      i2 = getCPUIdleTime(mv[mnum-1].mvData);
+      t2 = getCPUTotalTime(mv[mnum-1].mvData);
+      ip = ((i1*100)/t1) - ((i2*100)/t2);      
+    }
+    else { ip = (100*i1)/t1; }
+
+    //fprintf(stderr,"idle time: %f\n",ip);
+    memcpy(v,&ip,sizeof(float));
+    return sizeof(float);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* tool functions on CPUTime                                                  */
+/* ---------------------------------------------------------------------------*/
+
+unsigned long long getCPUUserTime( char * data ) {
+
+  char * hlp = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* first entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    memset(time,0,sizeof(time));
+    strncpy(time, data, (strlen(data)-strlen(hlp)) );
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long getCPUNiceTime( char * data ) {
+
+  char * hlp = NULL;
+  char * end = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* third entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    hlp++;
+    end = strchr(hlp, ':');
+    memset(time,0,sizeof(time));
+    strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long getCPUKernelTime( char * data ) {
+
+  char * hlp = NULL;
+  char * end = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* third entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    hlp++;
+    hlp = strchr(hlp, ':');
+    hlp++;
+    end = strchr(hlp, ':');
+    memset(time,0,sizeof(time));
+    strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long getCPUIdleTime( char * data ) {
+
+  char * hlp = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* last entry of data (CPUTime) */
+  if( (hlp = strrchr(data, ':')) != NULL ) {
+    hlp++;
+    memset(time,0,sizeof(time));
+    strcpy(time, hlp);
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long getCPUTotalTime( char * data ) {
+
+  unsigned long long val = 0;
+
+  /* sum of User, Kernel and Idle time of data (CPUTime) */
+  val = getCPUUserTime(data) +
+        getCPUKernelTime(data) +
+        getCPUIdleTime(data);
+
+  return val;
 }
 
 
