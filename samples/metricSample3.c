@@ -1,7 +1,7 @@
 /*
- * $Id: metricSample3.c,v 1.3 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: metricSample3.c,v 1.4 2004/08/03 12:36:08 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -38,7 +38,9 @@ int _DefinedMetrics (MetricRegisterId *mr,
     fprintf(stderr,"invalid parameter list\n");
     return -1;
   }
+  metricDef.mdVersion=MD_VERSION;
   metricDef.mdName="sample3";
+  metricDef.mdReposPluginName="samples/librepositorySample3.so";
   metricDef.mdId=mr(pluginname,metricDef.mdName);
   metricDef.mdSampleInterval=20;
   metricDef.mproc=metricRetriever;

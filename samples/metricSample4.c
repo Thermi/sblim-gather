@@ -1,7 +1,7 @@
 /*
- * $Id: metricSample4.c,v 1.4 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: metricSample4.c,v 1.5 2004/08/03 12:36:08 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE

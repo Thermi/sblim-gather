@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.2 2004/08/02 14:23:02 mihajlov Exp $
+ * $Id: reposctl.c,v 1.3 2004/08/03 12:36:08 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -139,7 +139,7 @@ int main()
 	    printf("%hhd",*vr.vsValues[i].viValue);
 	    break;
 	  case MD_UINT8:
-	    printf("%hhuu",*(unsigned char*)vr.vsValues[i].viValue);
+	    printf("%hhu",*(unsigned char*)vr.vsValues[i].viValue);
 	    break;
 	  case MD_UINT16:
 	  case MD_CHAR16:
