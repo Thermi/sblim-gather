@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryUnixProcess.c,v 1.1 2004/08/04 09:00:58 heidineu Exp $
+ * $Id: repositoryUnixProcess.c,v 1.2 2004/08/19 10:54:59 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -22,6 +22,16 @@
  * ResidentSetSize
  * PageInCounter
  * PageInRate
+ * InternalViewKernelModePercentage
+ * InternalViewUserModePercentage
+ * InternalViewTotalCPUPercentage
+ * ExternalViewKernelModePercentage
+ * ExternalViewUserModePercentage
+ * ExternalViewTotalCPUPercentage
+ * AccumulatedKernelModeTime
+ * AccumulatedUserModeTime
+ * AccumulatedTotalCPUTime
+ * VirtualSize
  *
  */
 
@@ -34,14 +44,32 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[7];
+static MetricCalculationDefinition metricCalcDef[17];
 
 /* --- CPUTime is base for :
- * KernelModeTime, UserModeTime, TotalCPUTime --- */
+ * KernelModeTime, UserModeTime, TotalCPUTime,
+ * InternalViewKernelModePercentage, InternalViewUserModePercentage,
+ * InternalViewTotalCPUPercentage, ExternalViewKernelModePercentage,
+ * ExternalViewUserModePercentage, ExternalViewTotalCPUPercentage,
+ * AccumulatedKernelModeTime, AccumulatedUserModeTime,
+ * AccumulatedTotalCPUTime 
+ * --- */
 static MetricCalculator  metricCalcCPUTime;
 static MetricCalculator  metricCalcKernelTime;
 static MetricCalculator  metricCalcUserTime;
 static MetricCalculator  metricCalcTotalCPUTime;
+
+static MetricCalculator metricCalcInternKernelTimePerc;
+static MetricCalculator metricCalcInternUserTimePerc;
+static MetricCalculator metricCalcInternTotalCPUTimePerc;
+
+static MetricCalculator metricCalcExternKernelTimePerc;
+static MetricCalculator metricCalcExternUserTimePerc;
+static MetricCalculator metricCalcExternTotalCPUTimePerc;
+
+static MetricCalculator metricCalcAccKernelTime;
+static MetricCalculator metricCalcAccUserTime;
+static MetricCalculator metricCalcAccTotalCPUTime;
 
 /* --- ResidentSetSize --- */
 static MetricCalculator  metricCalcResSetSize;
@@ -49,6 +77,34 @@ static MetricCalculator  metricCalcResSetSize;
 /* --- PageInCounter, PageInRate --- */
 static MetricCalculator  metricCalcPageInCounter;
 static MetricCalculator  metricCalcPageInRate;
+
+/* --- VirtualSize --- */
+static MetricCalculator  metricCalcVirtualSize;
+
+
+/* ---------------------------------------------------------------------------*/
+
+static unsigned long long getCPUUserTime( char * data );
+static unsigned long long getCPUKernelTime( char * data );
+static unsigned long long getCPUTotalTime( char * data );
+static float getCPUKernelTimePercentage( char * start, char * end ); 
+static float getCPUUserTimePercentage( char * start, char * end );
+static float getTotalCPUTimePercentage( char * start, char * end );
+
+/* ---------------------------------------------------------------------------*/
+
+/* TODO : move to lib repositoryTool */
+
+static unsigned long long os_getCPUUserTime( char * data );
+static unsigned long long os_getCPUNiceTime( char * data );
+static unsigned long long os_getCPUKernelTime( char * data );
+static unsigned long long os_getCPUIdleTime( char * data );
+static unsigned long long os_getCPUTotalTime( char * data );
+static float os_getCPUKernelTimePercentage( char * start, char * end ); 
+static float os_getCPUUserTimePercentage( char * start, char * end );
+static float os_getCPUIdleTimePercentage( char * start, char * end );
+static float os_getTotalCPUTimePercentage( char * start, char * end );
+static float os_getCPUConsumptionIndex( char * start, char * end );
 
 /* ---------------------------------------------------------------------------*/
 
@@ -118,7 +174,86 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[6].mcAliasId=metricCalcDef[5].mcId;
   metricCalcDef[6].mcCalc=metricCalcPageInRate;
 
-  *mcnum=7;
+  metricCalcDef[7].mcVersion=MD_VERSION;
+  metricCalcDef[7].mcName="InternalViewKernelModePercentage";
+  metricCalcDef[7].mcId=mr(pluginname,metricCalcDef[7].mcName);
+  metricCalcDef[7].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[7].mcDataType=MD_FLOAT32;
+  metricCalcDef[7].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[7].mcCalc=metricCalcInternKernelTimePerc;
+
+  metricCalcDef[8].mcVersion=MD_VERSION;
+  metricCalcDef[8].mcName="InternalViewUserModePercentage";
+  metricCalcDef[8].mcId=mr(pluginname,metricCalcDef[8].mcName);
+  metricCalcDef[8].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[8].mcDataType=MD_FLOAT32;
+  metricCalcDef[8].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[8].mcCalc=metricCalcInternUserTimePerc;
+
+  metricCalcDef[9].mcVersion=MD_VERSION;
+  metricCalcDef[9].mcName="InternalViewTotalCPUPercentage";
+  metricCalcDef[9].mcId=mr(pluginname,metricCalcDef[9].mcName);
+  metricCalcDef[9].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[9].mcDataType=MD_FLOAT32;
+  metricCalcDef[9].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[9].mcCalc=metricCalcInternTotalCPUTimePerc;
+
+  metricCalcDef[10].mcVersion=MD_VERSION;
+  metricCalcDef[10].mcName="ExternalViewKernelModePercentage";
+  metricCalcDef[10].mcId=mr(pluginname,metricCalcDef[10].mcName);
+  metricCalcDef[10].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[10].mcDataType=MD_FLOAT32;
+  metricCalcDef[10].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[10].mcCalc=metricCalcExternKernelTimePerc;
+
+  metricCalcDef[11].mcVersion=MD_VERSION;
+  metricCalcDef[11].mcName="ExternalViewUserModePercentage";
+  metricCalcDef[11].mcId=mr(pluginname,metricCalcDef[11].mcName);
+  metricCalcDef[11].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[11].mcDataType=MD_FLOAT32;
+  metricCalcDef[11].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[11].mcCalc=metricCalcExternUserTimePerc;
+
+  metricCalcDef[12].mcVersion=MD_VERSION;
+  metricCalcDef[12].mcName="ExternalViewTotalCPUPercentage";
+  metricCalcDef[12].mcId=mr(pluginname,metricCalcDef[12].mcName);
+  metricCalcDef[12].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[12].mcDataType=MD_FLOAT32;
+  metricCalcDef[12].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[12].mcCalc=metricCalcExternTotalCPUTimePerc;
+
+  metricCalcDef[13].mcVersion=MD_VERSION;
+  metricCalcDef[13].mcName="AccumulatedKernelModeTime";
+  metricCalcDef[13].mcId=mr(pluginname,metricCalcDef[13].mcName);
+  metricCalcDef[13].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[13].mcDataType=MD_UINT64;
+  metricCalcDef[13].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[13].mcCalc=metricCalcAccKernelTime;
+
+  metricCalcDef[14].mcVersion=MD_VERSION;
+  metricCalcDef[14].mcName="AccumulatedUserModeTime";
+  metricCalcDef[14].mcId=mr(pluginname,metricCalcDef[14].mcName);
+  metricCalcDef[14].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[14].mcDataType=MD_UINT64;
+  metricCalcDef[14].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[14].mcCalc=metricCalcAccUserTime;
+
+  metricCalcDef[15].mcVersion=MD_VERSION;
+  metricCalcDef[15].mcName="AccumulatedTotalCPUTime";
+  metricCalcDef[15].mcId=mr(pluginname,metricCalcDef[15].mcName);
+  metricCalcDef[15].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[15].mcDataType=MD_UINT64;
+  metricCalcDef[15].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[15].mcCalc=metricCalcAccTotalCPUTime;
+
+  metricCalcDef[16].mcVersion=MD_VERSION;
+  metricCalcDef[16].mcName="VirtualSize";
+  metricCalcDef[16].mcId=mr(pluginname,metricCalcDef[16].mcName);
+  metricCalcDef[16].mcMetricType=MD_RETRIEVED|MD_POINT;
+  metricCalcDef[16].mcDataType=MD_UINT64;
+  metricCalcDef[16].mcCalc=metricCalcVirtualSize;
+
+  *mcnum=17;
   *mc=metricCalcDef;
   return 0;
 }
@@ -131,7 +266,8 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
 /* 
  * The raw data CPUTime has the following syntax :
  *
- * <user mode time>:<kernel mode time>
+ * <PID user mode time>:<PID kernel mode time>:<OS user mode>:
+ * <OS user mode with low priority(nice)>:<OS system mode>:<OS idle task>
  *
  * the values in CPUTime are saved in Jiffies ( 1/100ths of a second )
  */
@@ -162,8 +298,6 @@ size_t metricCalcKernelTime( MetricValue *mv,
 			     int mnum,
 			     void *v, 
 			     size_t vlen ) { 
-  char * hlp = NULL;
-  char   k_time[sizeof(unsigned long long)+1];
   unsigned long long kt = 0;
   unsigned long long k1 = 0;
   unsigned long long k2 = 0;
@@ -182,29 +316,17 @@ size_t metricCalcKernelTime( MetricValue *mv,
   fprintf(stderr,"mnum : %i\n",mnum);
   fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
   fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
-  fprintf(stderr,"vlen : %i\n",vlen);
-  fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength);
-  fprintf(stderr,"sizeof(unsigned long long) : %i\n",sizeof(unsigned long long));  
   */
 
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
-    hlp = strchr(mv[0].mvData, ':');
-    hlp++;
-    memset(k_time,0,sizeof(k_time));
-    strncpy(k_time, hlp, strlen(hlp) );
-    k1 = atoll(k_time)*10;
-      
+
+    k1 = getCPUKernelTime(mv[0].mvData);
     if( mnum > 1 ) {
-      hlp = strchr(mv[mnum-1].mvData, ':');
-      hlp++;
-      memset(k_time,0,sizeof(k_time));
-      strncpy(k_time, hlp, strlen(hlp) );
-      k2 = atoll(k_time)*10;
-      
-      kt = (k1-k2)/2;
+      k2 = getCPUKernelTime(mv[mnum-1].mvData);
+      kt = k1-k2;
     }
     else { kt = k1; }
-    
+
     //fprintf(stderr,"kernel time: %lld\n",kt);
     memcpy(v,&kt,sizeof(unsigned long long));
     return sizeof(unsigned long long);
@@ -221,9 +343,6 @@ size_t metricCalcUserTime( MetricValue *mv,
 			   int mnum,
 			   void *v, 
 			   size_t vlen ) { 
-  char * hlp = NULL;
-  char * end = NULL;
-  char   u_time[sizeof(unsigned long long)+1];
   unsigned long long ut = 0;
   unsigned long long u1 = 0;
   unsigned long long u2 = 0;
@@ -242,26 +361,14 @@ size_t metricCalcUserTime( MetricValue *mv,
   fprintf(stderr,"mnum : %i\n",mnum);
   fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
   fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
-  fprintf(stderr,"vlen : %i\n",vlen);
-  fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength);
-  fprintf(stderr,"sizeof(unsigned long long) : %i\n",sizeof(unsigned long long));  
   */
 
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
-    hlp = mv[0].mvData;
-    end = strchr(hlp, ':');
-    memset(u_time,0,sizeof(u_time));
-    strncpy(u_time, hlp, (strlen(hlp)-strlen(end)) );
-    u1 = atoll(u_time)*10;
-    
+
+    u1 = getCPUUserTime(mv[0].mvData);
     if( mnum > 1 ) {
-      hlp = mv[mnum-1].mvData;
-      end = strchr(hlp, ':');
-      memset(u_time,0,sizeof(u_time));
-      strncpy(u_time, hlp, (strlen(hlp)-strlen(end)) );
-      u2 = atoll(u_time)*10;
-      
-      ut = (u1-u2)/2;
+      u2 = getCPUUserTime(mv[mnum-1].mvData);
+      ut = u1-u2;
     }
     else { ut = u1; }
     
@@ -280,15 +387,9 @@ size_t metricCalcUserTime( MetricValue *mv,
 size_t metricCalcTotalCPUTime( MetricValue *mv,   
 			       int mnum,
 			       void *v, 
-			       size_t vlen ) { 
-  char * hlp = NULL;
-  char * end = NULL;
-  char   u_time[sizeof(unsigned long long)+1];
-  char   k_time[sizeof(unsigned long long)+1];
-  unsigned long long u1 = 0;
-  unsigned long long u2 = 0;
-  unsigned long long k1 = 0;
-  unsigned long long k2 = 0;
+			       size_t vlen ) {
+  unsigned long long t1 = 0;
+  unsigned long long t2 = 0;
   unsigned long long total = 0;
 
 #ifdef DEBUG
@@ -305,38 +406,16 @@ size_t metricCalcTotalCPUTime( MetricValue *mv,
   fprintf(stderr,"mnum : %i\n",mnum);
   fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
   fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
-  fprintf(stderr,"vlen : %i\n",vlen);
-  fprintf(stderr,"mv->mvDataLength : %i\n",mv->mvDataLength);
-  fprintf(stderr,"sizeof(unsigned long long) : %i\n",sizeof(unsigned long long));  
   */
 
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
-    hlp = mv[0].mvData;
-    end = strchr(hlp, ':');
-    memset(u_time,0,sizeof(u_time));
-    strncpy(u_time, hlp, (strlen(hlp)-strlen(end)) );
-    u1 = atoll(u_time)*10;
 
-    hlp = end+1;
-    memset(k_time,0,sizeof(k_time));
-    strncpy(k_time, hlp, strlen(hlp) );
-    k1 = atoll(k_time)*10;
-
+    t1 = getCPUTotalTime(mv[0].mvData);
     if( mnum > 1 ) {
-      hlp = mv[mnum-1].mvData;
-      end = strchr(hlp, ':');
-      memset(u_time,0,sizeof(u_time));
-      strncpy(u_time, hlp, (strlen(hlp)-strlen(end)) );
-      u2 = atoll(u_time)*10;
-
-      hlp = end+1;
-      memset(k_time,0,sizeof(k_time));
-      strncpy(k_time, hlp, strlen(hlp) );
-      k2 = atoll(k_time)*10;
-      
-      total = ((u1-u2)+(k1-k2))/2;
+      t2 = getCPUTotalTime(mv[mnum-1].mvData);
+      total = t1-t2;
     }
-    else { total = u1+k1; }
+    else { total = t1; }
 
     //fprintf(stderr,"total time: %lld\n",total);
     memcpy(v,&total,sizeof(unsigned long long));
@@ -411,6 +490,769 @@ size_t metricCalcPageInRate( MetricValue *mv,
     return sizeof(unsigned long long);
   }
   return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* VirtualSize                                                                */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcVirtualSize( MetricValue *mv,   
+			      int mnum,
+			      void *v, 
+			      size_t vlen ) {
+  
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate VirtualSize\n",
+	  __FILE__,__LINE__);
+#endif
+  /* plain copy */
+  if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
+    memcpy(v,mv->mvData,mv->mvDataLength);
+    return mv->mvDataLength;
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* InternalViewKernelModePercentage                                           */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcInternKernelTimePerc( MetricValue *mv,   
+				       int mnum,
+				       void *v, 
+				       size_t vlen ) {
+
+  float kp = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate InternalViewKernelModePercentage\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * InternalViewKernelModePercentage is based on KernelModeTime and
+   * TotalCPUTime
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(float)) && (mnum>=1) ) {
+
+    if(mnum>1) {
+      kp = getCPUKernelTimePercentage( mv[mnum-1].mvData, 
+				       mv[0].mvData);
+    }
+    else {
+      kp = getCPUKernelTimePercentage( NULL, 
+				       mv[0].mvData);
+    }
+
+    //fprintf(stderr,"kernel time percentage: %f\n",kp);
+    memcpy(v,&kp,sizeof(float));
+    return sizeof(float);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* InternalViewUserModePercentage                                             */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcInternUserTimePerc( MetricValue *mv,   
+				     int mnum,
+				     void *v, 
+				     size_t vlen ) {
+
+  float up = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate InternalViewUserModePercentage\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * InternalViewKernelModePercentage is based on KernelModeTime and
+   * TotalCPUTime
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(float)) && (mnum>=1) ) {
+
+    if(mnum>1) {
+      up = getCPUUserTimePercentage( mv[mnum-1].mvData, 
+				     mv[0].mvData);
+    }
+    else {
+      up = getCPUUserTimePercentage( NULL, 
+				     mv[0].mvData);
+    }
+
+    //fprintf(stderr,"user time percentage: %f\n",up);
+    memcpy(v,&up,sizeof(float));
+    return sizeof(float);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* InternalViewTotalCPUPercentage                                             */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcInternTotalCPUTimePerc( MetricValue *mv,   
+					 int mnum,
+					 void *v, 
+					 size_t vlen ) {
+
+  float tp = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate InternalViewTotalCPUPercentage\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * InternalViewTotalCPUPercentage is the difference of
+   * InternalViewIdleTimePercentage to 100 %
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(float)) && (mnum>=1) ) {
+
+    if(mnum>1) {
+      tp = getTotalCPUTimePercentage( mv[mnum-1].mvData, 
+				      mv[0].mvData);
+    }
+    else {
+      tp = getTotalCPUTimePercentage( NULL, 
+				      mv[0].mvData);
+    }
+
+    //fprintf(stderr,"total cpu percentage: %f\n",tp);
+    memcpy(v,&tp,sizeof(float));
+    return sizeof(float);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* ExternalViewKernelModePercentage                                           */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcExternKernelTimePerc( MetricValue *mv,   
+				       int mnum,
+				       void *v, 
+				       size_t vlen ) {
+
+  float kp = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate ExternalViewKernelModePercentage\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * ExternalViewKernelModePercentage is based on KernelModeTime and
+   * TotalCPUTime
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(float)) && (mnum>=1) ) {
+
+    if(mnum>1) {
+      kp = getCPUKernelTimePercentage( mv[mnum-1].mvData, 
+				       mv[0].mvData);
+    }
+    else {
+      kp = getCPUKernelTimePercentage( NULL, 
+				       mv[0].mvData);
+    }
+
+    //fprintf(stderr,"external kernel time percentage: %f\n",kp);
+    memcpy(v,&kp,sizeof(float));
+    return sizeof(float);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* ExternalViewUserModePercentage                                             */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcExternUserTimePerc( MetricValue *mv,   
+				     int mnum,
+				     void *v, 
+				     size_t vlen ) {
+
+  float up = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate ExternalViewUserModePercentage\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * ExternalViewKernelModePercentage is based on KernelModeTime and
+   * TotalCPUTime
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(float)) && (mnum>=1) ) {
+
+    if(mnum>1) {
+      up = getCPUUserTimePercentage( mv[mnum-1].mvData, 
+				     mv[0].mvData);
+    }
+    else {
+      up = getCPUUserTimePercentage( NULL, 
+				     mv[0].mvData);
+    }
+
+    //fprintf(stderr,"external user time percentage: %f\n",up);
+    memcpy(v,&up,sizeof(float));
+    return sizeof(float);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* ExternalViewTotalCPUPercentage                                             */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcExternTotalCPUTimePerc( MetricValue *mv,   
+					 int mnum,
+					 void *v, 
+					 size_t vlen ) {
+
+  float tp = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate ExternalViewTotalCPUPercentage\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * ExternalViewTotalCPUPercentage is the difference of
+   * ExternalViewIdleTimePercentage to 100 %
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(float)) && (mnum>=1) ) {
+
+    if(mnum>1) {
+      tp = getTotalCPUTimePercentage( mv[mnum-1].mvData, 
+				      mv[0].mvData);
+    }
+    else {
+      tp = getTotalCPUTimePercentage( NULL, 
+				      mv[0].mvData);
+    }
+
+    //fprintf(stderr,"external total cpu percentage: %f\n",tp);
+    memcpy(v,&tp,sizeof(float));
+    return sizeof(float);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* AccumulatedKernelModeTime                                                  */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcAccKernelTime( MetricValue *mv,   
+				int mnum,
+				void *v, 
+				size_t vlen ) {
+
+  unsigned long long kt = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate AccumulatedKernelModeTime\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * AccumulatedKernelModeTime is the second entry of CPUTime
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    kt = getCPUKernelTime(mv[0].mvData);
+
+    //fprintf(stderr,"accumulated kernel mode time: %f\n",kt);
+    memcpy(v,&kt,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* AccumulatedUserModeTime                                                    */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcAccUserTime( MetricValue *mv,   
+			      int mnum,
+			      void *v, 
+			      size_t vlen ) {
+
+  unsigned long long ut = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate AccumulatedUserModeTime\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * AccumulatedUserModeTime is the first entry of CPUTime
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    ut = getCPUUserTime(mv[0].mvData);
+
+    //fprintf(stderr,"accumulated user mode time: %f\n",ut);
+    memcpy(v,&ut,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* AccumulatedTotalCPUTime                                                    */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcAccTotalCPUTime( MetricValue *mv,   
+				  int mnum,
+				  void *v, 
+				  size_t vlen ) {
+
+  unsigned long long total = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate AccumulatedTotalCPUTime\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * AccumulatedTotalCPUTime is the sum of 
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    total = getCPUTotalTime(mv[0].mvData);
+
+    //fprintf(stderr,"accumulated total cpu time: %f\n",total);
+    memcpy(v,&total,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* tool functions on CPUTime                                                  */
+/* ---------------------------------------------------------------------------*/
+
+unsigned long long getCPUUserTime( char * data ) {
+
+  char * hlp = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* first entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    memset(time,0,sizeof(time));
+    strncpy(time, data, (strlen(data)-strlen(hlp)) );
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long getCPUKernelTime( char * data ) {
+
+  char * hlp = NULL;
+  char * end = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* second entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    hlp++;
+    end = strchr(hlp, ':');
+    memset(time,0,sizeof(time));
+    strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long getCPUTotalTime( char * data ) {
+
+  unsigned long long val = 0;
+
+  /* sum of User and Kernel time of data (CPUTime) */
+  val = getCPUUserTime(data) +
+        getCPUKernelTime(data);
+
+  return val;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+
+float getCPUKernelTimePercentage( char * start, char * end ) {
+
+  float end_kernel     = 0;
+  float end_total_os   = 0;
+  float start_kernel   = 0;
+  float start_total_os = 0;
+  float kernelPerc     = 0;
+
+  if(!end) return -1;
+
+  end_kernel = getCPUKernelTime(end);
+  end_total_os = os_getCPUTotalTime(end);
+
+  if( start != NULL ) {
+    start_kernel = getCPUKernelTime(start);
+    start_total_os = os_getCPUTotalTime(start);
+
+    kernelPerc = ( (end_kernel-start_kernel) / 
+		   (end_total_os-start_total_os) ) *
+      os_getTotalCPUTimePercentage(start,end) ;
+  }
+  else {
+    kernelPerc = (end_kernel / end_total_os) *
+      os_getTotalCPUTimePercentage(NULL,end);
+  }
+
+  return kernelPerc;
+}
+
+
+float getCPUUserTimePercentage( char * start, char * end ) {
+
+  float end_user       = 0;
+  float end_total_os   = 0;
+  float start_user     = 0;
+  float start_total_os = 0;
+  float userPerc       = 0;
+
+  if(!end) return -1;
+
+  end_user  = getCPUUserTime(end);
+  end_total_os = os_getCPUTotalTime(end);
+
+  if( start != NULL ) {
+    start_user  = getCPUUserTime(start);
+    start_total_os = os_getCPUTotalTime(start);
+
+    userPerc = ( (end_user-start_user) / 
+		 (end_total_os-start_total_os) ) *
+      os_getTotalCPUTimePercentage(start,end) ;
+  }
+  else { 
+    userPerc = (end_user / end_total_os) *
+      os_getTotalCPUTimePercentage(NULL,end); 
+  }
+
+  return userPerc;
+}
+
+
+float getTotalCPUTimePercentage( char * start, char * end ) {
+
+  float kernelPerc = 0;
+  float userPerc   = 0;
+  float totalPerc  = 0;
+
+  if(!end) return -1;
+
+  kernelPerc = getCPUKernelTimePercentage(start,end);
+  userPerc = getCPUUserTimePercentage(start,end);
+  totalPerc = kernelPerc + userPerc;
+
+  return totalPerc;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* OperatingSystem specific metrics                                           */
+/* ---------------------------------------------------------------------------*/
+
+unsigned long long os_getCPUUserTime( char * data ) {
+
+  char * hlp = NULL;
+  char * end = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* third entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    hlp++;
+    hlp = strchr(data, ':');
+    hlp++;
+    end = strchr(hlp, ':');
+    memset(time,0,sizeof(time));
+    strncpy(time, data, (strlen(hlp)-strlen(end)) );
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long os_getCPUNiceTime( char * data ) {
+
+  char * hlp = NULL;
+  char * end = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* fourth entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    hlp++;
+    hlp = strchr(data, ':');
+    hlp++;
+    hlp = strchr(data, ':');
+    hlp++;
+    end = strchr(hlp, ':');
+    memset(time,0,sizeof(time));
+    strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long os_getCPUKernelTime( char * data ) {
+
+  char * hlp = NULL;
+  char * end = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* fith entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    hlp++;
+    hlp = strchr(hlp, ':');
+    hlp++;
+    hlp = strchr(data, ':');
+    hlp++;
+    hlp = strchr(data, ':');
+    hlp++;
+    end = strchr(hlp, ':');
+    memset(time,0,sizeof(time));
+    strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long os_getCPUIdleTime( char * data ) {
+
+  char * hlp = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* sixt and last entry of data (CPUTime) */
+  if( (hlp = strrchr(data, ':')) != NULL ) {
+    hlp++;
+    memset(time,0,sizeof(time));
+    strcpy(time, hlp);
+    val = atoll(time)*10;
+  }
+
+  return val;
+}
+
+unsigned long long os_getCPUTotalTime( char * data ) {
+
+  unsigned long long val = 0;
+
+  val = os_getCPUUserTime(data) +
+        os_getCPUKernelTime(data);
+
+  return val;
+}
+
+/* ---------------------------------------------------------------------------*/
+
+float os_getCPUKernelTimePercentage( char * start, char * end ) {
+
+  float end_idle     = 0;
+  float end_total    = 0;
+  float end_kernel   = 0;
+  float start_idle   = 0;
+  float start_total  = 0;
+  float start_kernel = 0;
+  float kernelPerc   = 0;
+
+  if(!end) return -1;
+
+  end_idle   = os_getCPUIdleTime(end);
+  end_total  = os_getCPUTotalTime(end);
+  end_kernel = os_getCPUKernelTime(end);
+
+  if( start != NULL ) {
+    start_idle   = os_getCPUIdleTime(start);
+    start_total  = os_getCPUTotalTime(start);
+    start_kernel = os_getCPUKernelTime(start);
+
+    kernelPerc = ( (end_kernel-start_kernel) / 
+		   (end_total-start_total) ) *
+      os_getTotalCPUTimePercentage(start,end) ;
+  }
+  else { kernelPerc = (end_kernel*100)/(end_idle+end_total); }
+
+  return kernelPerc;
+}
+
+
+float os_getCPUUserTimePercentage( char * start, char * end ) {
+
+  float end_user    = 0;
+  float end_idle    = 0;
+  float end_total   = 0;
+  float start_idle  = 0;
+  float start_total = 0;
+  float start_user  = 0;
+  float userPerc    = 0;
+
+  if(!end) return -1;
+
+  end_user  = os_getCPUUserTime(end);
+  end_idle  = os_getCPUIdleTime(end);
+  end_total = os_getCPUTotalTime(end);
+
+  if( start != NULL ) {
+    start_user  = os_getCPUUserTime(start);
+    start_idle  = os_getCPUIdleTime(start);
+    start_total = os_getCPUTotalTime(start);
+
+    userPerc = ( (end_user-start_user) / 
+		 (end_total-start_total) ) *
+      os_getTotalCPUTimePercentage(start,end) ;
+  }
+  else { userPerc = (end_user*100)/(end_idle+end_total); }
+
+  return userPerc;
+}
+
+
+float os_getCPUIdleTimePercentage( char * start, char * end ) {
+
+  float end_idle    = 0;
+  float end_total   = 0;
+  float start_idle  = 0;
+  float start_total = 0;
+  float idlePerc    = 0;
+
+  if(!end) return -1;
+
+  end_idle  = os_getCPUIdleTime(end);
+  end_total = os_getCPUTotalTime(end);
+
+  if( start != NULL ) {
+    start_idle = os_getCPUIdleTime(start);
+    start_total = os_getCPUTotalTime(start);
+
+    idlePerc = ((end_idle - start_idle) / 
+		((end_idle+end_total)-(start_idle+start_total)) ) * 100;
+    if(idlePerc<0) { idlePerc = 0; }
+  }
+  else { idlePerc = (end_idle/(end_idle+end_total))*100; }
+
+  return idlePerc;
+}
+
+
+float os_getTotalCPUTimePercentage( char * start, char * end ) {
+
+  float idlePerc  = 0;
+  float totalPerc = 0;
+
+  if(!end) return -1;
+
+  idlePerc = os_getCPUIdleTimePercentage(start,end);
+  totalPerc = 100 - idlePerc;
+
+  return totalPerc;
+}
+
+
+float os_getCPUConsumptionIndex( char * start, char * end ) {
+
+  float end_idle    = 0;
+  float end_total   = 0;
+  float start_idle  = 0;
+  float start_total = 0;
+  float index       = 0;
+
+  if(!end) return -1;
+
+  end_idle  = os_getCPUIdleTime(end);
+  end_total = os_getCPUTotalTime(end);
+
+  if( start != NULL ) {
+    start_idle = os_getCPUIdleTime(start);
+    start_total = os_getCPUTotalTime(start);
+
+    index = (end_total - start_total) / 
+            ((end_idle+end_total)-(start_idle+start_total));
+  }
+  else { index = end_total/(end_idle+end_total); }
+
+  return index;
 }
 
 

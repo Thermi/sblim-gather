@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.4 2004/08/04 09:00:04 heidineu Exp $
+ * $Id: metricUnixProcess.c,v 1.5 2004/08/19 10:54:59 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -22,6 +22,16 @@
  * ResidentSetSize
  * PageInCounter
  * PageInRate
+ * InternalViewKernelModePercentage
+ * InternalViewUserModePercentage
+ * InternalViewTotalCPUPercentage
+ * ExternalViewKernelModePercentage
+ * ExternalViewUserModePercentage
+ * ExternalViewTotalCPUPercentage
+ * AccumulatedKernelModeTime
+ * AccumulatedUserModeTime
+ * AccumulatedTotalCPUTime
+ * VirtualSize
  *
  */
 
@@ -39,10 +49,16 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricDefinition  metricDef[3];
+static MetricDefinition  metricDef[4];
 
 /* --- CPUTime is base for :
- * KernelModeTime, UserModeTime, TotalCPUTime --- */
+ * KernelModeTime, UserModeTime, TotalCPUTime,
+ * InternalViewKernelModePercentage, InternalViewUserModePercentage,
+ * InternalViewTotalCPUPercentage, ExternalViewKernelModePercentage,
+ * ExternalViewUserModePercentage, ExternalViewTotalCPUPercentage,
+ * AccumulatedKernelModeTime, AccumulatedUserModeTime,
+ * AccumulatedTotalCPUTime
+ * --- */
 static MetricRetriever   metricRetrCPUTime;
 
 /* --- ResidentSetSize --- */
@@ -50,6 +66,9 @@ static MetricRetriever   metricRetrResSetSize;
 
 /* --- PageInCounter, PageInRate --- */
 static MetricRetriever   metricRetrPageInCounter;
+
+/* --- VirtualSize --- */
+static MetricRetriever   metricRetrVirtualSize;
 
 /* ---------------------------------------------------------------------------*/
 
@@ -94,7 +113,15 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[2].mproc=metricRetrPageInCounter;
   metricDef[2].mdeal=free;
 
-  *mdnum=3;
+  metricDef[3].mdVersion=MD_VERSION;
+  metricDef[3].mdName="VirtualSize";
+  metricDef[3].mdReposPluginName="librepositoryUnixProcess.so";
+  metricDef[3].mdId=mr(pluginname,metricDef[3].mdName);
+  metricDef[3].mdSampleInterval=60;
+  metricDef[3].mproc=metricRetrVirtualSize;
+  metricDef[3].mdeal=free;
+
+  *mdnum=4;
   *md=metricDef;
   return 0;
 }
@@ -116,7 +143,8 @@ int _StartStopMetrics (int starting) {
 /* 
  * The raw data CPUTime has the following syntax :
  *
- * <user mode time>:<kernel mode time>
+ * <PID user mode time>:<PID kernel mode time>:<OS user mode>:
+ * <OS user mode with low priority(nice)>:<OS system mode>:<OS idle task>
  *
  * the values in CPUTime are saved in Jiffies ( 1/100ths of a second )
  */
@@ -126,9 +154,14 @@ int metricRetrCPUTime( int mid,
   MetricValue * mv          = NULL;
   FILE        * fhd         = NULL;
   char        * _enum_pid   = NULL;
-  char          buf[254];
+  char        * ptr         = NULL;
+  char        * end         = NULL;
+  char        * hlp         = NULL;
+  char          buf[4096];
+  char          os_buf[4096];
   int           _enum_size  = 0;
   int           i           = 0;
+  size_t        bytes_read  = 0;
   unsigned long long u_time = 0;
   unsigned long long k_time = 0;
 
@@ -142,6 +175,23 @@ int metricRetrCPUTime( int mid,
     fprintf(stderr,"--- %s(%i) : Sampling for metric CPUTime ID %d\n",
 	    __FILE__,__LINE__,mid);
 #endif
+
+    /* get OS specific CPUTime */
+    if( (fhd = fopen("/proc/stat","r")) != NULL ) {
+      bytes_read = fread(os_buf, 1, sizeof(os_buf)-1, fhd);
+      ptr = strstr(os_buf,"cpu")+3;
+      while( *ptr == ' ') { ptr++; }
+      end = strchr(ptr, '\n');
+      hlp = ptr;
+      for( ; i<3; i++ ) { 
+	hlp = strchr(hlp, ' ');
+	*hlp = ':';
+      }
+      fclose(fhd);
+    }
+    else { return -1; }
+    fhd=NULL;
+
     /* get number of processes */
     _enum_size = enum_all_pid( &_enum_pid );
     if( _enum_size > 0 ) {
@@ -161,7 +211,8 @@ int metricRetrCPUTime( int mid,
 	}
 
 	memset(buf,0,sizeof(buf));
-	sprintf(buf,"%lld:%lld",u_time,k_time);
+	sprintf(buf,"%lld:%lld:",u_time,k_time);
+	strncpy(buf+strlen(buf),ptr,strlen(ptr)-strlen(end));
 
 	mv = calloc( 1, sizeof(MetricValue) + 
 		     (strlen(buf)+1) +
@@ -310,6 +361,70 @@ int metricRetrPageInCounter( int mid,
 	  strcpy(mv->mvResource,_enum_pid + (i*64));
 	  mret(mv);
 	}	
+      }
+      if(_enum_pid) free(_enum_pid);
+      return _enum_size;
+    }
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* VirtualSize                                                                */
+/* ---------------------------------------------------------------------------*/
+
+int metricRetrVirtualSize( int mid, 
+			   MetricReturner mret ) {
+  MetricValue   * mv         = NULL;
+  FILE          * fhd        = NULL;
+  char          * _enum_pid  = NULL;
+  char            buf[254];
+  int             _enum_size = 0;
+  int             i          = 0;
+  unsigned long long size    = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Retrieving VirtualSize\n",
+	  __FILE__,__LINE__);
+#endif
+  if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
+  else {
+#ifdef DEBUG
+    fprintf(stderr,"--- %s(%i) : Sampling for metric VirtualSize ID %d\n",
+	    __FILE__,__LINE__,mid);
+#endif
+    /* get number of processes */
+    _enum_size = enum_all_pid( &_enum_pid );
+    if( _enum_size > 0 ) {
+      for(i=0;i<_enum_size;i++) {
+
+	size = 0;
+	memset(buf,0,sizeof(buf));
+	strcpy(buf,"/proc/");
+	strcat(buf,_enum_pid + (i*64));
+	strcat(buf,"/stat");
+	if( (fhd = fopen(buf,"r")) != NULL ) {
+	  fscanf(fhd,"%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s "
+		 "%*s %*s %*s %*s %*s %*s %*s %*s %lld",
+		 &size);
+	  fclose(fhd);
+	}
+	
+	mv = calloc( 1, sizeof(MetricValue) + 
+		     sizeof(unsigned long long) +
+		     (strlen(_enum_pid + (i*64))+1) );
+	if (mv) {
+	  mv->mvId = mid;
+	  mv->mvTimeStamp = time(NULL);
+	  mv->mvDataType = MD_UINT64;
+	  mv->mvDataLength = sizeof(unsigned long long);
+	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  *(unsigned long long *)mv->mvData = size;	
+	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  strcpy(mv->mvResource,_enum_pid + (i*64));
+	  mret(mv);
+	}
       }
       if(_enum_pid) free(_enum_pid);
       return _enum_size;

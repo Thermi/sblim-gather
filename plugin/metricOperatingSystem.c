@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.7 2004/08/04 09:00:04 heidineu Exp $
+ * $Id: metricOperatingSystem.c,v 1.8 2004/08/19 10:54:59 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -21,7 +21,10 @@
  * CPUTime
  * MemorySize
  * PageInCounter
+ * PageOutCounter
  * LoadCounter
+ * ContextSwitchCounter
+ * HardwareInterruptCounter
  *
  */
 
@@ -38,8 +41,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricDefinition  metricDef[6];
-static MetricDeallocator valueDeallocator;
+static MetricDefinition  metricDef[9];
 
 /* --- NumberOfUsers --- */
 static MetricRetriever   metricRetrNumOfUser;
@@ -48,7 +50,13 @@ static MetricRetriever   metricRetrNumOfUser;
 static MetricRetriever   metricRetrNumOfProc;
 
 /* --- CPUTime is base for :
- * KernelModeTime, UserModeTime, TotalCPUTime --- */
+ * KernelModeTime, UserModeTime, TotalCPUTime,
+ * InternalViewKernelModePercentage, InternalViewUserModePercentage,
+ * InternalViewIdlePercentage, InternalViewTotalCPUPercentage,
+ * ExternalViewKernelModePercentage, ExternalViewUserModePercentage,
+ * ExternalViewTotalCPUPercentage,
+ * CPUConsumptionIndex 
+ * --- */
 static MetricRetriever   metricRetrCPUTime;
 
 /* --- MemorySize is base for :
@@ -60,8 +68,17 @@ static MetricRetriever   metricRetrMemorySize;
 /* --- PageInCounter, PageInRate --- */
 static MetricRetriever   metricRetrPageInCounter;
 
+/* --- PageOutCounter, PageOutRate --- */
+static MetricRetriever   metricRetrPageOutCounter;
+
 /* --- LoadCounter, LoadAverage --- */
 static MetricRetriever   metricRetrLoadCounter;
+
+/* --- ContextSwitchCounter, ContextSwitchRate --- */
+static MetricRetriever   metricRetrContextSwitchCounter;
+
+/* --- HardwareInterruptCounter, HardwareInterruptRate --- */
+static MetricRetriever   metricRetrHardwareInterruptCounter;
 
 /* ---------------------------------------------------------------------------*/
 
@@ -124,14 +141,38 @@ int _DefinedMetrics( MetricRegisterId *mr,
   metricDef[4].mdeal=free;
 
   metricDef[5].mdVersion=MD_VERSION;
-  metricDef[5].mdName="LoadCounter";
+  metricDef[5].mdName="PageOutCounter";
   metricDef[5].mdReposPluginName="librepositoryOperatingSystem.so";
   metricDef[5].mdId=mr(pluginname,metricDef[5].mdName);
   metricDef[5].mdSampleInterval=60;
-  metricDef[5].mproc=metricRetrLoadCounter;
+  metricDef[5].mproc=metricRetrPageOutCounter;
   metricDef[5].mdeal=free;
 
-  *mdnum=6;
+  metricDef[6].mdVersion=MD_VERSION;
+  metricDef[6].mdName="LoadCounter";
+  metricDef[6].mdReposPluginName="librepositoryOperatingSystem.so";
+  metricDef[6].mdId=mr(pluginname,metricDef[6].mdName);
+  metricDef[6].mdSampleInterval=60;
+  metricDef[6].mproc=metricRetrLoadCounter;
+  metricDef[6].mdeal=free;
+
+  metricDef[7].mdVersion=MD_VERSION;
+  metricDef[7].mdName="ContextSwitchCounter";
+  metricDef[7].mdReposPluginName="librepositoryOperatingSystem.so";
+  metricDef[7].mdId=mr(pluginname,metricDef[7].mdName);
+  metricDef[7].mdSampleInterval=60;
+  metricDef[7].mproc=metricRetrContextSwitchCounter;
+  metricDef[7].mdeal=free;
+
+  metricDef[8].mdVersion=MD_VERSION;
+  metricDef[8].mdName="HardwareInterruptCounter";
+  metricDef[8].mdReposPluginName="librepositoryOperatingSystem.so";
+  metricDef[8].mdId=mr(pluginname,metricDef[8].mdName);
+  metricDef[8].mdSampleInterval=60;
+  metricDef[8].mproc=metricRetrHardwareInterruptCounter;
+  metricDef[8].mdeal=free;
+
+  *mdnum=9;
   *md=metricDef;
   return 0;
 }
@@ -422,9 +463,12 @@ int metricRetrMemorySize( int mid,
 
 int metricRetrPageInCounter( int mid, 
 			     MetricReturner mret ) { 
-  MetricValue      * mv   = NULL; 
-  FILE             * fhd  = NULL;
-  unsigned long long page = 0;
+  MetricValue * mv  = NULL; 
+  FILE        * fhd = NULL;
+  char          buf[30000];
+  char        * ptr = NULL;
+  size_t bytes_read = 0;
+  unsigned long long in = 0;
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving PageInCounter\n",
@@ -437,9 +481,9 @@ int metricRetrPageInCounter( int mid,
 	    __FILE__,__LINE__,mid);
 #endif
     if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
-      fscanf(fhd,
-	     "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lld",
-	     &page);
+      bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      ptr = strstr(buf,"swap");
+      sscanf(ptr, "%*s %lld", &in);
       fclose(fhd);
     }
     else { return -1; }
@@ -453,7 +497,59 @@ int metricRetrPageInCounter( int mid,
       mv->mvDataType = MD_UINT64;
       mv->mvDataLength = sizeof(unsigned long long);
       mv->mvData = (void*)mv + sizeof(MetricValue);
-      *(unsigned long long*)mv->mvData = page;
+      *(unsigned long long*)mv->mvData = in;
+      mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+      strcpy(mv->mvResource,resource);
+      mret(mv);
+    }
+      
+    return 1;
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* PageOutCounter                                                             */
+/* ---------------------------------------------------------------------------*/
+
+int metricRetrPageOutCounter( int mid, 
+			      MetricReturner mret ) { 
+  MetricValue * mv  = NULL; 
+  FILE        * fhd = NULL;
+  char          buf[30000];
+  char        * ptr = NULL;
+  size_t bytes_read = 0;
+  unsigned long long out = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Retrieving PageOutCounter\n",
+	  __FILE__,__LINE__);
+#endif
+  if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
+  else {
+#ifdef DEBUG
+    fprintf(stderr,"--- %s(%i) : Sampling for metric PageOutCounter ID %d\n",
+	    __FILE__,__LINE__,mid);
+#endif
+    if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
+      bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      ptr = strstr(buf,"swap");
+      sscanf(ptr, "%*s %*s %lld", &out);
+      fclose(fhd);
+    }
+    else { return -1; }
+
+    mv = calloc(1, sizeof(MetricValue) + 
+		   sizeof(unsigned long long) + 
+		   (strlen(resource)+1) );
+    if (mv) {
+      mv->mvId = mid;
+      mv->mvTimeStamp = time(NULL);
+      mv->mvDataType = MD_UINT64;
+      mv->mvDataLength = sizeof(unsigned long long);
+      mv->mvData = (void*)mv + sizeof(MetricValue);
+      *(unsigned long long*)mv->mvData = out;
       mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
       strcpy(mv->mvResource,resource);
       mret(mv);
@@ -507,6 +603,110 @@ int metricRetrLoadCounter( int mid,
       strcpy(mv->mvResource,resource);
       mret(mv);
     }
+    return 1;
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* ContextSwitchCounter                                                       */
+/* ---------------------------------------------------------------------------*/
+
+int metricRetrContextSwitchCounter( int mid, 
+				    MetricReturner mret ) { 
+  MetricValue * mv  = NULL; 
+  FILE        * fhd = NULL;
+  char          buf[30000];
+  char        * ptr = NULL;
+  size_t bytes_read = 0;
+  unsigned long long ctxt = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Retrieving ContextSwitchCounter\n",
+	  __FILE__,__LINE__);
+#endif
+  if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
+  else {
+#ifdef DEBUG
+    fprintf(stderr,"--- %s(%i) : Sampling for metric ContextSwitchCounter ID %d\n",
+	    __FILE__,__LINE__,mid);
+#endif
+    if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
+      bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      ptr = strstr(buf,"ctxt");
+      sscanf(ptr, "%*s %lld", &ctxt);
+      fclose(fhd);
+    }
+    else { return -1; }
+
+    mv = calloc(1, sizeof(MetricValue) + 
+		   sizeof(unsigned long long) + 
+		   (strlen(resource)+1) );
+    if (mv) {
+      mv->mvId = mid;
+      mv->mvTimeStamp = time(NULL);
+      mv->mvDataType = MD_UINT64;
+      mv->mvDataLength = sizeof(unsigned long long);
+      mv->mvData = (void*)mv + sizeof(MetricValue);
+      *(unsigned long long*)mv->mvData = ctxt;
+      mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+      strcpy(mv->mvResource,resource);
+      mret(mv);
+    }
+      
+    return 1;
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* HardwareInterruptCounter                                                   */
+/* ---------------------------------------------------------------------------*/
+
+int metricRetrHardwareInterruptCounter( int mid, 
+					MetricReturner mret ) { 
+  MetricValue * mv  = NULL; 
+  FILE        * fhd = NULL;
+  char          buf[30000];
+  char        * ptr = NULL;
+  size_t bytes_read = 0;
+  unsigned long long intr = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Retrieving HardwareInterruptCounter\n",
+	  __FILE__,__LINE__);
+#endif
+  if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
+  else {
+#ifdef DEBUG
+    fprintf(stderr,"--- %s(%i) : Sampling for metric HardwareInterruptCounter ID %d\n",
+	    __FILE__,__LINE__,mid);
+#endif
+    if ( (fhd=fopen("/proc/stat","r")) != NULL ) {
+      bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
+      ptr = strstr(buf,"intr");
+      sscanf(ptr, "%*s %lld", &intr);
+      fclose(fhd);
+    }
+    else { return -1; }
+
+    mv = calloc(1, sizeof(MetricValue) + 
+		   sizeof(unsigned long long) + 
+		   (strlen(resource)+1) );
+    if (mv) {
+      mv->mvId = mid;
+      mv->mvTimeStamp = time(NULL);
+      mv->mvDataType = MD_UINT64;
+      mv->mvDataLength = sizeof(unsigned long long);
+      mv->mvData = (void*)mv + sizeof(MetricValue);
+      *(unsigned long long*)mv->mvData = intr;
+      mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+      strcpy(mv->mvResource,resource);
+      mret(mv);
+    }
+      
     return 1;
   }
   return -1;
