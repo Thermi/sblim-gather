@@ -1,5 +1,5 @@
 /*
- * $Id: mcfgtest.c,v 1.1 2004/10/20 08:15:21 mihajlov Exp $
+ * $Id: mcfgtest.c,v 1.2 2004/10/20 14:25:18 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -53,6 +53,11 @@ int main()
     printf("Config value for %s is %s\n","huge",cfgbuf);
   } else {
     printf("Failed to get config value for %s\n","huge");
+  }
+  if (get_configitem(cfghandle,"gReAt",cfgbuf,sizeof(cfgbuf))==0) {
+    printf("Config value for %s is %s\n","gReAt",cfgbuf);
+  } else {
+    printf("Failed to get config value for %s\n","gReAt");
   }
 
   return 0;

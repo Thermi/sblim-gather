@@ -1,5 +1,5 @@
 /*
- * $Id: mcfg.c,v 1.1 2004/10/20 08:15:20 mihajlov Exp $
+ * $Id: mcfg.c,v 1.2 2004/10/20 14:25:18 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -31,6 +31,16 @@ static struct CFG_ITEM {
 } * CfgRoot[CFG_MAXHANDLE] = {NULL};
 
 static int CfgFiles=0;
+
+static int _in_allowed(const char ** allowed,const char *key)
+{
+  while (allowed && *allowed) {
+    if (strcasecmp(*allowed++,key)==0) {
+      return 1;
+    }
+  }
+  return 0;
+}
 
 int set_configfile(const char * filename, const char ** keys)
 {
@@ -69,13 +79,15 @@ int set_configfile(const char * filename, const char ** keys)
 		  break;
 		}
 	      }
-	      /* extend config buffer */
-	      CfgRoot[CfgFiles] = 
-		realloc(CfgRoot[CfgFiles],sizeof(struct CFG_ITEM)*(i+2));
-	      CfgRoot[CfgFiles][i].ci_key = strdup(buffer+skipblanks);
-	      CfgRoot[CfgFiles][i].ci_value = strdup(value);
-	      CfgRoot[CfgFiles][i+1].ci_key=NULL;
-	      i++;
+	      if (_in_allowed(keys,buffer+skipblanks)) {
+		/* extend config buffer */
+		CfgRoot[CfgFiles] = 
+		  realloc(CfgRoot[CfgFiles],sizeof(struct CFG_ITEM)*(i+2));
+		CfgRoot[CfgFiles][i].ci_key = strdup(buffer+skipblanks);
+		CfgRoot[CfgFiles][i].ci_value = strdup(value);
+		CfgRoot[CfgFiles][i+1].ci_key=NULL;
+		i++;
+	      }
 	    }
 	  }
 	}
@@ -91,7 +103,7 @@ int get_configitem(int handle, const char * key, char *value, size_t maxlen)
   int i=0;
   if (CfgRoot && handle > 0 && handle < CFG_MAXHANDLE && CfgRoot[handle] && key && value) {
     while (CfgRoot[handle][i].ci_key) {
-      if (strcmp(CfgRoot[handle][i].ci_key,key)==0 && 
+      if (strcasecmp(CfgRoot[handle][i].ci_key,key)==0 && 
 	  strlen(CfgRoot[handle][i].ci_value) < maxlen) {
 	strcpy(value,CfgRoot[handle][i].ci_value);
 	return 0;
