@@ -1,5 +1,5 @@
 /*
- * $Id: mcfg.c,v 1.1 2004/10/19 12:06:56 mihajlov Exp $
+ * $Id: mcfg.c,v 1.2 2004/10/19 15:06:35 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -23,10 +23,14 @@
 #include <string.h>
 #include <ctype.h>
 
+#define CFG_MAXHANDLE 10
+
 static struct CFG_ITEM {
   char * ci_key;
   char * ci_value;
-} * CfgRoot = NULL;
+} * CfgRoot[CFG_MAXHANDLE] = {NULL};
+
+static int CfgFiles=0;
 
 int set_configfile(const char * filename, const char ** keys)
 {
@@ -40,6 +44,10 @@ int set_configfile(const char * filename, const char ** keys)
   if (filename && keys) {
     cfgf = fopen(filename,"r");
     if (cfgf) {
+      CfgFiles++;
+      if (CfgFiles >= CFG_MAXHANDLE) {
+	return -1;
+      }
       while (!feof(cfgf)) {
 	if (fgets(buffer,sizeof(buffer),cfgf)) {
 	  skipblanks=strspn(buffer," \t");
@@ -61,30 +69,31 @@ int set_configfile(const char * filename, const char ** keys)
 		  break;
 		}
 	      }
+	      /* extend config buffer */
+	      CfgRoot[CfgFiles] = 
+		realloc(CfgRoot[CfgFiles],sizeof(struct CFG_ITEM)*(i+2));
+	      CfgRoot[CfgFiles][i].ci_key = strdup(buffer+skipblanks);
+	      CfgRoot[CfgFiles][i].ci_value = strdup(value);
+	      CfgRoot[CfgFiles][i+1].ci_key=NULL;
+	      i++;
 	    }
-	    /* extend config buffer */
-	    CfgRoot = realloc(CfgRoot,sizeof(struct CFG_ITEM)*(i+2));
-	    CfgRoot[i].ci_key = strdup(buffer+skipblanks);
-	    CfgRoot[i].ci_value = strdup(value);
-	    CfgRoot[i+1].ci_key=NULL;
-	    i++;
 	  }
 	}
       }
-      return 0;
+      return CfgFiles;
     }
   }
   return -1;
 }
 
-int get_configitem(const char * key, char *value, size_t maxlen)
+int get_configitem(int handle, const char * key, char *value, size_t maxlen)
 {
   int i=0;
-  if (CfgRoot && key && value) {
-    while (CfgRoot[i].ci_key) {
-      if (strcmp(CfgRoot[i].ci_key,key)==0 && 
-	  strlen(CfgRoot[i].ci_value) < maxlen) {
-	strcpy(value,CfgRoot[i].ci_value);
+  if (CfgRoot && handle > 0 && handle < CFG_MAXHANDLE && CfgRoot[handle] && key && value) {
+    while (CfgRoot[handle][i].ci_key) {
+      if (strcmp(CfgRoot[handle][i].ci_key,key)==0 && 
+	  strlen(CfgRoot[handle][i].ci_value) < maxlen) {
+	strcpy(value,CfgRoot[handle][i].ci_value);
 	return 0;
       }
       i++;

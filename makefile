@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2004/10/19 12:18:53 mihajlov Exp $
+# $Id: makefile,v 1.7 2004/10/19 15:06:35 mihajlov Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
@@ -9,7 +9,7 @@ SUBDIRS=comms samples # plugin  provider
 SOURCES=mlist.c mretr.c mplugmgr.c mreg.c mrwlock.c mreposl.c mreposp.c \
 	gather.c gatherctl.c rgather.c gatherd.c commheap.c \
 	rrepos.c repos.c reposctl.c rplugmgr.c rreg.c reposd.c gatherutil.c \
-	mcfg.c mcfgtest.c
+	mcfg.c mcfgtest.c gathercfg.c
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 LIBRARIES=libgatherutil.so librrepos.so librepos.so libgather.so librgather.so
@@ -21,7 +21,7 @@ include rules
 
 all: $(SUBDIRS) $(LIBRARIES) $(EXECUTABLES) mcfgtest
 
-libgatherutil.so: gatherutil.o commheap.o mrwlock.o mcfg.o
+libgatherutil.so: gatherutil.o commheap.o mrwlock.o mcfg.o gathercfg.o
 
 libgather.so: LDFLAGS=-L .
 libgather.so: LOADLIBES=-lrrepos -lgatherutil

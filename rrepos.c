@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.11 2004/10/18 11:34:38 heidineu Exp $
+ * $Id: rrepos.c,v 1.12 2004/10/19 15:06:35 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -22,6 +22,7 @@
 #include "gatherc.h"
 #include "mcclt.h"
 #include "rcclt.h"
+#include "gathercfg.h"
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -31,9 +32,10 @@
 
 static RepositoryToken _RemoteToken = {sizeof(RepositoryToken),0,0};
 static int rreposhandle=-1;
-static char _systemId[265] = {0};
-static char rsystemId[265] = {0};
-static int  rreposport     = 6363;
+static char _systemId[265]   = {0};
+static char rsystemId[265]   = {0};
+static char rreposport_s[10] = {0};
+static int  rreposport       = 0;
 
 /* use mutex for I/O serialisation */
 static pthread_mutex_t rrepos_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -52,9 +54,16 @@ pthread_mutex_unlock(&rrepos_mutex);
 #define RINITCHECK() \
 pthread_mutex_lock(&rrepos_mutex); \
 if (strlen(rsystemId)==0) { \
-  sprintf(rsystemId,"dyn-9-152-173-70.boeblingen.de.ibm.com"); \
+  if (gathercfg_getitem("RepositoryHost",rsystemId,sizeof(rsystemId))) { \
+    sprintf(rsystemId,"localhost"); \
+  } \
+  if (gathercfg_getitem("RepositoryPort",rreposport_s,sizeof(rreposport_s)) == 0) {  \
+    rreposport=atoi(rreposport_s); \
+  } else { \
+    rreposport=6363; \
+  } \
+  rcc_init(rsystemId,&rreposport); \
 } \
-rcc_init(rsystemId,&rreposport); \
 pthread_mutex_unlock(&rrepos_mutex); 
 
 

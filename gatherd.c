@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.5 2004/10/12 08:44:53 mihajlov Exp $
+ * $Id: gatherd.c,v 1.6 2004/10/19 15:06:35 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -23,6 +23,7 @@
 #include "gather.h"
 #include "gatherc.h"
 #include "commheap.h"
+#include "gathercfg.h"
 #include <mcserv.h>
 #include <stdio.h>
 #include <string.h>
@@ -47,6 +48,10 @@ int main(int argc, char * argv[])
       perror("gatherd");
       exit(-1);
     }
+  }
+
+  if (gathercfg_init()) {
+    fprintf(stderr,"Could not open gatherd config file.\n");
   }
   
   if (mcs_init(GATHER_COMMID)) {

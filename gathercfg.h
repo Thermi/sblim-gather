@@ -1,5 +1,5 @@
 /*
- * $Id: mcfg.h,v 1.2 2004/10/19 15:06:35 mihajlov Exp $
+ * $Id: gathercfg.h,v 1.1 2004/10/19 15:06:35 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -13,16 +13,16 @@
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
  * Contributors: 
  *
- * Description: Simple Configuration Support
+ * Description: Gatherd Configuration
  *
  */
 
-#ifndef MCFG_H
-#define MCFG_H
+#ifndef GATHERCFG_H
+#define GATHERCFG_H
 
 #include <stddef.h>
 
-int set_configfile(const char * filename, const char ** keys);
-int get_configitem(int handle, const char * key, char *value, size_t maxlen);
+int gathercfg_init();
+int gathercfg_getitem(const char * key, char * value, size_t maxlen);
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv_ip.c,v 1.2 2004/10/15 10:40:38 heidineu Exp $
+ * $Id: rcserv_ip.c,v 1.3 2004/10/19 15:06:35 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -60,30 +60,14 @@ static void _sigpipe_h(int signal)
 int rcs_init(const int *portid)
 {
   struct sockaddr_in  srvaddr;
-  struct hostent     *srv = NULL;
-  char   srvid[HOST_NAME_MAX+1];
-  char   ip[16];
 
   if (srvhdl != -1) { return -1; }
 
-  /* retrieve and set server information */
-  gethostname(srvid,sizeof(srvid));
-  if ((srv = gethostbyname(srvid)) == NULL) {
-    fprintf(stderr,"%s: %s\n",hstrerror(h_errno),srvid);
-    return -1; 
-  }
-  sprintf(ip, "%u.%u.%u.%u",
-	  ((unsigned char *)srv->h_addr)[0],
-	  ((unsigned char *)srv->h_addr)[1],
-	  ((unsigned char *)srv->h_addr)[2],
-	  ((unsigned char *)srv->h_addr)[3]);
+  /* setup address info */
   srvaddr.sin_family = AF_INET;
+  srvaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   if (!portid) { srvaddr.sin_port = htons(PORT); }
   else { srvaddr.sin_port = htons(*portid); }
-  if (inet_aton(ip,&srvaddr.sin_addr) == 0) {
-    fprintf(stderr,"server address not valid : %s\n",inet_ntoa(srvaddr.sin_addr));
-    return -1;
-  }
 
   /* create socket */
   srvhdl=socket(PF_INET, SOCK_STREAM, 0);
