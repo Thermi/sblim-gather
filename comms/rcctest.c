@@ -1,5 +1,5 @@
 /*
- * $Id: rcctest.c,v 1.3 2004/10/14 16:28:50 heidineu Exp $
+ * $Id: rcctest.c,v 1.4 2004/10/15 10:40:38 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -59,7 +59,7 @@ int main()
 	fprintf(stderr,"send : %s\n",buf);
       }
       else { break; }
-      sleep(3);
+      //sleep(3);
       if (transactions++ == 10) {
 	end = time(NULL);
 	fprintf(stderr,"Transactions %d in seconds %ld, rate = %ld\n",

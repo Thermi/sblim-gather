@@ -1,5 +1,5 @@
 /*
- * $Id: rcstest.c,v 1.2 2004/10/14 16:28:50 heidineu Exp $
+ * $Id: rcstest.c,v 1.3 2004/10/15 10:40:38 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -41,12 +41,12 @@ static void * _get_request(void * hdl)
   char   buf[500];
   size_t buflen;
 
-  fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
+  //fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
   
   while (1) {
     buflen = sizeof(buf);
     if (rcs_getrequest((int)hdl,buf,&buflen) == -1) {
-      fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
+      //fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
       break;
     }
     fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buf);
@@ -61,7 +61,7 @@ static void * _get_request(void * hdl)
     }
   }
   pthread_mutex_unlock(&connect_mutex);
-  fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
+  //fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
   return NULL;
 }
 
@@ -100,7 +100,7 @@ int main()
       }
 
       hdl = -1;
-      fprintf(stderr,"thread_id [%i] : %ld\n",i,thread_id[i]);
+      //fprintf(stderr,"thread_id [%i] : %ld\n",i,thread_id[i]);
       if (connects<MAXCONN) { connects++; }
       else { 
 	pthread_mutex_unlock(&connect_mutex);

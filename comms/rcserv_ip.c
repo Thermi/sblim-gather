@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv_ip.c,v 1.1 2004/10/14 14:19:33 heidineu Exp $
+ * $Id: rcserv_ip.c,v 1.2 2004/10/15 10:40:38 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -91,7 +91,7 @@ int rcs_init(const int *portid)
     perror("socket error");
     return -1;
   }
-  
+
   /* bind socket */
   if (bind(srvhdl,(struct sockaddr*)&srvaddr,sizeof(srvaddr))) {
     perror("bind error");
@@ -124,6 +124,7 @@ int rcs_term()
   if (srvhdl != -1) {
     close(srvhdl);
     srvhdl = -1;
+    _sigpipe_h_installed=0;
     return 0;
   }
   return -1;
@@ -134,6 +135,9 @@ int rcs_term()
 
 int rcs_accept(int *clthdl)
 {
+  struct linger optval = {1};
+  socklen_t optlen = sizeof(optval);
+
   pthread_mutex_lock(&connect_mutex);
   if (clthdl) {
     *clthdl=accept(srvhdl,NULL,0);
@@ -142,6 +146,11 @@ int rcs_accept(int *clthdl)
       pthread_mutex_unlock(&connect_mutex);
       return -1;
     }
+
+    if (setsockopt(*clthdl,SOL_SOCKET,SO_LINGER,(void*)&optval,optlen) != 0) {
+      perror("setsockopt SO_LINGER");
+    }
+    
     connects++;
     pthread_mutex_unlock(&connect_mutex);
     return 0;
@@ -179,7 +188,7 @@ int rcs_getrequest(int clthdl, void *reqdata, size_t *reqdatalen)
 	fprintf(stderr,
 		"getrequest buffer to small, needed %d available %d\n",
 		*reqdatalen,
-		maxlen);
+		readlen);
       } else if (readlen > 0) {
 	readlen=0;
 	recvlen=0;
