@@ -31,6 +31,7 @@ int         mtrace_level = 0;
 const char *mtrace_file  = NULL;
 
 static char *mtrace_components[] = {
+  "<reserved>",
   MTRACE_UTIL_S,
   MTRACE_COMM_S,
   MTRACE_REPOS_S,
@@ -182,23 +183,23 @@ void m_trace_disable(unsigned component)
 
 unsigned m_trace_compid(const char * component_name)
 {
-  int i=0;
+  int i=1;
   while (mtrace_components[i]) {
     if (strcmp(mtrace_components[i],component_name)==0) {
-      return i;
+      return 0x0001 << (i-1);
     }
     i++;
   }
-  return MTRACE_MASKALL + 1;
+  return 0;
 }
 
 const char * m_trace_component(unsigned component)
 {
-  static int maxcomp = sizeof(mtrace_components)/sizeof(char*);
+  static int maxcomp = sizeof(mtrace_components)/sizeof(char*) - 1;
   int i;
   
-  for (i=0; i<maxcomp; i++) {
-    if (component == (0x0001 << i)) {
+  for (i=1; i<maxcomp; i++) {
+    if (component == (0x0001 << (i-1))) {
       return mtrace_components[i];
     }
   }

@@ -1,5 +1,5 @@
 /*
- * $Id: gathercfg.c,v 1.1 2004/10/20 08:15:20 mihajlov Exp $
+ * $Id: gathercfg.c,v 1.2 2004/10/20 14:08:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -27,6 +27,9 @@ int gathercfg_init()
   const char * allowed[] = {
     "RepositoryHost",
     "RepositoryPort",
+    "TraceLevel",
+    "TraceFile",
+    "TraceComponents",
     NULL
   };
   gathercfg_handle=set_configfile("/etc/gatherd.conf",allowed);

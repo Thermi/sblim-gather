@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.7 2004/10/19 16:09:08 mihajlov Exp $
+ * $Id: gatherd.c,v 1.8 2004/10/20 14:08:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -22,9 +22,10 @@
 
 #include "gather.h"
 #include "gatherc.h"
-#include "commheap.h"
-#include "gathercfg.h"
-#include "mlog.h"
+#include <commheap.h>
+#include <gathercfg.h>
+#include <mtrace.h>
+#include <mlog.h>
 #include <mcserv.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,6 +42,8 @@ int main(int argc, char * argv[])
   COMMHEAP     *ch;
   char          buffer[GATHERVALBUFLEN];
   size_t        bufferlen=sizeof(buffer);
+  char          cfgbuf[1000];
+  char         *cfgidx1, *cfgidx2;
   int           i, j;
   PluginDefinition *pdef;
 
@@ -60,6 +63,29 @@ int main(int argc, char * argv[])
     m_log(M_ERROR,M_SHOW,"Could not open gatherd config file.\n");
   }
   
+  /* init tracing from config */
+#ifndef NOTRACE
+  if (gathercfg_getitem("TraceLevel",cfgbuf,sizeof(cfgbuf))==0) {
+    m_trace_setlevel(atoi(cfgbuf));
+  }
+  if (gathercfg_getitem("TraceFile",cfgbuf,sizeof(cfgbuf)) ==0) {
+	m_trace_setfile(cfgbuf);
+  }
+  if (gathercfg_getitem("TraceComponents",cfgbuf,sizeof(cfgbuf)) ==0) {
+    cfgidx1 = cfgbuf;
+    while (cfgidx1) {
+      cfgidx2 = strchr(cfgidx1,':');
+      if (cfgidx2) {
+	*cfgidx2++=0;
+      }
+      m_trace_enable(m_trace_compid(cfgidx1));
+      cfgidx1=cfgidx2;
+    }
+  }
+#endif
+  
+  M_TRACE(MTRACE_DETAILED,MTRACE_GATHER,("Gatherd tracing initialized."));
+
   if (mcs_init(GATHER_COMMID)) {
     m_log(M_ERROR,M_SHOW,"Could not open gatherd socket.\n");
     return -1;
@@ -69,6 +95,7 @@ int main(int argc, char * argv[])
 
   while (!quit && mcs_accept(&hdr)==0) {
     while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
+      M_TRACE(MTRACE_FLOW,MTRACE_GATHER,("Received message type=%d",hdr.mc_type));
       if (hdr.mc_type != GATHERMC_REQ) {
 	/* ignore unknown message types */
 	m_log(M_ERROR,M_QUIET,"Invalid request type  received %c\n",hdr.mc_type);
@@ -81,6 +108,7 @@ int main(int argc, char * argv[])
 	      sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
 	continue;
       }
+      M_TRACE(MTRACE_FLOW,MTRACE_GATHER,("Received command id=%d",comm->gc_cmd));
       switch (comm->gc_cmd) {
       case GCMD_STATUS:
 	gather_status((GatherStatus*)(buffer+sizeof(GATHERCOMM)));
@@ -183,5 +211,6 @@ int main(int argc, char * argv[])
   }
   mcs_term();
   m_log(M_INFO,M_QUIET,"Gatherd is shutting down.\n");
+  M_TRACE(MTRACE_FLOW,MTRACE_GATHER,("Gatherd is shutting down.\n"));
   return 0;
 }
