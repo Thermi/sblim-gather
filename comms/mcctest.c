@@ -1,5 +1,5 @@
 /*
- * $Id: mcctest.c,v 1.4 2004/10/12 08:44:53 mihajlov Exp $
+ * $Id: mcctest.c,v 1.5 2004/10/21 15:51:18 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -17,6 +17,7 @@
  */
 
 #include "mcclt.h"
+#include <mtrace.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -35,6 +36,11 @@ int main()
   time_t start, end;
   int    comhdl;
 
+#ifndef NOTRACE
+  m_trace_setlevel(MTRACE_ALL);
+  m_trace_setfile("mcctest.trc");
+  m_trace_enable(MTRACE_MASKALL);
+#endif
   start=time(NULL);
   comhdl = mcc_init("mcstest");
   memset(buf,0,sizeof(buf));

@@ -1,5 +1,5 @@
 /*
- * $Id: mcdefs.h,v 1.3 2004/10/12 08:44:53 mihajlov Exp $ 
+ * $Id: mcdefs.h,v 1.4 2004/10/21 15:51:18 mihajlov Exp $ 
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -22,6 +22,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <merrdefs.h>
+
+#define MC_ERR_BASE          MERRNO_BASE_COMM
+#define MC_ERR_NOCONNECT     (MC_ERR_BASE+ 1)
+#define MC_ERR_BADINIT       (MC_ERR_BASE+ 2)
+#define MC_ERR_INVHANDLE     (MC_ERR_BASE+ 3)
+#define MC_ERR_IOFAIL        (MC_ERR_BASE+ 4)
+#define MC_ERR_INVPARAM      (MC_ERR_BASE+ 5)
+#define MC_ERR_OVERFLOW      (MC_ERR_BASE+ 6)
+
   
 #define MC_SOCKET  "/tmp/.%s-socket"
 #define MC_LOCKFILE  "/tmp/.%s-lockfile"

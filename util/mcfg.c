@@ -1,5 +1,5 @@
 /*
- * $Id: mcfg.c,v 1.2 2004/10/20 14:25:18 mihajlov Exp $
+ * $Id: mcfg.c,v 1.3 2004/10/21 15:51:18 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -18,6 +18,7 @@
  */
 
 #include "mcfg.h"
+#include "mlog.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,6 +57,9 @@ int set_configfile(const char * filename, const char ** keys)
     if (cfgf) {
       CfgFiles++;
       if (CfgFiles >= CFG_MAXHANDLE) {
+	m_log(M_ERROR,M_QUIET,
+	      "set_configfile: maximum number (%d) of config files exceeded",
+	      CFG_MAXHANDLE);
 	return -1;
       }
       while (!feof(cfgf)) {

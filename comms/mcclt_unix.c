@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.5 2004/10/20 08:31:06 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.6 2004/10/21 15:51:18 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -22,7 +22,8 @@
 
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <mlog.h>
+#include <mtrace.h>
+#include <merrno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -55,33 +56,44 @@ static struct {
 int mcc_init(const char *commid)
 {
   int i;
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,("mcc_init(%s) called",commid));
   pthread_mutex_lock(&sockname_mutex);
   for (i=0; i < MAXCONN;i++) {
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_init search free handle"));
     if (sockname[i].sn_name[0]==0) {
+      M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_init found free handle %d",i));
       if (snprintf(sockname[i].sn_name,sizeof(sockname),MC_SOCKET,commid) > 
 	  sizeof(sockname[i].sn_name)) {
-	m_log(M_ERROR,M_QUIET,
-	      "mcc_init: could not complete socket name for %s\n",
-	      commid);
-	pthread_mutex_unlock(&sockname_mutex);
+	m_seterrno(MC_ERR_BADINIT);
+	m_setstrerror("mcc_init could not complete socket name %s",commid);
+	M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+		("mcc_init could not complete socket name %s"));
 	return -1;
       }
       if (!_sigpipe_h_installed) {
 	signal(SIGPIPE,_sigpipe_h);
       }
       pthread_mutex_unlock(&sockname_mutex);
+      M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_init return handle %d",i));
       return i;
     }
   }
   pthread_mutex_unlock(&sockname_mutex);
+  m_seterrno(MC_ERR_BADINIT);
+  m_setstrerror("mcc_init out of socket slots for %s",commid);
+  M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	  ("mcc_init out of socket slots for %s",commid));
   return -1;
 }
 
 int mcc_term(int commhandle)
 {
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,("mcc_term(%d) called",commhandle));
   pthread_mutex_lock(&sockname_mutex);
   if (commhandle >= 0 && commhandle < MAXCONN && 
       sockname[commhandle].sn_name[0]) {
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
+	    ("mcc_init closing socket %s",sockname[commhandle].sn_name));
     sockname[commhandle].sn_name[0]=0;
     if (sockname[commhandle].sn_handle > 0) {
       close(sockname[commhandle].sn_handle);
@@ -91,34 +103,68 @@ int mcc_term(int commhandle)
     return 0;
   }
   pthread_mutex_unlock(&sockname_mutex);
+  m_seterrno(MC_ERR_INVHANDLE);
+  m_setstrerror("mcc_term received invalid handle %d",
+		commhandle);
+  M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	  ("mcc_term received invalid handle %d",commhandle));
   return -1;
 }
 
 static int _mcc_connect(int commhandle)
 {    
   struct sockaddr_un sa;
+  int connhandle;
 
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,("_mcc_connect(%d) called",commhandle));
   if (commhandle < MAXCONN && sockname[commhandle].sn_name[0]) {
     if (sockname[commhandle].sn_handle>0) {
+      M_TRACE(MTRACE_FLOW,MTRACE_COMM,
+	      ("mcc_term closing %s",sockname[commhandle].sn_name));
       close(sockname[commhandle].sn_handle);
     }
     sockname[commhandle].sn_handle=socket(PF_UNIX,SOCK_STREAM,0);
     if (sockname[commhandle].sn_handle==-1) {
-      m_log(M_ERROR,M_QUIET,
-	    "_mcc_connect: could not create socket for %s, error string %s\n",
-	    sockname[commhandle].sn_name,
-	    strerror(errno));
+      m_seterrno(MC_ERR_NOCONNECT);
+      m_setstrerror("_mcc_connect could not create socket for %s,"
+		    " system error string: %s",
+		    sockname[commhandle].sn_name,
+		    strerror(errno));
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("_mcc_connect could not create socket for %s,"
+	       " system error string: %s",
+	       sockname[commhandle].sn_name,
+	       strerror(errno)));
       return -1;
     }
     sa.sun_family = AF_UNIX;
     strcpy(sa.sun_path,sockname[commhandle].sn_name);
     sockname[commhandle].sn_connects ++;
-    return connect(sockname[commhandle].sn_handle,
-		   (struct sockaddr*)&sa,
-		   sizeof(struct sockaddr_un));
-
+    connhandle=connect(sockname[commhandle].sn_handle,
+		       (struct sockaddr*)&sa,
+		       sizeof(struct sockaddr_un));
+    if (connhandle < 0) {
+      m_seterrno(MC_ERR_NOCONNECT);
+      m_setstrerror("_mcc_connect could not connect socket for %s,"
+		    " system error string: %s",
+		    sockname[commhandle].sn_name,
+		    strerror(errno));
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("_mcc_connect could not connect socket for %s,"
+	       " system error string: %s",
+	       sockname[commhandle].sn_name,
+	       strerror(errno)));
+    }
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
+	    ("_mcc_connect returning %d",connhandle));
+    return connhandle;
   }
   /* invalid commhandle */
+  m_seterrno(MC_ERR_INVHANDLE);
+  m_setstrerror("_mcc_connect received invalid handle %d",
+		commhandle);
+  M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	  ("_mcc_connect received invalid handle %d",commhandle));
   return -1;
 }
 
@@ -131,40 +177,69 @@ int mcc_request(int commhandle, MC_REQHDR *hdr,
     {&reqdatalen, sizeof(size_t)}, 
     {reqdata, reqdatalen}, 
   };
+
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,
+	  ("mcc_request(%d,%p,%p,%u) called",
+	   commhandle,hdr,reqdata,reqdatalen));
   if (commhandle < 0 || commhandle >= MAXCONN || hdr == NULL || 
       reqdata == NULL) {
+    m_seterrno(MC_ERR_INVPARAM);
+    m_setstrerror("mcc_request received invalid parameters (%d,%p,%p)",
+		  commhandle,hdr,reqdata);
+    M_TRACE(MTRACE_FLOW,MTRACE_COMM,
+	    ("mcc_request received invalid parameters (%d,%p,%p)",
+	     commhandle,hdr,reqdata));
     return -1;
   }
   if (sockname[commhandle].sn_handle<=0) {
     if (_mcc_connect(commhandle)<0 ) {
-      m_log(M_ERROR,M_QUIET,
-	    "mcc_request: could not connect socket for %s, error string %s\n",
-	    sockname[commhandle].sn_name,
-	    strerror(errno));
+      m_seterrno(MC_ERR_NOCONNECT);
+      m_setstrerror("mcc_request could not connect socket for %s,"
+		    " system error string: %s\n",
+		    sockname[commhandle].sn_name,
+		    strerror(errno));
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("mcc_request could not connect socket for %s,"
+	       " system error string: %s\n",
+	       sockname[commhandle].sn_name,
+	       strerror(errno)));
       return -1;
     }
   }
+  M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_request write"));
   sentlen = writev(sockname[commhandle].sn_handle,iov,3);
   if (sentlen <= 0) {
     if (_mcc_connect(commhandle)<0 ) {
-      m_log(M_ERROR,M_QUIET,
-	    "mcc_init: could not reconnect socket for %s, error string %s\n",
-	    sockname[commhandle].sn_name,
-	    strerror(errno));
+      m_seterrno(MC_ERR_NOCONNECT);
+      m_setstrerror("mcc_request could not reconnect socket for %s,"
+		    " system error string: %s\n",
+		    sockname[commhandle].sn_name,
+		    strerror(errno));
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("mcc_request could not reconnect socket for %s,"
+		    " system error string: %s\n",
+		    sockname[commhandle].sn_name,
+		    strerror(errno)));
       return -1;
     } else {
+      M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_request retry write"));
       sentlen = writev(sockname[commhandle].sn_handle,iov,3);
     }
   }
   if (sentlen == (reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR))) {
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
+	    ("mcc_request for %s succeeded, count=%d",
+	     sockname[commhandle].sn_name,
+	     sockname[commhandle].sn_requests++));
     hdr->mc_handle=sockname[commhandle].sn_handle;
     sockname[commhandle].sn_requests++;
     return 0;
   }
-  m_log(M_ERROR,M_QUIET,
-	"mcc_request: send error, wanted %d got %d, error string %s\n",
-	reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
-	sentlen, strerror(errno));
+  m_seterrno(MC_ERR_IOFAIL);
+  m_setstrerror("mcc_request send error, wanted %d got %d,"
+		" system error string: %s\n",
+		reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
+		sentlen, strerror(errno));
   return -1;
 }
 
@@ -178,16 +253,36 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
   int    readlen=0;
   size_t  recvlen=0;
   int    maxlen=0;
+
+  M_TRACE(MTRACE_FLOW,MTRACE_COMM,
+	  ("mcc_response(%p,%p,%u) called",hdr,respdata,respdatalen));
   if (hdr==NULL || hdr->mc_handle ==-1 || respdata == NULL || 
       respdatalen == NULL) {
+    m_seterrno(MC_ERR_INVPARAM);
+    m_setstrerror("_mcc_response received invalid parameters (%p,%d,%p)",
+		  hdr,hdr->mc_handle,respdata);
+    M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	    ("_mcc_response received invalid parameters (%p,%d,%p)",
+	     hdr,hdr->mc_handle,respdata));
     return -1;
   }
   if (*respdatalen>0) maxlen=*respdatalen;
   cltsock = hdr->mc_handle;
   do {
     /* get header & size */
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_response reading header chunk"));
     readlen=readv(cltsock,iov,2);
     if (readlen <= 0) {
+      m_seterrno(MC_ERR_IOFAIL);
+      m_setstrerror("mcc_request read error, wanted %d got %d,"
+		    " system error string: %s\n",
+		    sizeof(size_t)+sizeof(MC_REQHDR),
+		    readlen, strerror(errno));
+      M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	      ("mcc_request read error, wanted %d got %d,"
+	       " system error string: %s\n",
+	       sizeof(size_t)+sizeof(MC_REQHDR),
+	       readlen, strerror(errno)));
       return -1;
     }
     recvlen += readlen;
@@ -199,23 +294,39 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
       iov[0].iov_len-=readlen; 
     }
   } while (recvlen != (sizeof(MC_REQHDR)+sizeof(size_t)));
+  M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
+	  ("mcc_response done reading header, data length=%d",*respdatalen));
   if (maxlen > 0 && *respdatalen > maxlen) {
-    m_log(M_ERROR, M_QUIET,
-	  "mcc_repsonse: buffer to small, needed %d available %d\n",
-	  *respdatalen,
-	  maxlen);
+    m_seterrno(MC_ERR_OVERFLOW);
+    m_setstrerror("mcc_response buffer to small, needed %d available %d",
+		  *respdatalen,
+		  maxlen);
+    M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	    ("mcc_response buffer to small, needed %d available %d",
+	     *respdatalen,
+	     maxlen)); 
     return -1;
   }  
   readlen=0;
   recvlen=0;
   do {
     /* get data */
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_response reading data chunk"));
     readlen=read(cltsock,respdata+recvlen,*respdatalen-recvlen);
     if (readlen <= 0) break;
     recvlen+=readlen;
   } while (recvlen != *respdatalen);
   if (readlen > 0) {      
+    M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_response done reading data"));
     return 0;
   }
+  m_seterrno(MC_ERR_IOFAIL);
+  m_setstrerror("mcc_request unexpected read error, "
+		" system error string: %s",
+		strerror(errno));
+  M_TRACE(MTRACE_ERROR,MTRACE_COMM,
+	  ("mcc_request unexpected read error, "
+	   " system error string: %s",
+	   strerror(errno)));
   return -1;
 }

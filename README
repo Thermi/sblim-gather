@@ -11,12 +11,15 @@ SBLIM Performance Data Gatherer and Provider
  http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
 
 Author: Viktor Mihajlovski <mihajlov@de.ibm.com>
-Last Change Date: 07/16/2004
+Last Change Date: 10/20/2004
 
 Changelog:
 10/17/2003	Initial Version.
 02/20/2004	Added test cases for SBLIM testsuite.
 07/16/2004	Started prototyping for version 2
+10/20/2004	Many changes: remote repository (by Heidi Neumann),
+		logging, tracing and config file processing.
+		Association Providers for Metric Values completed.
 
 
 **** IMPORTANT NOTE ****
