@@ -1,0 +1,17 @@
+********************************************************************************
+class : Linux_MetricGatherer
+
+--------------------------------------------------------------------------------
+Linux_MetricGatherer : -eq 1
+
+--------------------------------------------------------------------------------
+SystemCreationClassName : -eq -file MetricGatherer.keys[0]
+SystemName : -eq -file MetricGatherer.keys[1]
+CreationClassName: -eq -file MetricGatherer.keys[2]
+Name : -eq -file MetricGatherer.keys[3]
+
+EnabledState: -eq 2
+Started: -eq TRUE
+Sampling: -eq TRUE
+NumberOfPlugins: -eq 5
+NumberOfMetrics: -eq 31
