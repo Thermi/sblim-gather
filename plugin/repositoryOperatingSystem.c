@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.1 2004/08/03 10:24:17 heidineu Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.2 2004/08/03 11:24:46 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -125,6 +125,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[3].mcId=mr(pluginname,metricCalcDef[3].mcName);
   metricCalcDef[3].mcMetricType=MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[3].mcDataType=MD_UINT64;
+  metricCalcDef[3].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[3].mcCalc=metricCalcKernelTime;
 
   metricCalcDef[4].mcVersion=MD_VERSION;
@@ -132,6 +133,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[4].mcId=mr(pluginname,metricCalcDef[4].mcName);
   metricCalcDef[4].mcMetricType=MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[4].mcDataType=MD_UINT64;
+  metricCalcDef[4].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[4].mcCalc=metricCalcUserTime;
 
   metricCalcDef[5].mcVersion=MD_VERSION;
@@ -139,6 +141,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[5].mcId=mr(pluginname,metricCalcDef[5].mcName);
   metricCalcDef[5].mcMetricType=MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[5].mcDataType=MD_UINT64;
+  metricCalcDef[5].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[5].mcCalc=metricCalcTotalCPUTime;
 
   metricCalcDef[6].mcVersion=MD_VERSION;
@@ -153,6 +156,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[7].mcId=mr(pluginname,metricCalcDef[7].mcName);
   metricCalcDef[7].mcMetricType=MD_CALCULATED|MD_POINT;
   metricCalcDef[7].mcDataType=MD_UINT64;
+  metricCalcDef[7].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[7].mcCalc=metricCalcTotalPhysMem;
 
   metricCalcDef[8].mcVersion=MD_VERSION;
@@ -160,6 +164,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[8].mcId=mr(pluginname,metricCalcDef[8].mcName);
   metricCalcDef[8].mcMetricType=MD_CALCULATED|MD_POINT;
   metricCalcDef[8].mcDataType=MD_UINT64;
+  metricCalcDef[8].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[8].mcCalc=metricCalcFreePhysMem;
 
   metricCalcDef[9].mcVersion=MD_VERSION;
@@ -167,6 +172,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[9].mcId=mr(pluginname,metricCalcDef[9].mcName);
   metricCalcDef[9].mcMetricType=MD_CALCULATED|MD_POINT;
   metricCalcDef[9].mcDataType=MD_UINT64;
+  metricCalcDef[9].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[9].mcCalc=metricCalcTotalSwapMem;
 
   metricCalcDef[10].mcVersion=MD_VERSION;
@@ -174,6 +180,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[10].mcId=mr(pluginname,metricCalcDef[10].mcName);
   metricCalcDef[10].mcMetricType=MD_CALCULATED|MD_POINT;
   metricCalcDef[10].mcDataType=MD_UINT64;
+  metricCalcDef[10].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[10].mcCalc=metricCalcFreeSwapMem;
 
   metricCalcDef[11].mcVersion=MD_VERSION;
@@ -181,6 +188,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[11].mcId=mr(pluginname,metricCalcDef[11].mcName);
   metricCalcDef[11].mcMetricType=MD_CALCULATED|MD_POINT;
   metricCalcDef[11].mcDataType=MD_UINT64;
+  metricCalcDef[11].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[11].mcCalc=metricCalcTotalVirtMem;
 
   metricCalcDef[12].mcVersion=MD_VERSION;
@@ -188,6 +196,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[12].mcId=mr(pluginname,metricCalcDef[12].mcName);
   metricCalcDef[12].mcMetricType=MD_CALCULATED|MD_POINT;
   metricCalcDef[12].mcDataType=MD_UINT64;
+  metricCalcDef[12].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[12].mcCalc=metricCalcFreeVirtMem;
 
   metricCalcDef[13].mcVersion=MD_VERSION;
@@ -202,6 +211,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[14].mcId=mr(pluginname,metricCalcDef[14].mcName);
   metricCalcDef[14].mcMetricType=MD_CALCULATED|MD_RATE;
   metricCalcDef[14].mcDataType=MD_UINT64;
+  metricCalcDef[14].mcAliasId=metricCalcDef[13].mcId;
   metricCalcDef[14].mcCalc=metricCalcPageInRate;
 
   metricCalcDef[15].mcVersion=MD_VERSION;
@@ -216,6 +226,7 @@ int _DefinedRepositoryMetrics (MetricRegisterId *mr,
   metricCalcDef[16].mcId=mr(pluginname,metricCalcDef[16].mcName);
   metricCalcDef[16].mcMetricType=MD_CALCULATED|MD_AVERAGE;
   metricCalcDef[16].mcDataType=MD_FLOAT32;
+  metricCalcDef[16].mcAliasId=metricCalcDef[15].mcId;
   metricCalcDef[16].mcCalc=metricCalcLoadAverage;
 
   *mcnum=17;
@@ -323,7 +334,6 @@ size_t metricCalcKernelTime( MetricValue *mv,
    * value and needs to be multiplied by 10 to get microseconds
    *
    */
-
   /*
   fprintf(stderr,"mnum : %i\n",mnum);
   fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
@@ -359,7 +369,8 @@ size_t metricCalcKernelTime( MetricValue *mv,
     }
     else { kt = k1; }
 
-    //fprintf(stderr,"kernel time: %lld\n",kt);
+    fprintf(stderr,"kernel time: %lld\n",kt);
+    
     memcpy(v,&kt,sizeof(unsigned long long));
     return sizeof(unsigned long long);
   }
