@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.8 2004/10/19 16:09:08 mihajlov Exp $
+ * $Id: reposd.c,v 1.9 2004/10/19 16:22:22 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -31,6 +31,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <netinet/in.h>
 
 #define CHECKBUFFER(comm,buffer,sz) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=sizeof(buffer))
 
@@ -52,19 +53,21 @@ static void * _get_request(void * hdl)
   MetricValue  *mv;
   int           i;
 
-  //fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
-  
   while (1) {
     memset(buffer, 0, sizeof(buffer));
     bufferlen=sizeof(buffer);
     if (rcs_getrequest((int)hdl,buffer,&bufferlen) == -1) {
-      //fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
+      //      fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
       break;
     }
     //    fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buffer);
 
     /* write data to repository */
-    comm=(GATHERCOMM*)buffer;
+    comm=(GATHERCOMM*)buffer;    
+    comm->gc_cmd     = ntohs(comm->gc_cmd);
+    comm->gc_datalen = ntohl(comm->gc_datalen);
+    comm->gc_result  = ntohs(comm->gc_result);
+        
     /* perform sanity check */
     if (bufferlen != sizeof(GATHERCOMM) + comm->gc_datalen) {
       fprintf(stderr,"--- invalid length received: expected %d got %d\n",
@@ -86,9 +89,15 @@ static void * _get_request(void * hdl)
     } else {
       mv->mvData=(char*)(mv + 1);
     }
+    /* convert from host byte order into network byte order */
+    mv->mvId         = ntohl((int)mv->mvId);
+    mv->mvTimeStamp  = ntohl((time_t)mv->mvTimeStamp);
+    mv->mvDataType   = ntohl((unsigned)mv->mvDataType);
+    mv->mvDataLength = ntohl((size_t)mv->mvDataLength);
     mv->mvSystemId=mv->mvData+mv->mvDataLength;
-    comm->gc_result=reposvalue_put(pluginname,metricname,mv);
-    comm->gc_datalen=0;
+    if ((comm->gc_result=reposvalue_put(pluginname,metricname,mv)) != 0) {
+      fprintf(stderr,"write %s to repository failed\n",metricname);
+    }
   }
 
   pthread_mutex_lock(&connect_mutex);
@@ -100,7 +109,7 @@ static void * _get_request(void * hdl)
     }
   }
   pthread_mutex_unlock(&connect_mutex);
-  //fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
+  //  fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
   return NULL;
 }
 
@@ -113,29 +122,27 @@ static void * _reposd_remote()
   struct timespec req = {0,0};
   struct timespec rem = {0,0};
 
+  if (rcs_init(&port)) { return 0; }
   memset(thread_id,0,sizeof(thread_id));
-
-  if (rcs_init(&port)) {
-    return 0;
-  }
    
   while (1) {
-    pthread_mutex_lock(&connect_mutex);
     if (hdl == -1) {
       if (rcs_accept(&hdl) == -1) { return 0; }
     }
+    pthread_mutex_lock(&connect_mutex);
     for(i=0;i<MAXCONN;i++) {
       if (clthdl[i] <= 0) {
 	clthdl[i] = hdl;
 	break;
       } 
     }
-    if (pthread_create(&thread_id[i],NULL,_get_request,(void*)hdl) != 0) {
-      perror("create thread");
+    pthread_mutex_unlock(&connect_mutex);
+    if (pthread_create(&thread_id[i],NULL,_get_request,(void*)clthdl[i]) != 0) {
+      perror("_reposd_remote create thread");
       return 0;
     }
     hdl = -1;
-    //fprintf(stderr,"thread_id [%i] : %ld\n",i,thread_id[i]);
+    pthread_mutex_lock(&connect_mutex);
     if (connects<(MAXCONN-1)) { connects++; }
     else {
       pthread_mutex_unlock(&connect_mutex);

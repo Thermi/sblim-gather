@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.12 2004/10/19 15:06:35 mihajlov Exp $
+ * $Id: rrepos.c,v 1.13 2004/10/19 16:22:22 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -47,10 +47,6 @@ if (rreposhandle==-1) { \
 } \
 pthread_mutex_unlock(&rrepos_mutex); 
 
-
-
-/* TODO : configuration interface */
-
 #define RINITCHECK() \
 pthread_mutex_lock(&rrepos_mutex); \
 if (strlen(rsystemId)==0) { \
@@ -65,8 +61,6 @@ if (strlen(rsystemId)==0) { \
   rcc_init(rsystemId,&rreposport); \
 } \
 pthread_mutex_unlock(&rrepos_mutex); 
-
-
 
 #ifdef NAGNAG
 typedef struct _IdMap {
@@ -144,7 +138,6 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
 {
   char              xbuf[GATHERBUFLEN];
   GATHERCOMM       *comm=(GATHERCOMM*)xbuf;
-  size_t            commlen=sizeof(xbuf);
   size_t            dataoffs=sizeof(GATHERCOMM);
 
   if (mv) {
@@ -153,15 +146,20 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
       gethostname(_systemId,sizeof(_systemId));
     }
     RINITCHECK();
-    comm->gc_cmd=GCMD_SETVALUE;
-    comm->gc_datalen=strlen(reposplugin) + 1 +
-      strlen(metric) + 1 +
-      sizeof(MetricValue) + 
-      (mv->mvResource?strlen(mv->mvResource) + 1:0) +
-      mv->mvDataLength +
-      strlen(_systemId) + 1;
-    comm->gc_result=0;
-    /* prepare data */    
+    comm->gc_cmd     = htons(GCMD_SETVALUE);
+    comm->gc_datalen = htonl(strlen(reposplugin) + 1 +
+			     strlen(metric) + 1 +
+			     sizeof(MetricValue) + 
+			     (mv->mvResource?strlen(mv->mvResource) + 1:0) +
+			     mv->mvDataLength +
+			     strlen(_systemId) + 1);
+    comm->gc_result  = htons(0);
+    /* prepare data */
+    mv->mvId         = htonl(mv->mvId);
+    mv->mvTimeStamp  = htonl(mv->mvTimeStamp);
+    mv->mvDataType   = htonl(mv->mvDataType);
+    mv->mvDataLength = htonl(mv->mvDataLength);
+    /* copy data into xbuf */ 
     strcpy(xbuf+dataoffs,reposplugin);
     dataoffs+=strlen(reposplugin)+1;
     strcpy(xbuf+dataoffs,metric);
@@ -172,17 +170,16 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
       strcpy(xbuf+dataoffs,mv->mvResource);
       dataoffs+=strlen(mv->mvResource)+1;
     }
-    memcpy(xbuf+dataoffs,mv->mvData,mv->mvDataLength);
-    dataoffs+=mv->mvDataLength;
+    memcpy(xbuf+dataoffs,mv->mvData,ntohl(mv->mvDataLength));
+    dataoffs+=ntohl(mv->mvDataLength);
     strcpy(xbuf+dataoffs,_systemId);
     pthread_mutex_lock(&rrepos_mutex);
-    if (rcc_request(comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
-	commlen == sizeof(GATHERCOMM)) {
+    if (rcc_request(comm,sizeof(GATHERCOMM)+ntohl(comm->gc_datalen)) == 0) {
       pthread_mutex_unlock(&rrepos_mutex);
-      return comm->gc_result;
+      return 0;
     }
     pthread_mutex_unlock(&rrepos_mutex);
-  }    
+  }
   return -1;
 }
 

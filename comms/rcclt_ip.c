@@ -1,5 +1,5 @@
 /*
- * $Id: rcclt_ip.c,v 1.3 2004/10/18 12:26:31 heidineu Exp $
+ * $Id: rcclt_ip.c,v 1.4 2004/10/19 16:22:22 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -127,7 +127,7 @@ int _rcc_connect() {
 
 int rcc_request(void *reqdata, size_t reqdatalen)
 {
-  size_t sentlen;
+  int    sentlen;
   size_t reqlen;
 
   if (reqdata == NULL) return -1;
@@ -140,11 +140,10 @@ int rcc_request(void *reqdata, size_t reqdatalen)
   }
 
   reqlen = reqdatalen+sizeof(size_t);
-
   sentlen = write(srvhdl,&reqdatalen,sizeof(size_t)) +
     write(srvhdl,reqdata,reqdatalen);
 
-  if (errno == EPIPE) {
+  if (sentlen <= 0) {
     if (_rcc_connect() < 0) {
       perror("rcclient reconnect");
       return -1;
