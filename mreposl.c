@@ -1,7 +1,7 @@
 /*
- * $Id: mreposl.c,v 1.6 2004/11/04 09:47:03 mihajlov Exp $
+ * $Id: mreposl.c,v 1.7 2004/11/09 15:54:45 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003
+ * (C) Copyright IBM Corp. 2003, 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -20,7 +20,7 @@
 
 #include "mrepos.h"
 #include "mrwlock.h"
-
+#include "mtrace.h" 
 #include "mreg.h" 
 
 #include <stdlib.h>
@@ -40,19 +40,21 @@ int LocalMetricResources(int id, MetricResourceId ** resources,
 int LocalMetricFreeResources(MetricResourceId * resources);
   
 
-/**/
+/* Local repository functions */
 
 int LocalMetricAdd (MetricValue *mv);
 int LocalMetricRetrieve (int mid, MetricResourceId *resource,
 			 MetricValue **mv, int *num, 
 			 time_t from, time_t to, int maxnum);
 int LocalMetricRelease (MetricValue *mv);
+int LocalMetricRegisterCallback (MetricCallback *mcb, int mid, int state);
 
 static MetricRepositoryIF mrep = {
   "LocalRepository",
   LocalMetricAdd,
   LocalMetricRetrieve,
   LocalMetricRelease,
+  LocalMetricRegisterCallback,
   LocalMetricResources,
   LocalMetricFreeResources,
 };
@@ -66,14 +68,21 @@ MRWLOCK_DEFINE(LocalRepLock);
  * which are assumed to be ordered by timestamp
  */
 
+typedef struct _MReposCallback {
+  MetricCallback         *mrc_callback;
+  struct _MReposCallback *mrc_next;
+  int                     mrc_usecount;
+} MReposCallback;
+
 typedef struct _MReposValue {
   struct _MReposValue *mrv_next;
   MetricValue         *mrv_value;
 } MReposValue;
 
 struct _MReposHdr {
-  int          mrh_id;
-  MReposValue *mrh_first;
+  int             mrh_id;
+  MReposValue    *mrh_first;
+  MReposCallback *mrh_cb;
 } * LocalReposHeader = NULL;
 size_t LocalReposNumIds = 0;
 
@@ -90,11 +99,16 @@ int LocalMetricAdd (MetricValue *mv)
   int          rc=-1;
   MReposValue *mrv;
   
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	  ("LocalMetricAdd %p (%d)", mv, mv?mv->mvId:-1));  
   /* obligatory prune check */
   pruneRepository();
   
   if (mv && MWriteLock(&LocalRepLock)==0) {  
     if (findres(mv->mvResource, mv->mvSystemId)==0) {
+      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	      ("LocalMetricAdd adding resource %s (%d)", 
+	       mv->mvResource, mv->mvId));  
       addres(mv->mvResource, mv->mvSystemId);
     }
     idx=locateIndex(mv->mvId);
@@ -102,6 +116,15 @@ int LocalMetricAdd (MetricValue *mv)
       idx=addIndex(mv->mvId);
     }
     if (idx!=-1) {
+      if (LocalReposHeader[idx].mrh_cb) {
+	M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+		("LocalMetricAdd processing callbacks for mid=%d", mv->mvId));
+	MReposCallback *cblist = LocalReposHeader[idx].mrh_cb;
+	while (cblist && cblist->mrc_callback) {
+	  cblist->mrc_callback(mv);
+	  cblist = cblist->mrc_next;
+	}
+      } 
       mrv=malloc(sizeof(MReposValue));
       mrv->mrv_next=LocalReposHeader[idx].mrh_first;
       mrv->mrv_value=malloc(sizeof(MetricValue));
@@ -221,6 +244,57 @@ int LocalMetricRelease (MetricValue *mv)
   return 0;
 }
 
+int LocalMetricRegisterCallback (MetricCallback *mcb, int mid, int state)
+{
+  int idx = locateIndex(mid);
+  MReposCallback * cblist;
+  MReposCallback * cbprev;
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("LocalMetricRegisterCallback=%p, %d, %d",mcb,mid,state));
+  if (mcb == NULL || (state != 0 && state != 1) ) {
+    M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	    ("LocalMetricRegisterCallback invalid parameter=%p, %d, %d",mcb,mid,state));
+    return -1;
+  } 
+  if (idx == -1) {
+    idx = addIndex(mid);
+  }
+  cblist = LocalReposHeader[idx].mrh_cb;
+  cbprev = LocalReposHeader[idx].mrh_cb;
+  if (state == MCB_STATE_REGISTER ) {
+    while(cblist && cblist->mrc_callback) {
+      if (mcb == cblist->mrc_callback) {
+	cblist->mrc_usecount ++;
+	break;
+      }
+      cblist = cblist->mrc_next;
+    }
+    if (cblist == NULL) {
+      cblist = malloc(sizeof(MReposCallback));
+      cblist->mrc_callback = mcb;
+      cblist->mrc_next = LocalReposHeader[idx].mrh_cb;
+      LocalReposHeader[idx].mrh_cb = cblist;
+    }
+  } else if ( state == MCB_STATE_UNREGISTER) {
+    while(cblist && cblist->mrc_callback) {
+      if (mcb == cblist->mrc_callback) {
+	cblist->mrc_usecount--;
+	break;
+      }
+      cbprev = cblist;
+      cblist = cblist->mrc_next;
+    }
+    if (cblist && cblist->mrc_usecount == 0) {
+      if (cbprev == LocalReposHeader[idx].mrh_cb) {
+	LocalReposHeader[idx].mrh_cb = cblist->mrc_next;
+      } else {
+	cbprev->mrc_next=cblist->mrc_next;
+      }
+      free (cblist);
+    }
+  }
+  return 0;
+}
+
 static int locateIndex(int mid)
 {
   int idx=0;
@@ -238,6 +312,7 @@ static int addIndex(int mid)
   LocalReposNumIds += 1;
   LocalReposHeader=realloc(LocalReposHeader,
 			   LocalReposNumIds*sizeof(struct _MReposHdr));
+  LocalReposHeader[LocalReposNumIds-1].mrh_cb=NULL;			   
   LocalReposHeader[LocalReposNumIds-1].mrh_first=NULL;			   
   LocalReposHeader[LocalReposNumIds-1].mrh_id=mid;			   
   return LocalReposNumIds-1;

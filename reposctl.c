@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.6 2004/11/04 09:47:03 mihajlov Exp $
+ * $Id: reposctl.c,v 1.7 2004/11/09 15:54:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -32,6 +32,7 @@ static const char* commands[] = {
   "\tl plugin\tload plugin\n",
   "\tu plugin\tunload plugin\n",
   "\tv plugin\tview/list metrics for plugin\n",
+  "\ts\t\tsubscribe\n",
   "\tq\t\tquit\n",
   "\tg id [system [resource [from [to]]]]\tget metric value\n",
   "\tk\t\tkill daemon\n",
@@ -189,6 +190,11 @@ int main()
 	}
       }
       ch_release(commh);
+      break;
+    case 'b':
+      sscanf(arg,"%s",argbuf);
+      if(rrepos_subscribe(argbuf))
+	printf("Failed\n");
       break;
     case 'k':
       if(rrepos_unload())

@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.14 2004/11/04 09:47:03 mihajlov Exp $
+ * $Id: rrepos.c,v 1.15 2004/11/09 15:54:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -483,6 +483,32 @@ int rrepos_unload()
   comm->gc_result=0;
   pthread_mutex_lock(&rrepos_mutex);
   if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
+      mcc_response(&hdr,comm,&commlen)==0) {
+    pthread_mutex_unlock(&rrepos_mutex);
+    return comm->gc_result;
+  } else {
+    pthread_mutex_unlock(&rrepos_mutex);
+    return -1;
+  }
+}
+
+int rrepos_subscribe(char *id)
+{
+  MC_REQHDR   hdr;
+  char        xbuf[GATHERBUFLEN];
+  GATHERCOMM *comm=(GATHERCOMM*)xbuf;
+  size_t      commlen=sizeof(xbuf);
+
+  INITCHECK();
+  hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
+  comm->gc_cmd=GCMD_SUBSCRIBE;
+  comm->gc_datalen=strlen(id)+1;
+  comm->gc_result=0;
+  strcpy(xbuf+sizeof(GATHERCOMM),id);
+  pthread_mutex_lock(&rrepos_mutex);
+  if (mcc_request(rreposhandle,&hdr,comm,
+		  sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
       mcc_response(&hdr,comm,&commlen)==0) {
     pthread_mutex_unlock(&rrepos_mutex);
     return comm->gc_result;

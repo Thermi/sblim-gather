@@ -1,5 +1,5 @@
 /*
- * $Id: gatherc.h,v 1.3 2004/08/02 14:23:01 mihajlov Exp $
+ * $Id: gatherc.h,v 1.4 2004/11/09 15:54:45 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -40,6 +40,7 @@ extern "C" {
 #define GCMD_LISTPLUGIN  9
 #define GCMD_SETVALUE   10
 #define GCMD_GETTOKEN   11
+#define GCMD_SUBSCRIBE  12
 
 #define GCMD_QUIT       99
 

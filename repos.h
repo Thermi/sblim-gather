@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.7 2004/11/04 09:47:03 mihajlov Exp $
+ * $Id: repos.h,v 1.8 2004/11/09 15:54:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -92,6 +92,32 @@ typedef void * MVENUM;
 int reposvalue_put(const char *reposplugin, const char *metric, 
 		   MetricValue *mv);
 int reposvalue_get(ValueRequest *vs, COMMHEAP ch);
+
+/* subscriptions --- */
+
+#define SUBSCR_OP_ANY 0
+#define SUBSCR_OP_EQ  1
+#define SUBSCR_OP_NE  2
+#define SUBSCR_OP_GT  3
+#define SUBSCR_OP_GE  4
+#define SUBSCR_OP_LT  5
+#define SUBSCR_OP_LE  6
+
+typedef struct _SubscriptionRequest {
+  int    srCorrelatorId;
+  int    srMetricId; /* required -- anything below can be SUBSCR_OP_ANY */
+  int    srBaseMetricId; /* if the metric is a derived one this must be set */
+  char  *srResource;
+  int    srResourceOp;
+  char  *srValue;
+  int    srValueOp;
+  char  *srSystemId;
+  int    srSystemOp;
+} SubscriptionRequest;
+
+typedef void (SubscriptionCallback) (int corrid, ValueRequest *vr);
+
+int repos_subscribe(SubscriptionRequest *sr, SubscriptionCallback *mcb);
 
 #ifdef __cplusplus
 }

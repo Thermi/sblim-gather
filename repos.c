@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.8 2004/11/04 09:47:03 mihajlov Exp $
+ * $Id: repos.c,v 1.9 2004/11/09 15:54:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -24,6 +24,7 @@
 #include "rreg.h"
 #include "rplugmgr.h"
 #include "mrepos.h"
+#include "mtrace.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -42,6 +43,20 @@ static int         initialized=0;
 static void pl_link(RepositoryPlugin *);
 static void pl_unlink(RepositoryPlugin *);
 static RepositoryPlugin* pl_find(const char *);
+
+/* Subscription Support */
+static void RepositorySubscriptionCallback(MetricValue *mv);
+typedef struct _RepositorySubscription {
+  SubscriptionRequest            *rsr_req;
+  SubscriptionCallback           *rsr_cb;
+  struct _RepositorySubscription *rsr_next;
+} RepositorySubscription;
+
+static RepositorySubscription *subscriptions=NULL;
+static int sub_add(SubscriptionRequest *, SubscriptionCallback*);
+static void sub_remove(SubscriptionRequest *);
+static int  matchCommonCriteria(SubscriptionRequest *, MetricValue*);
+static int  matchValue(SubscriptionRequest *, ValueRequest *);
 
 int repos_init()
 {
@@ -173,16 +188,9 @@ int reposplugin_list(const char *pluginname,
       for (i=0;i<rp->rpNumMetricCalcDefs;i++) {
 	(*rdef)[i].rdId=rp->rpMetricCalcDefs[i].mcId;
 	(*rdef)[i].rdDataType=rp->rpMetricCalcDefs[i].mcDataType;
-
-
-	// NEW
 	(*rdef)[i].rdMetricType=rp->rpMetricCalcDefs[i].mcMetricType;
 	(*rdef)[i].rdChangeType=rp->rpMetricCalcDefs[i].mcChangeType;
 	(*rdef)[i].rdIsContinuous=rp->rpMetricCalcDefs[i].mcIsContinuous;
-	// --- NEW
-
-
-
 	(*rdef)[i].rdName=rp->rpMetricCalcDefs[i].mcName;
 	(*rdef)[i].rdResource=NULL; /* todo must specify resource listing fnc */
       }
@@ -247,13 +255,13 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	mv = calloc(resnum, sizeof(MetricValue*));
 	numv = calloc(resnum,sizeof(int));
 	for (j=0; j < resnum; j++) {
-	  if (MetricRepository-> mrep_retrieve(id,
-					       resources + j,
-					       &mv[j],
-					       &numv[j],
-					       vs->vsFrom,
-					       vs->vsTo,
-					       intervalnum) != -1 ) {
+	  if (MetricRepository->mrep_retrieve(id,
+					      resources + j,
+					      &mv[j],
+					      &numv[j],
+					      vs->vsFrom,
+					      vs->vsTo,
+					      intervalnum) != -1 ) {
 	    totalnum += numv[j];
 	  }
 	}
@@ -344,6 +352,193 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
   }
   return -1;
 }
+
+int repos_subscribe(SubscriptionRequest *sr, SubscriptionCallback *scb)
+{
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	  ("repos_subscribe %p %p", sr, scb));
+  if (sr && scb && sub_add(sr,scb) == 0) {
+    return MetricRepository->
+      mrep_regcallback(RepositorySubscriptionCallback,
+		       sr->srBaseMetricId == -1 ?
+		       sr->srMetricId : sr->srBaseMetricId,
+		       MCB_STATE_REGISTER);
+  };
+  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	  ("repos_subscribe invalid parameter %p %p", sr, scb));
+  return -1;
+}
+
+static void RepositorySubscriptionCallback(MetricValue *mv)
+{
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	  ("RepositorySubscriptionCallback %p (%d)", mv, mv?mv->mvId:-1));
+  if (mv) {
+    RepositorySubscription *subs = subscriptions;
+    while (subs && subs->rsr_req) {
+      MetricCalculationDefinition *mc=NULL;
+      ValueRequest vr;
+      ValueItem    vi;
+      char         valbuf[100];
+      if (matchCommonCriteria(subs->rsr_req,mv)) {
+	/* NOTE: at the moment we handle only point metrics */
+	if (mc == NULL) {
+	  /* only calculate once per mv */
+	  mc=RPR_GetMetric(mv->mvId);
+	  if (mc && mc->mcCalc) {
+	    vr.vsId=mv->mvId;
+	    vr.vsNumValues=1;
+	    vr.vsValues=&vi;
+	    vi.viCaptureTime=mv->mvTimeStamp;
+	    vi.viDuration=0;
+	    vi.viResource=mv->mvResource;
+	    vi.viSystemId=mv->mvSystemId;
+	    vi.viValueLen=sizeof(valbuf);
+	    vi.viValue=valbuf;
+	    if (mc->mcCalc(mv,1,vi.viValue,vi.viValueLen) == -1) {
+	      M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		      ("RepositorySubscriptionCallback failed to calculate metric"
+		       " value for %d", mv->mvId));
+	      break;
+	    }
+	  } else {
+	    M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		    ("RepositorySubscriptionCallback failed to retrieve metric"
+		     " calculator for %d", mv->mvId));
+	    break;
+	  }
+	}
+	if (matchValue(subs->rsr_req,&vr)) {
+	  subs->rsr_cb(subs->rsr_req->srCorrelatorId,&vr);
+	}
+      }
+      subs = subs->rsr_next;
+    }
+  }
+}
+
+static int sub_add(SubscriptionRequest *sr, SubscriptionCallback *scb)
+{
+  /* TODO: add locks */
+  if (sr && scb) {
+    RepositorySubscription *subs = subscriptions;
+    RepositorySubscription *prev = subscriptions;
+    MetricCalculationDefinition *mc=RPR_GetMetric(sr->srMetricId);
+    if (mc == NULL) {
+      M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	      ("sub_add failed to retrieve metric"
+	       " definition for %d", sr->srMetricId));
+      return -1;
+    }
+    sr->srBaseMetricId = (mc->mcMetricType&MD_CALCULATED) ? mc->mcAliasId : -1;
+    while (subs && subs->rsr_req) {
+      if (subs->rsr_req->srMetricId == sr->srMetricId &&
+	  subs->rsr_cb == scb) {
+	/* already there */
+	return 0;
+      } else if (subs->rsr_req->srMetricId > sr->srMetricId) {
+	break;
+      }
+      if (subs->rsr_next) {
+	prev = subs;
+	subs = subs->rsr_next;
+      } else {
+	break;
+      }
+    }
+    subs = malloc(sizeof(RepositorySubscription));
+    subs->rsr_req = sr;
+    subs->rsr_cb = scb;
+    if (subscriptions==prev) {
+      subs->rsr_next = prev;
+      subscriptions=subs;
+    } else {
+      subs->rsr_next = prev->rsr_next;
+      prev=subs;
+    }
+    return 0;
+  }
+  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	  ("sub_add invalid parameters %p %p", sr, scb));
+  return -1;
+}
+
+static int  matchCommonCriteria(SubscriptionRequest * sr, MetricValue* mv)
+{
+  int match = 0;
+  if (sr && mv) {
+    if (sr->srMetricId == mv->mvId) {
+      switch( sr->srSystemOp ) {
+      case SUBSCR_OP_ANY:
+	match = 1;
+	break;
+      case SUBSCR_OP_EQ:
+	match = !strcmp(sr->srSystemId,mv->mvSystemId);
+	break;
+      case SUBSCR_OP_NE:
+	match = strcmp(sr->srSystemId,mv->mvSystemId);
+	break;
+      default:
+	match = 0;
+      }
+      if (match) {
+	switch( sr->srResourceOp ) {
+	case SUBSCR_OP_ANY:
+	  match = 1;
+	  break;
+	case SUBSCR_OP_EQ:
+	  match = !strcmp(sr->srResource,mv->mvResource);
+	  break;
+	case SUBSCR_OP_NE:
+	  match = strcmp(sr->srResource,mv->mvResource);
+	  break;
+	default:
+	  match = 0;
+	}
+      }
+    }
+  }
+  return match;
+}
+
+
+static int  matchValue(SubscriptionRequest * sr, ValueRequest * vr)
+{
+  int compstate;
+  if (sr && vr && vr->vsValues && vr->vsValues->viValue) {
+    if ( sr->srValueOp == SUBSCR_OP_ANY ) {
+      return 1;
+    }
+    if (vr->vsDataType & (MD_BOOL|MD_UINT|MD_SINT)) {
+      long long ls = atoll(sr->srValue);
+      long long lv = *(long long*)vr->vsValues->viValue;
+      compstate = ls - lv; 
+    } else if (vr->vsDataType & (MD_FLOAT)) {
+      double ds = atof(sr->srValue);
+      double dv = *(double*)vr->vsValues->viValue;
+      compstate = ds - dv; 
+    } else {
+      compstate = strcmp(sr->srValue,vr->vsValues->viValue);
+    }
+    switch( sr->srValueOp ) {
+    case SUBSCR_OP_EQ:
+      return compstate == 0;
+    case SUBSCR_OP_NE:
+      return compstate != 0;
+    case SUBSCR_OP_GT:
+      return compstate > 0;
+    case SUBSCR_OP_GE:
+      return compstate >= 0;
+    case SUBSCR_OP_LT:
+      return compstate < 0;
+    case SUBSCR_OP_LE:
+      return compstate <= 0;
+    }
+  }
+  
+  return 0;
+}
+
 static void pl_link(RepositoryPlugin *rp)
 {
   PluginList *p = pluginhead;

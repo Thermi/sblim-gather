@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.h,v 1.3 2004/08/04 11:27:36 mihajlov Exp $
+ * $Id: rrepos.h,v 1.4 2004/11/09 15:54:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -99,6 +99,11 @@ int rreposplugin_remove(const char *pluginname);
 int rreposplugin_list(const char *pluginname,
 		      RepositoryPluginDefinition **pdef, 
 		      COMMHEAP ch);
+
+ /*
+  * dummy for testing
+  */
+int rrepos_subscribe(char *id);
 
 #ifdef __cplusplus
 }
