@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.6 2004/08/05 10:23:46 mihajlov Exp $
+ * $Id: rrepos.c,v 1.7 2004/09/30 14:39:23 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -28,6 +28,8 @@
 
 static RepositoryToken _RemoteToken = {sizeof(RepositoryToken),0,0};
 static int rreposhandle=-1;
+static char _systemId[260] = {0};
+
 
 #define INITCHECK() \
 if (rreposhandle==-1) { \
@@ -113,6 +115,10 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
   size_t            dataoffs=sizeof(GATHERCOMM);
 
   if (mv) {
+    /* determine system id */
+    if (strlen(_systemId)==0) {
+      gethostname(_systemId,sizeof(_systemId));
+    }
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     comm->gc_cmd=GCMD_SETVALUE;
@@ -120,7 +126,8 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
       strlen(metric) + 1 +
       sizeof(MetricValue) + 
       (mv->mvResource?strlen(mv->mvResource) + 1:0) +
-      mv->mvDataLength;
+      mv->mvDataLength +
+      strlen(_systemId) + 1;
     /* prepare data */    
     strcpy(xbuf+dataoffs,reposplugin);
     dataoffs+=strlen(reposplugin)+1;
@@ -133,6 +140,8 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
       dataoffs+=strlen(mv->mvResource)+1;
     }
     memcpy(xbuf+dataoffs,mv->mvData,mv->mvDataLength);
+    dataoffs+=mv->mvDataLength;
+    strcpy(xbuf+dataoffs,_systemId);
     if (mcc_request(rreposhandle,&hdr,comm,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&

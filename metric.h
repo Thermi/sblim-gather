@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.5 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: metric.h,v 1.6 2004/09/30 14:39:23 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -58,8 +58,8 @@ extern "C" {
 #define MD_FLOAT32   (MD_FLOAT|MD_32BIT)
 #define MD_FLOAT64   (MD_FLOAT|MD_64BIT)
 
-#define MD_VERSION_MAJOR     0x0200
-#define MD_VERSION_MINOR     0x0001
+#define MD_VERSION_MAJOR     0x0100
+#define MD_VERSION_MINOR     0x0099
 #define MD_VERSION_MINOR_MAX 0x00ff
 #define MD_VERSION (MD_VERSION_MAJOR+MD_VERSION_MINOR)
 
@@ -70,6 +70,7 @@ typedef struct _MetricValue {
   unsigned  mvDataType;
   size_t    mvDataLength;
   char     *mvData;
+  char     *mvSystemId; /* System Id - this is needed for remote support */
 } MetricValue;
 
 /* data returning callback for plugin */

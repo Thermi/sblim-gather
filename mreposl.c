@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.4 2004/08/04 07:29:26 mihajlov Exp $
+ * $Id: mreposl.c,v 1.5 2004/09/30 14:39:23 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -106,6 +106,7 @@ int LocalMetricAdd (MetricValue *mv)
       mrv->mrv_value->mvResource=strdup(mv->mvResource);
       mrv->mrv_value->mvData=malloc(mv->mvDataLength);
       memcpy(mrv->mrv_value->mvData,mv->mvData,mv->mvDataLength);
+      mrv->mrv_value->mvSystemId=strdup(mv->mvSystemId);
       LocalReposHeader[idx].mrh_first=mrv;
       rc=0;
     }
@@ -183,6 +184,8 @@ int LocalMetricRetrieve (int mid, char *resource,
 	    memcpy((*mv)[i+1].mvData,
 		   mrv->mrv_value->mvData,
 		   mrv->mrv_value->mvDataLength);
+	    (*mv)[i+1].mvResource=strdup(mrv->mrv_value->mvResource);
+	    (*mv)[i+1].mvSystemId=strdup(mrv->mrv_value->mvSystemId);
 	    i+=1;
 	  }
 	}
@@ -207,6 +210,8 @@ int LocalMetricRelease (MetricValue *mv)
     mv-=1;
     for (i=0;i<mv->mvDataLength;i++) {
       free (mv[i+1].mvData);
+      free (mv[i+1].mvResource);
+      free (mv[i+1].mvSystemId);
     } 
     free(mv);
   }
@@ -274,8 +279,9 @@ static int pruneRepository()
 	    bv->mrv_next = NULL;
 	  /* now delete all outdated metrics*/
 	  while (v) {
-	    if (v->mrv_value->mvResource) free (v->mrv_value->mvResource); 
+	    free(v->mrv_value->mvResource); 
 	    free(v->mrv_value->mvData);
+	    free(v->mrv_value->mvSystemId);
 	    free(v->mrv_value);
 	    bv=v;
 	    v=v->mrv_next;

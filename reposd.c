@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.2 2004/08/02 14:23:02 mihajlov Exp $
+ * $Id: reposd.c,v 1.3 2004/09/30 14:39:23 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -166,6 +166,7 @@ int main(int argc, char * argv[])
       } else {
 	mv->mvData=(char*)(mv + 1);
       }
+      mv->mvSystemId=mv->mvData+mv->mvDataLength;
       comm->gc_result=reposvalue_put(pluginname,metricname,mv);
       comm->gc_datalen=0;
       break;      
