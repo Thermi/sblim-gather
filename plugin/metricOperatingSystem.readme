@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.readme,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricOperatingSystem.readme,v 1.2 2003/11/05 15:52:07 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -66,8 +66,8 @@ Sample Interval : 30 sec
 CIM Data Type   : uint32
 Units           : processes
 
-Value Source    : search through /proc file system and counts all PID directory
-                  entries
+Value Source    : fourth entry in /proc/loadavg contains 
+                  "<running processes>/<total number of processes>"
 
 
 /* ---------------------------------------------------------------------------*/

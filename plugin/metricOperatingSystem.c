@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: metricOperatingSystem.c,v 1.2 2003/11/05 15:52:06 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -421,9 +421,10 @@ size_t metricCalcNumOfUser( MetricValue *mv,
 int metricRetrNumOfProc( int mid, 
 			 MetricReturner mret ) {
   MetricValue   * mv    = NULL;
+  char          * value = NULL;
+  char          * ptr   = NULL;
   unsigned long   nop   = 0;
-  DIR           * dir   = NULL;
-  struct dirent * entry = NULL;
+  FILE          * fhd   = NULL;
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving NumberOfProcesses\n",
@@ -436,19 +437,16 @@ int metricRetrNumOfProc( int mid,
 	    __FILE__,__LINE__,mid);
 #endif
     /* get number of processes */
-
-    if( ( dir = opendir("/proc") ) != NULL ) {
-      while( ( entry = readdir(dir)) != NULL ) {
-	if( strcasecmp(entry->d_name,"1") == 0 ) { 
-	  //	  fprintf(stderr,"entry : %s\n",entry->d_name);
-	  nop++;
-	  while( ( entry = readdir(dir)) != NULL ) {
-	    nop++;
-	    //	    fprintf(stderr,"entry : %s\n",entry->d_name);
-	  }
-	}
-      }
-      closedir(dir);
+    if ( (fhd=fopen("/proc/loadavg","r")) != NULL ) {
+      value = calloc(1,256);
+      fscanf(fhd, 
+	     "%*s %*s %*s %s",
+	     value);
+      fclose(fhd);
+      ptr = strchr(value,'/');
+      ptr++;
+      nop = atol(ptr);
+      if(value) { free(value); }
     }
     else { return -1; }
 
