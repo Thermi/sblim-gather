@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.5 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: repos.h,v 1.6 2004/11/03 08:16:36 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -48,6 +48,9 @@ int reposplugin_remove(const char *pluginname);
 typedef struct _RepositoryPluginDefinition {
   int      rdId;
   unsigned rdDataType;
+  unsigned rdMetricType;
+  unsigned rdChangeType;
+  unsigned char rdIsContinuous;
   char    *rdName; 
   char   **rdResource; 
 } RepositoryPluginDefinition;

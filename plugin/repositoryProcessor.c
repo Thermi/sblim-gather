@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryProcessor.c,v 1.1 2004/08/04 09:00:58 heidineu Exp $
+ * $Id: repositoryProcessor.c,v 1.2 2004/11/03 08:16:36 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -52,7 +52,9 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcVersion=MD_VERSION;
   metricCalcDef[0].mcName="TotalCPUTimePercentage";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
-  metricCalcDef[0].mcMetricType=MD_RETRIEVED|MD_AVERAGE;
+  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_AVERAGE;
+  metricCalcDef[0].mcChangeType=MD_GAUGE;
+  metricCalcDef[0].mcIsContinuous=MD_TRUE;
   metricCalcDef[0].mcDataType=MD_UINT8;
   metricCalcDef[0].mcCalc=metricCalcCPUTimePerc;
 

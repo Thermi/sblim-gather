@@ -1,5 +1,5 @@
 //
-// $Id: Linux_LocalFileSystemMetric.mof,v 1.4 2004/10/07 06:22:00 mihajlov Exp $
+// $Id: Linux_LocalFileSystemMetric.mof,v 1.5 2004/11/03 08:16:36 heidineu Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004
 //
@@ -28,7 +28,16 @@
   Description ("Class for Local File System Metric Definitions")
 ]
 class Linux_LocalFileSystemMetric : CIM_BaseMetricDefinition
-{ };
+{
+	[Experimental]
+	boolean IsContinuous;
+	[Experimental]
+	uint16 ChangeType;
+	[Experimental]
+	uint16 TimeScope;
+	[Experimental]
+	uint16 GatheringType;
+};
 
 
 // ===================================================================

@@ -1,10 +1,10 @@
-# $Id: makefile,v 1.9 2004/10/07 06:22:00 mihajlov Exp $
+# $Id: makefile,v 1.10 2004/11/03 08:16:36 heidineu Exp $
 
 include setting.cmpi
 
 export CFLAGS=-Wall -g 
-CPPFLAGS=-I .. -I $(CIMOMINC) -I $(COMMONINC)
-LOADLIBES=-L .. -lrrepos -lgatherutil -L . -lOSBase_MetricUtil
+CPPFLAGS=-I ..  -I ../util -I $(CIMOMINC) -I $(COMMONINC)
+LOADLIBES=-L .. -L ../util -lrrepos -lgatherutil -L . -lOSBase_MetricUtil
 
 SUBDIRS=mof
 SOURCES=OSBase_MetricDefinitionProvider.c OSBase_MetricValueProvider.c \
@@ -28,10 +28,10 @@ all: $(SUBDIRS) 	libOSBase_MetricUtil.so \
 	libOSBase_MetricForMEProvider.so \
 	libOSBase_MetricInstanceProvider.so
 
-libOSBase_MetricGathererProvider.so: LOADLIBES=-L .. -lrgather -lcmpiOSBase_Common
-libOSBase_MetricRepositoryServiceProvider.so: LDLIBS=-lcmpiOSBase_Common
+libOSBase_MetricGathererProvider.so: LOADLIBES=-L .. -L $(COMMONLIB) -lrgather -lcmpiOSBase_Common
+libOSBase_MetricRepositoryServiceProvider.so: LDLIBS=-L $(COMMONLIB) -lcmpiOSBase_Common
 
-libOSBase_MetricUtil.so: LOADLIBES=-L .. -lrrepos -lgatherutil
+libOSBase_MetricUtil.so: LOADLIBES=-L .. -L ../util -lrrepos -lgatherutil
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) libOSBase_Metric*.so

@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.11 2004/10/21 15:51:18 mihajlov Exp $
+# $Id: makefile,v 1.12 2004/11/03 08:16:36 heidineu Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
 CPPFLAGS=-Icomms -Iutil
 LDLIBS=-lpthread -ldl
 
-SUBDIRS=util comms samples # plugin  provider
+SUBDIRS=util comms samples  # plugin  provider
 SOURCES=mlist.c mretr.c mplugmgr.c mreg.c mreposl.c mreposp.c \
 	gather.c gatherctl.c rgather.c gatherd.c \
 	rrepos.c repos.c reposctl.c rplugmgr.c rreg.c reposd.c 

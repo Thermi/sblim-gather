@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.4 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.5 2004/11/03 08:16:36 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -49,6 +49,9 @@ static struct _MdefList {
   char * mdef_pluginname;
   char * mdef_cimpluginname;
   int    mdef_datatype;
+  int    mdef_metrictype;
+  int    mdef_changetype;
+  int    mdef_iscontinuous;
 } * metricDefinitionList = NULL;
 
 static struct _MvalList {
@@ -193,6 +196,9 @@ int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx,
 	  metricDefinitionList[totalnum+i].mdef_pluginname = strdup(pname);
 	  metricDefinitionList[totalnum+i].mdef_cimpluginname = strdup(cpname);
 	  metricDefinitionList[totalnum+i].mdef_datatype = rdef[i].rdDataType;
+	  metricDefinitionList[totalnum+i].mdef_metrictype = rdef[i].rdMetricType;
+	  metricDefinitionList[totalnum+i].mdef_changetype = rdef[i].rdChangeType;
+	  metricDefinitionList[totalnum+i].mdef_iscontinuous = rdef[i].rdIsContinuous;
 	}
 	/* identify last element with null name */
 	totalnum += rdefnum;
@@ -869,6 +875,36 @@ CMPIObjectPath * makeMetricDefPath(CMPIBroker * broker,
   return co;
 }
 
+
+static unsigned char CMPI_false = 0;
+static unsigned char CMPI_true  = 1;
+
+static int metrictypetable[] = {
+  -1,
+  MD_POINT,
+  MD_INTERVAL,
+  MD_STARTUPINTERVAL,
+  MD_RATE,
+  MD_AVERAGE,
+};
+
+static int mapmetrictypetable[] = {
+  0,
+  2,
+  3,
+  4,
+  32768,
+  32769,
+};
+
+static int changetypetable[] = {
+  -1,
+  -1,
+  -1,
+  MD_COUNTER,
+  MD_GAUGE,
+};
+
 static int typetable[] = {
   -1,
   MD_BOOL,
@@ -914,12 +950,46 @@ CMPIInstance * makeMetricDefInst(CMPIBroker * broker,
 		    makeMetricDefId(instid,defname,defid),
 		    CMPI_chars);
       CMSetProperty(ci,"Name",defname,CMPI_chars);
+      /* DataType */
       for (dt=0;dt<sizeof(typetable)/sizeof(int);dt++) {
 	if (metricDefinitionList[i].mdef_datatype==typetable[dt])
 	  break;
       }
       if (dt<sizeof(typetable)/sizeof(int))
 	CMSetProperty(ci,"DataType",&dt,CMPI_uint16);
+      /* GatheringType */
+      dt=3;
+      if (metricDefinitionList[i].mdef_metrictype&MD_PERIODIC)
+	CMSetProperty(ci,"GatheringType",&dt,CMPI_uint16);
+      /* TimeScope */
+      for (dt=0;dt<sizeof(metrictypetable)/sizeof(int);dt++) {
+	if ((metricDefinitionList[i].mdef_metrictype&metrictypetable[dt])
+	    ==metrictypetable[dt])
+	  break;
+      }
+      if (dt<sizeof(mapmetrictypetable)/sizeof(int))
+	CMSetProperty(ci,"TimeScope",&mapmetrictypetable[dt],CMPI_uint16);
+      else 
+	CMSetProperty(ci,"TimeScope",&mapmetrictypetable[0],CMPI_uint16);
+      /* IsContinuous, ChangeType */
+      if (metricDefinitionList[i].mdef_iscontinuous&MD_TRUE) {
+	CMSetProperty(ci,"IsContinuous",&CMPI_true,CMPI_boolean);
+	for (dt=0;dt<sizeof(changetypetable)/sizeof(int);dt++) {
+	  if (metricDefinitionList[i].mdef_changetype==changetypetable[dt])
+	    break;
+	}
+	if (dt<sizeof(changetypetable)/sizeof(int))
+	  CMSetProperty(ci,"ChangeType",&dt,CMPI_uint16);
+	else {
+	  dt=0;
+	  CMSetProperty(ci,"ChangeType",&dt,CMPI_uint16);
+	}
+      }
+      else {
+	CMSetProperty(ci,"IsContinuous",&CMPI_false,CMPI_boolean);
+	dt=2;
+	CMSetProperty(ci,"ChangeType",&dt,CMPI_uint16);
+      }
       return ci;
     }
   }

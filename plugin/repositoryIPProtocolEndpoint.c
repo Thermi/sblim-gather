@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryIPProtocolEndpoint.c,v 1.1 2004/09/15 11:31:05 heidineu Exp $
+ * $Id: repositoryIPProtocolEndpoint.c,v 1.2 2004/11/03 08:16:36 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -74,14 +74,17 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcVersion=MD_VERSION;
   metricCalcDef[0].mcName="BytesSubmitted";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
-  metricCalcDef[0].mcMetricType=MD_RETRIEVED|MD_POINT;
+  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[0].mcIsContinuous=MD_FALSE;
   metricCalcDef[0].mcDataType=MD_STRING;
   metricCalcDef[0].mcCalc=metricCalcBytesSubmitted;
 
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="BytesTransmitted";
   metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
-  metricCalcDef[1].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[1].mcChangeType=MD_GAUGE;
+  metricCalcDef[1].mcIsContinuous=MD_TRUE;
   metricCalcDef[1].mcDataType=MD_UINT64;
   metricCalcDef[1].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[1].mcCalc=metricCalcBytesTransmitted;
@@ -89,7 +92,9 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="BytesReceived";
   metricCalcDef[2].mcId=mr(pluginname,metricCalcDef[2].mcName);
-  metricCalcDef[2].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[2].mcChangeType=MD_GAUGE;
+  metricCalcDef[2].mcIsContinuous=MD_TRUE;
   metricCalcDef[2].mcDataType=MD_UINT64;
   metricCalcDef[2].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[2].mcCalc=metricCalcBytesReceived;
@@ -97,7 +102,9 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcVersion=MD_VERSION;
   metricCalcDef[3].mcName="ErrorRate";
   metricCalcDef[3].mcId=mr(pluginname,metricCalcDef[3].mcName);
-  metricCalcDef[3].mcMetricType=MD_CALCULATED|MD_RATE;
+  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[3].mcChangeType=MD_GAUGE;
+  metricCalcDef[3].mcIsContinuous=MD_TRUE;
   metricCalcDef[3].mcDataType=MD_FLOAT32;
   metricCalcDef[3].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[3].mcCalc=metricCalcErrorRate;
@@ -105,7 +112,9 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="PacketsTransmitted";
   metricCalcDef[4].mcId=mr(pluginname,metricCalcDef[4].mcName);
-  metricCalcDef[4].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[4].mcChangeType=MD_GAUGE;
+  metricCalcDef[4].mcIsContinuous=MD_TRUE;
   metricCalcDef[4].mcDataType=MD_UINT64;
   metricCalcDef[4].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[4].mcCalc=metricCalcPacketsTransmitted;
@@ -113,7 +122,9 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcVersion=MD_VERSION;
   metricCalcDef[5].mcName="PacketsReceived";
   metricCalcDef[5].mcId=mr(pluginname,metricCalcDef[5].mcName);
-  metricCalcDef[5].mcMetricType=MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[5].mcChangeType=MD_GAUGE;
+  metricCalcDef[5].mcIsContinuous=MD_TRUE;
   metricCalcDef[5].mcDataType=MD_UINT64;
   metricCalcDef[5].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[5].mcCalc=metricCalcPacketsReceived;

@@ -1,5 +1,5 @@
 //
-// $Id: Linux_IPProtocolEndpointMetric.mof,v 1.2 2004/10/07 06:22:00 mihajlov Exp $
+// $Id: Linux_IPProtocolEndpointMetric.mof,v 1.3 2004/11/03 08:16:36 heidineu Exp $
 //
 // (C) Copyright IBM Corp. 2004
 //
@@ -25,10 +25,19 @@
 // ===================================================================
 
 [ Provider("cmpi:OSBase_MetricDefinitionProvider"),
-  Description ("Class for Local File System Metric Definitions")
+  Description ("Class for IP ProtocolEndpoint Metric Definitions")
 ]
 class Linux_IPProtocolEndpointMetric : CIM_BaseMetricDefinition
-{ };
+{
+	[Experimental]
+	boolean IsContinuous;
+	[Experimental]
+	uint16 ChangeType;
+	[Experimental]
+	uint16 TimeScope;
+	[Experimental]
+	uint16 GatheringType;
+};
 
 
 // ===================================================================
@@ -36,7 +45,7 @@ class Linux_IPProtocolEndpointMetric : CIM_BaseMetricDefinition
 // ===================================================================
 
 [ Provider("cmpi:OSBase_MetricValueProvider"),
-  Description ("Class for Local File System Metric Value")
+  Description ("Class for IP ProtocolEndpoint Metric Value")
 ]
 class Linux_IPProtocolEndpointMetricValue : CIM_BaseMetricValue
 { };

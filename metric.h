@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.7 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: metric.h,v 1.8 2004/11/03 08:16:36 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -26,13 +26,32 @@
 extern "C" {
 #endif
 
-#define MD_RETRIEVED  0x0001
-#define MD_CALCULATED 0x0002
-#define MD_POINT      0x0100
-#define MD_INTERVAL   0x0200
-#define MD_RATE       0x0400
-#define MD_AVERAGE    0x0800
+#define MD_RETRIEVED       0x0001
+#define MD_CALCULATED      0x0002
 
+// CIM_BaseMetricDefinition.GatheringType
+#define MD_PERIODIC        0x0010
+
+// CIM_BaseMetricDefinition.TimeScope
+#define MD_POINT           0x0100   // 2 (Point)
+#define MD_INTERVAL        0x0200   // 3 (Interval)
+#define MD_STARTUPINTERVAL 0x0400   // 4 (StartupInterval)
+
+#define MD_RATE            0x0800   // 32768 (Rate)
+#define MD_AVERAGE         0x1000   // 32769 (Average)
+
+
+// CIM_BaseMetricDefinition.IsContinuous
+#define MD_FALSE           0x0000
+#define MD_TRUE            0x0001
+
+
+// CIM_BaseMetricDefinition.ChangeType
+#define MD_COUNTER         0x0001   // 3 (Counter)
+#define MD_GAUGE           0x0002   // 4 (Gauge)
+
+
+// CIM_BaseMetricDefinition.DataType
 #define MD_BOOL      0x0000
 #define MD_UINT      0x0100
 #define MD_SINT      0x0200
@@ -115,6 +134,8 @@ typedef struct _MetricCalculationDefinition {
   int               mcId;
   int               mcAliasId;
   int               mcMetricType;
+  int               mcChangeType;
+  unsigned char     mcIsContinuous;
   int               mcDataType;
   char             *mcCimPlugin;  /* CIM Name Translation Plugin */
   MetricCalculator *mcCalc;

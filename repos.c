@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.6 2004/10/07 06:22:00 mihajlov Exp $
+ * $Id: repos.c,v 1.7 2004/11/03 08:16:36 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -173,6 +173,16 @@ int reposplugin_list(const char *pluginname,
       for (i=0;i<rp->rpNumMetricCalcDefs;i++) {
 	(*rdef)[i].rdId=rp->rpMetricCalcDefs[i].mcId;
 	(*rdef)[i].rdDataType=rp->rpMetricCalcDefs[i].mcDataType;
+
+
+	// NEW
+	(*rdef)[i].rdMetricType=rp->rpMetricCalcDefs[i].mcMetricType;
+	(*rdef)[i].rdChangeType=rp->rpMetricCalcDefs[i].mcChangeType;
+	(*rdef)[i].rdIsContinuous=rp->rpMetricCalcDefs[i].mcIsContinuous;
+	// --- NEW
+
+
+
 	(*rdef)[i].rdName=rp->rpMetricCalcDefs[i].mcName;
 	(*rdef)[i].rdResource=NULL; /* todo must specify resource listing fnc */
       }
