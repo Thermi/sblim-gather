@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.9 2004/11/10 16:08:24 heidineu Exp $
+ * $Id: repos.h,v 1.10 2004/11/12 16:40:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -114,10 +114,10 @@ typedef struct _SubscriptionRequest {
   int    srBaseMetricId; /* if the metric is a derived one this must be set */
   char  *srResource;
   int    srResourceOp;
-  char  *srValue;
-  int    srValueOp;
   char  *srSystemId;
   int    srSystemOp;
+  char  *srValue;
+  int    srValueOp;
 } SubscriptionRequest;
 
 typedef void (SubscriptionCallback) (int corrid, ValueRequest *vr);

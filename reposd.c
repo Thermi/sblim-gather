@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.17 2004/11/10 16:08:24 heidineu Exp $
+ * $Id: reposd.c,v 1.18 2004/11/12 16:40:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -22,8 +22,10 @@
  */
 
 #include "repos.h"
+#include "sforward.h"
 #include "gatherc.h"
 #include "commheap.h"
+#include "marshal.h"
 #include "reposcfg.h"
 #include <mtrace.h>
 #include <mlog.h>
@@ -69,17 +71,6 @@ if (rreposport==0) { \
 pthread_mutex_unlock(&connect_mutex); 
 
 
-/* subscription test */
-
-void test_callback(int corrid, ValueRequest *vr)
-{
-  fprintf(stderr,"--- subscription event: ");
-  fprintf(stderr,"id=%d ",corrid);
-  fprintf(stderr,", metric id=%d, resource=%s, system=%s, value=%s\n",
-	  vr->vsId, vr->vsValues->viResource, 
-	  vr->vsValues->viSystemId, vr->vsValues->viValue);
-}
-
 /* ---------------------------------------------------------------------------*/
 
 int main(int argc, char * argv[])
@@ -90,16 +81,17 @@ int main(int argc, char * argv[])
   COMMHEAP     *ch;
   char          buffer[GATHERVALBUFLEN];
   size_t        bufferlen=sizeof(buffer);
-  SubscriptionRequest sr;
+  SubscriptionRequest *sr;
   ValueRequest *vr;
   ValueItem    *vi;
   void         *vp, *vpmax;
   int           i,j;
   size_t        valreslen;
   size_t        valsyslen;
+  off_t         offset;
   RepositoryPluginDefinition *rdef;
+  char         *pluginname, *metricname, *listener;
   MetricResourceId *rid;
-  char         *pluginname, *metricname;
   MetricValue  *mv;
   pthread_t     rcomm;
   char          cfgbuf[1000];
@@ -292,11 +284,23 @@ int main(int argc, char * argv[])
 	ch_release(ch);
 	break;
       case GCMD_SUBSCRIBE:
-	sr.srMetricId=atoi(buffer+sizeof(GATHERCOMM));
-	sr.srResourceOp=SUBSCR_OP_ANY;
-	sr.srSystemOp=SUBSCR_OP_ANY;
-	sr.srValueOp=SUBSCR_OP_ANY;
-	comm->gc_result=repos_subscribe(&sr,test_callback);
+	offset = sizeof(GATHERCOMM);
+	if (unmarshal_string(&listener,buffer,&offset,sizeof(buffer),1) == 0 &&
+	    unmarshal_subscriptionrequest(&sr,buffer,&offset,sizeof(buffer)) 
+	    == 0) {
+	  if (subs_enable_forwarding(sr,listener)==0) {
+	    comm->gc_result=repos_subscribe(sr,subs_forward);
+	  } else {
+	    M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		    ("Enabling of susbcription forwarding failed."));
+	    comm->gc_result=-1;
+	  }
+	} else {
+	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		  ("Unmarshalling subscription request failed %d/%d.",
+		   offset,sizeof(buffer)));
+	  comm->gc_result=-1;
+	}
 	comm->gc_datalen=0;
 	break;
       case GCMD_SETVALUE:

@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.11 2004/11/10 16:08:24 heidineu Exp $
+ * $Id: repos.c,v 1.12 2004/11/12 16:40:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -422,6 +422,7 @@ static void RepositorySubscriptionCallback(MetricValue *mv)
 	mc=RPR_GetMetric(subs->rsr_req->srMetricId);
 	if (mc && mc->mcCalc) {
 	  vr.vsId=subs->rsr_req->srMetricId;
+	  vr.vsSystemId=vr.vsResource=NULL;
 	  vr.vsNumValues=1;
 	  vr.vsValues=&vi;
 	  vi.viCaptureTime=mv->mvTimeStamp;

@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.h,v 1.5 2004/11/10 16:08:24 heidineu Exp $
+ * $Id: rrepos.h,v 1.6 2004/11/12 16:40:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -100,9 +100,10 @@ int rreposplugin_list(const char *pluginname,
 		      RepositoryPluginDefinition **pdef, 
 		      COMMHEAP ch);
 
-
-
-
+/*
+ * Control interface, subscribe to repository events
+ */
+int rrepos_subscribe(SubscriptionRequest *sr,  SubscriptionCallback *scb);
 
 /*
  * Retrieve resource list from remote repository
@@ -112,12 +113,6 @@ int rreposplugin_list(const char *pluginname,
 int rreposresource_list(const char * metricid,
 			MetricResourceId **rid, 
 			COMMHEAP ch);
-
-
- /*
-  * dummy for testing
-  */
-int rrepos_subscribe(char *id);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.7 2004/11/09 15:54:46 mihajlov Exp $
+ * $Id: reposctl.c,v 1.8 2004/11/12 16:40:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -20,6 +20,7 @@
 
 #include "metric.h"
 #include "rrepos.h"
+#include "mtrace.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -37,10 +38,13 @@ static const char* commands[] = {
   "\tg id [system [resource [from [to]]]]\tget metric value\n",
   "\tk\t\tkill daemon\n",
   "\td\t\tstart daemon\n",
+  "\tc\t\tlocal trace\n",
   NULL
 };
 
 static void printhelp();
+static void test_callback(int corrid, ValueRequest *vr);
+
 
 int main()
 {
@@ -56,6 +60,7 @@ int main()
   COMMHEAP          commh;
   int               offFrom, offTo;
   ValueRequest      vr;
+  SubscriptionRequest sr;
   RepositoryPluginDefinition *rdef;
   
   while(fgets(buf,sizeof(buf),stdin)) {
@@ -64,6 +69,12 @@ int main()
     switch(cmd) {
     case 'h':
       printhelp();
+      break;
+    case 'c':
+#ifndef NOTRACE
+      m_trace_setlevel(MTRACE_ALL);
+      m_trace_enable(MTRACE_MASKALL);
+#endif
       break;
     case 's':
       if (rrepos_status(&rs) == 0) {
@@ -193,7 +204,12 @@ int main()
       break;
     case 'b':
       sscanf(arg,"%s",argbuf);
-      if(rrepos_subscribe(argbuf))
+      sr.srMetricId = atoi(arg);
+      sr.srCorrelatorId = 1;
+      sr.srSystemOp = SUBSCR_OP_ANY;
+      sr.srResourceOp = SUBSCR_OP_ANY;
+      sr.srValueOp = SUBSCR_OP_ANY;
+      if(rrepos_subscribe(&sr,test_callback))
 	printf("Failed\n");
       break;
     case 'k':
@@ -223,3 +239,14 @@ static void printhelp()
   for (i=0;commands[i];i++)
     printf(commands[i]);
 }
+
+static void test_callback(int corrid, ValueRequest *vr)
+{
+  printf("*** event notification: ");
+  printf("timestamp=%s ", ctime(&vr->vsValues[0].viCaptureTime));
+  printf("correlation id=%d ", corrid);
+  printf("metric id=%d ",vr->vsId);
+  printf("resource=%s ",vr->vsValues[0].viResource);
+  printf("\n");
+}
+

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2004/11/03 08:16:36 heidineu Exp $
+# $Id: makefile,v 1.13 2004/11/12 16:40:12 mihajlov Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
@@ -8,7 +8,8 @@ LDLIBS=-lpthread -ldl
 SUBDIRS=util comms samples  # plugin  provider
 SOURCES=mlist.c mretr.c mplugmgr.c mreg.c mreposl.c mreposp.c \
 	gather.c gatherctl.c rgather.c gatherd.c \
-	rrepos.c repos.c reposctl.c rplugmgr.c rreg.c reposd.c 
+	rrepos.c repos.c reposctl.c rplugmgr.c rreg.c reposd.c \
+	sforward.c slisten.c marshal.c
 
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
@@ -31,11 +32,11 @@ librgather.so: rgather.o
 
 librrepos.so: LDFLAGS=-L . -L comms -L util
 librrepos.so: LOADLIBES=-lmcserv -lrcserv -lgatherutil
-librrepos.so: rrepos.o mreposl.o
+librrepos.so: rrepos.o mreposl.o marshal.o slisten.o
 
 librepos.so: LDFLAGS=-L . -L util
 librepos.so: LOADLIBES=-lgatherutil
-librepos.so: repos.o rplugmgr.o mreposl.o rplugmgr.o rreg.o
+librepos.so: repos.o rplugmgr.o mreposl.o rplugmgr.o rreg.o marshal.o
 
 gatherd: LOADLIBES=-lgather -lmcserv
 gatherd: LDFLAGS=-L . -L comms -Xlinker -rpath-link -Xlinker .
@@ -43,7 +44,7 @@ gatherd: gatherd.o
 
 reposd: LOADLIBES=-lrepos -lmcserv -lrcserv
 reposd: LDFLAGS=-L . -L comms -Xlinker -rpath-link -Xlinker .
-reposd: reposd.o
+reposd: reposd.o sforward.o
 
 gatherctl: LOADLIBES=-lrgather -lmcserv -lgatherutil
 gatherctl: LDFLAGS=-L . -L comms -L util

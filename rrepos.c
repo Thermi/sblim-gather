@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.16 2004/11/10 16:08:24 heidineu Exp $
+ * $Id: rrepos.c,v 1.17 2004/11/12 16:40:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -20,7 +20,11 @@
 
 #include "rrepos.h"
 #include "gatherc.h"
+#include "marshal.h"
+#include "slisten.h"
 #include "mcclt.h"
+#include "mtrace.h"
+#include "merrno.h"
 #include "rcclt.h"
 #include "gathercfg.h"
 #include <string.h>
@@ -546,28 +550,46 @@ int rrepos_unload()
   }
 }
 
-int rrepos_subscribe(char *id)
+int rrepos_subscribe(SubscriptionRequest *sr,  SubscriptionCallback *scb)
 {
   MC_REQHDR   hdr;
   char        xbuf[GATHERBUFLEN];
   GATHERCOMM *comm=(GATHERCOMM*)xbuf;
   size_t      commlen=sizeof(xbuf);
+  off_t       offset;
+  char        listener[260];
 
+  M_TRACE(MTRACE_FLOW,MTRACE_RREPOS,
+	  ("srepos_subscribe %p %p", sr, scb));
   INITCHECK();
+  if (add_subscription_listener(listener,sr,scb)==-1) {
+    M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	    ("srepos_subscribe could not set up listener"));    
+    return -1;
+  }
   hdr.mc_type=GATHERMC_REQ;
   hdr.mc_handle=-1;
   comm->gc_cmd=GCMD_SUBSCRIBE;
-  comm->gc_datalen=strlen(id)+1;
-  comm->gc_result=0;
-  strcpy(xbuf+sizeof(GATHERCOMM),id);
-  pthread_mutex_lock(&rrepos_mutex);
-  if (mcc_request(rreposhandle,&hdr,comm,
-		  sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
-      mcc_response(&hdr,comm,&commlen)==0) {
-    pthread_mutex_unlock(&rrepos_mutex);
-    return comm->gc_result;
+  offset = sizeof(GATHERCOMM);
+  if (marshal_string(listener,xbuf,&offset,sizeof(xbuf),1) == 0 && 
+      marshal_subscriptionrequest(sr,xbuf,&offset,sizeof(xbuf)) == 0) {
+    comm->gc_datalen=offset;
+    pthread_mutex_lock(&rrepos_mutex);
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	mcc_response(&hdr,comm,&commlen)==0) {
+      pthread_mutex_unlock(&rrepos_mutex);
+      return comm->gc_result;
+    } else {
+      pthread_mutex_unlock(&rrepos_mutex);
+      M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	      ("srepos_subscribe remote request error"));    
+      return -1;
+    }
   } else {
-    pthread_mutex_unlock(&rrepos_mutex);
+    M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	    ("srepos_subscribe marshalling error, %d/%d",
+	     offset,sizeof(xbuf)));    
     return -1;
   }
 }
