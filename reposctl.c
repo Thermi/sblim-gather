@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.4 2004/08/04 11:27:36 mihajlov Exp $
+ * $Id: reposctl.c,v 1.5 2004/10/18 11:34:38 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -132,7 +132,7 @@ int main()
 	printf("Value id %d has value data \n",
 	       vr.vsId);
 	for (i=0; i < vr.vsNumValues; i++) {
-	  printf("\t for resource %s ",vr.vsValues[i].viResource);
+	  printf("\t on %s for resource %s ",vr.vsValues[i].viSystemId,vr.vsValues[i].viResource);
 	  switch(vr.vsDataType) {
 	  case MD_BOOL:
 	    printf("%s", *vr.vsValues[i].viValue ? "true" : "false" );

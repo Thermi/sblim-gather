@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2004/07/16 15:30:04 mihajlov Exp $
+# $Id: makefile,v 1.4 2004/10/18 11:34:38 heidineu Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
@@ -31,7 +31,7 @@ librgather.so: LOADLIBES=-lmcserv -lgatherutil
 librgather.so: rgather.o
 
 librrepos.so: LDFLAGS=-L . -L comms
-librrepos.so: LOADLIBES=-lmcserv -lgatherutil
+librrepos.so: LOADLIBES=-lmcserv -lrcserv -lgatherutil
 librrepos.so: rrepos.o mreposl.o
 
 librepos.so: LDFLAGS=-L .
@@ -42,7 +42,7 @@ gatherd: LOADLIBES=-lgather -lmcserv
 gatherd: LDFLAGS=-L . -L comms -Xlinker -rpath-link -Xlinker .
 gatherd: gatherd.o
 
-reposd: LOADLIBES=-lrepos -lmcserv
+reposd: LOADLIBES=-lrepos -lmcserv -lrcserv
 reposd: LDFLAGS=-L . -L comms -Xlinker -rpath-link -Xlinker .
 reposd: reposd.o
 

@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.10 2004/10/12 08:44:53 mihajlov Exp $
+ * $Id: rrepos.c,v 1.11 2004/10/18 11:34:38 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -21,7 +21,9 @@
 #include "rrepos.h"
 #include "gatherc.h"
 #include "mcclt.h"
+#include "rcclt.h"
 #include <string.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/wait.h>
@@ -29,7 +31,9 @@
 
 static RepositoryToken _RemoteToken = {sizeof(RepositoryToken),0,0};
 static int rreposhandle=-1;
-static char _systemId[260] = {0};
+static char _systemId[265] = {0};
+static char rsystemId[265] = {0};
+static int  rreposport     = 6363;
 
 /* use mutex for I/O serialisation */
 static pthread_mutex_t rrepos_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -40,6 +44,20 @@ if (rreposhandle==-1) { \
   rreposhandle=mcc_init(REPOS_COMMID); \
 } \
 pthread_mutex_unlock(&rrepos_mutex); 
+
+
+
+/* TODO : configuration interface */
+
+#define RINITCHECK() \
+pthread_mutex_lock(&rrepos_mutex); \
+if (strlen(rsystemId)==0) { \
+  sprintf(rsystemId,"dyn-9-152-173-70.boeblingen.de.ibm.com"); \
+} \
+rcc_init(rsystemId,&rreposport); \
+pthread_mutex_unlock(&rrepos_mutex); 
+
+
 
 #ifdef NAGNAG
 typedef struct _IdMap {
@@ -115,7 +133,6 @@ int rrepos_register(const PluginDefinition *pdef)
 
 int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
 {
-  MC_REQHDR         hdr;
   char              xbuf[GATHERBUFLEN];
   GATHERCOMM       *comm=(GATHERCOMM*)xbuf;
   size_t            commlen=sizeof(xbuf);
@@ -126,9 +143,7 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
     if (strlen(_systemId)==0) {
       gethostname(_systemId,sizeof(_systemId));
     }
-    INITCHECK();
-    hdr.mc_type=GATHERMC_REQ;
-    hdr.mc_handle=-1;
+    RINITCHECK();
     comm->gc_cmd=GCMD_SETVALUE;
     comm->gc_datalen=strlen(reposplugin) + 1 +
       strlen(metric) + 1 +
@@ -152,9 +167,7 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
     dataoffs+=mv->mvDataLength;
     strcpy(xbuf+dataoffs,_systemId);
     pthread_mutex_lock(&rrepos_mutex);
-    if (mcc_request(rreposhandle,&hdr,comm,
-		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
-	mcc_response(&hdr,comm,&commlen)==0 &&
+    if (rcc_request(comm,sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	commlen == sizeof(GATHERCOMM)) {
       pthread_mutex_unlock(&rrepos_mutex);
       return comm->gc_result;
