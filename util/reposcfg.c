@@ -1,5 +1,5 @@
 /*
- * $Id: reposcfg.c,v 1.1 2004/10/20 14:43:31 heidineu Exp $
+ * $Id: reposcfg.c,v 1.2 2004/10/21 13:55:11 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -27,6 +27,9 @@ int reposcfg_init()
   const char * allowed[] = {
     "RepositoryPort",
     "RepositoryMaxConnections",
+    "TraceLevel",
+    "TraceFile",
+    "TraceComponents",
     NULL
   };
   reposcfg_handle=set_configfile("/etc/reposd.conf",allowed);

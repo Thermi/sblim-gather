@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.13 2004/10/21 07:20:43 heidineu Exp $
+ * $Id: reposd.c,v 1.14 2004/10/21 13:55:11 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -345,7 +345,7 @@ int main(int argc, char * argv[])
   }
   mcs_term();
   m_log(M_INFO,M_QUIET,"Reposd is shutting down.\n");
-  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Reposd is shutting down.\n"));
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Reposd is shutting down."));
   return 0;
 }
 
@@ -354,35 +354,42 @@ static void * repos_remote()
   pthread_t thread;
   int       hdl = -1;
 
-  m_log(M_INFO,M_QUIET,"Remote reposd thread - starting.\n");
-  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Remote reposd thread - starting.\n"));
+  m_log(M_INFO,M_QUIET,"Remote reposd is starting up.\n");
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Remote reposd is starting up."));
 
   while (1) {
     if (hdl == -1) {
       if (rcs_accept(&hdl) == -1) {
-	m_log(M_ERROR,M_SHOW,"Could not accept: %s.\n",
+	m_log(M_ERROR,M_SHOW,"Remote reposd could not accept: %s.\n",
 	      strerror(errno));
 	return 0; 
       }
+      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Remote client request on socket %i accepted",hdl));
     }
     pthread_mutex_lock(&connect_mutex);
     connects++;
+    M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	    ("Increased number of current remote client connections %i",connects));
     pthread_mutex_unlock(&connect_mutex);
     if (pthread_create(&thread,NULL,rrepos_getrequest,(void*)hdl) != 0) {
-      perror("_reposd_remote create thread");
+      m_log(M_ERROR,M_SHOW,"Remote reposd could not create thread for socket %i: %s.\n",
+	    hdl,strerror(errno));
       return 0;
     }   
     pthread_mutex_lock(&connect_mutex);
     if(connects==rmaxconn) {
       /* wait for at least one finished thread */
+      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	      ("Remote reposd's MaxConnections reached %i - waiting for at least one finished thread",
+	       connects));
       pthread_cond_wait(&connect_cond,&connect_mutex);
     }
     pthread_mutex_unlock(&connect_mutex);
     hdl = -1;
   }
   rcs_term();
-  m_log(M_INFO,M_QUIET,"Remote reposd thread - exiting.\n");
-  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Remote reposd thread - exiting.\n"));
+  m_log(M_INFO,M_QUIET,"Remote reposd is shutting down.\n");
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Remote reposd is shutting down."));
   return 0;
 }
 
@@ -394,23 +401,25 @@ static void * rrepos_getrequest(void * hdl)
   char         *pluginname, *metricname;
   MetricValue  *mv;
 
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Starting thread on socket %i",(int)hdl));
   if (pthread_detach(pthread_self()) != 0) {
-    perror("detaching thread");
+    m_log(M_ERROR,M_SHOW,"Remote reposd thread could not detach: %s.\n",
+	  strerror(errno));
   }
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Detached thread on socket %i",(int)hdl));
 
-  //  fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
   while (1) {
     memset(buffer, 0, sizeof(buffer));
     bufferlen=sizeof(buffer);
     pthread_mutex_lock(&connect_mutex);
     if (rcs_getrequest((int)hdl,buffer,&bufferlen) == -1) {
-      //      fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
       connects--;
+      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	    ("Decreased number of current remote client connections %i",connects));
       pthread_cond_signal(&connect_cond);
       pthread_mutex_unlock(&connect_mutex);
       break;
     }
-    //    fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buffer);
     pthread_mutex_unlock(&connect_mutex);
 
     /* write data to repository */
@@ -421,8 +430,9 @@ static void * rrepos_getrequest(void * hdl)
         
     /* perform sanity check */
     if (bufferlen != sizeof(GATHERCOMM) + comm->gc_datalen) {
-      fprintf(stderr,"--- invalid length received: expected %d got %d\n",
-	      sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
+      m_log(M_ERROR,M_SHOW,
+	    "Remote reposd invalid length received on socket %i: expected %d got %d.\n",
+	    hdl,sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
       continue;
     }
     /* the transmitted parameters are
@@ -446,11 +456,14 @@ static void * rrepos_getrequest(void * hdl)
     mv->mvDataType   = ntohl((unsigned)mv->mvDataType);
     mv->mvDataLength = ntohl((size_t)mv->mvDataLength);
     mv->mvSystemId=mv->mvData+mv->mvDataLength;
-    //    fprintf(stderr,"socket %i : %s %s\n",(int)hdl,mv->mvSystemId,metricname);
+    M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	    ("Retrieved data on socket %i: %s %s %s",(int)hdl,
+	     mv->mvSystemId,pluginname,metricname));
     if ((comm->gc_result=reposvalue_put(pluginname,metricname,mv)) != 0) {
-      fprintf(stderr,"write %s to repository failed\n",metricname);
+      m_log(M_ERROR,M_SHOW,"Remote reposd on socket %i: write %s to repository failed.\n",
+	    hdl,metricname);
     }
   }
-  //  fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Ending thread on socket %i",(int)hdl));
   return NULL;
 }
