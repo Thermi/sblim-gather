@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.7 2004/10/18 11:34:38 heidineu Exp $
+ * $Id: reposd.c,v 1.8 2004/10/19 16:09:08 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -24,6 +24,7 @@
 #include "repos.h"
 #include "gatherc.h"
 #include "commheap.h"
+#include "mlog.h"
 #include <mcserv.h>
 #include <rcserv.h>
 #include <stdio.h>

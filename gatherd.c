@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.6 2004/10/19 15:06:35 mihajlov Exp $
+ * $Id: gatherd.c,v 1.7 2004/10/19 16:09:08 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -24,10 +24,12 @@
 #include "gatherc.h"
 #include "commheap.h"
 #include "gathercfg.h"
+#include "mlog.h"
 #include <mcserv.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define CHECKBUFFER(comm,buffer,sz) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=sizeof(buffer))
 
@@ -41,21 +43,25 @@ int main(int argc, char * argv[])
   size_t        bufferlen=sizeof(buffer);
   int           i, j;
   PluginDefinition *pdef;
+
+  m_start_logging("gatherd");
+  m_log(M_INFO,M_QUIET,"Gatherd is starting up.\n");
   
   if (argc == 1) {
     /* daemonize if no arguments are given */
     if (daemon(0,0)) {
-      perror("gatherd");
+      m_log(M_ERROR,M_SHOW,"Couldn't daemonize: %s - exiting\n",
+	    strerror(errno));
       exit(-1);
     }
   }
 
   if (gathercfg_init()) {
-    fprintf(stderr,"Could not open gatherd config file.\n");
+    m_log(M_ERROR,M_SHOW,"Could not open gatherd config file.\n");
   }
   
   if (mcs_init(GATHER_COMMID)) {
-    fprintf(stderr,"Could not open gatherd socket.\n");
+    m_log(M_ERROR,M_SHOW,"Could not open gatherd socket.\n");
     return -1;
   }
 
@@ -65,14 +71,14 @@ int main(int argc, char * argv[])
     while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
       if (hdr.mc_type != GATHERMC_REQ) {
 	/* ignore unknown message types */
-	fprintf(stderr,"--- invalid request type  received %c\n",hdr.mc_type);
+	m_log(M_ERROR,M_QUIET,"Invalid request type  received %c\n",hdr.mc_type);
 	continue;
       }
       comm=(GATHERCOMM*)buffer;
       /* perform sanity check */
       if (bufferlen != sizeof(GATHERCOMM) + comm->gc_datalen) {
-	fprintf(stderr,"--- invalid length received: expected %d got %d\n",
-		sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
+	m_log(M_ERROR,M_QUIET,"Invalid length received: expected %d got %d\n",
+	      sizeof(GATHERCOMM)+comm->gc_datalen,bufferlen);
 	continue;
       }
       switch (comm->gc_cmd) {
@@ -168,12 +174,14 @@ int main(int argc, char * argv[])
       }
       hdr.mc_type=GATHERMC_RESP;
       if (sizeof(GATHERCOMM) + comm->gc_datalen > sizeof(buffer)) {
-	fprintf(stderr,"Error: Available data size is exceeding buffer.\n");
+	m_log(M_ERROR,M_QUIET,
+	      "Error: Available data size is exceeding buffer.\n");
       }
       mcs_sendresponse(&hdr,buffer,sizeof(GATHERCOMM)+comm->gc_datalen);
       bufferlen=sizeof(buffer);
     }
   }
   mcs_term();
+  m_log(M_INFO,M_QUIET,"Gatherd is shutting down.\n");
   return 0;
 }
