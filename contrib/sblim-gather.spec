@@ -9,7 +9,7 @@ BuildRoot: /var/tmp/buildroot
 Summary: SBLIM Performance Data Gatherer and Providers
 Name: sblim-gather
 Version: 1.0.1
-Release: 1
+Release: 2
 Group: Systems Management/Base
 Copyright: Common Public Licence http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
 Packager: Viktor Mihajlovski <mihajlov@de.ibm.com>
@@ -52,9 +52,12 @@ mkdir -p $RPM_BUILD_ROOT/usr/bin
 mkdir -p $RPM_BUILD_ROOT/usr/lib/cmpi
 mkdir -p $RPM_BUILD_ROOT/usr/include/cmpi
 mkdir -p $RPM_BUILD_ROOT/usr/share/cmpi/mof
+mkdir -p $RPM_BUILD_ROOT/usr/share/cmpi/tests/cim
+mkdir -p $RPM_BUILD_ROOT/usr/share/cmpi/tests/system/linux
 
 make install INSTALLROOT=$RPM_BUILD_ROOT
 make -C provider install INSTALL_ROOT=$RPM_BUILD_ROOT PEGASUS= STANDALONE=1
+make -C provider/test install TESTSUITE=$RPM_BUILD_ROOT/usr/share/cmpi/tests
 
 # SUSE specific
 install -d $RPM_BUILD_ROOT/sbin/conf.d
