@@ -1,17 +1,20 @@
-# $Id: makefile,v 1.1 2004/10/20 08:15:20 mihajlov Exp $
+# $Id: makefile,v 1.2 2004/10/20 12:49:15 mihajlov Exp $
 
 CD=cd
 export CFLAGS=-Wall -g -fPIC
 CPPFLAGS=-Icomms
-LDLIBS=
+LDFLAGS=$(CFLAGS)
+LDLIBS=-lpthread
 
 SUBDIRS=
 SOURCES=mrwlock.c commheap.c gatherutil.c \
-	mcfg.c mcfgtest.c gathercfg.c mlog.c
+	mcfg.c mcfgtest.c gathercfg.c mlog.c mtrace.c \
+	mtracetest.c
+
 DEPFILES=$(SOURCES:.c=.d)
 OBJECTS=$(SOURCES:.c=.o)
 LIBRARIES=libgatherutil.so
-EXECUTABLES=mcfgtest
+EXECUTABLES=mcfgtest mtracetest
 
 include ../rules
 
@@ -19,9 +22,12 @@ include ../rules
 
 all: $(SUBDIRS) $(LIBRARIES) $(EXECUTABLES) mcfgtest
 
-libgatherutil.so: gatherutil.o commheap.o mrwlock.o mcfg.o gathercfg.o mlog.o
+libgatherutil.so: gatherutil.o commheap.o mrwlock.o mcfg.o gathercfg.o mlog.o \
+		mtrace.o
 
 mcfgtest: mcfgtest.o mcfg.o
+
+mtracetest: mtracetest.o mtrace.o
 
 clean: $(SUBDIRS)
 	$(RM) $(OBJECTS) $(LIBRARIES) $(EXECUTABLES)
