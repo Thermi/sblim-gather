@@ -1,5 +1,5 @@
 /*
- * $Id: slisten.c,v 1.2 2004/11/18 15:53:32 mihajlov Exp $
+ * $Id: slisten.c,v 1.3 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -131,7 +131,7 @@ int add_subscription_listener(char *listenerid, SubscriptionRequest *sr,
   CallbackEntry *cbl = cbHead;
   CallbackEntry *prev = cbHead;
   M_TRACE(MTRACE_FLOW,MTRACE_RREPOS,
-	  ("setup_subscription_listener"));
+	  ("add_subscription_listener"));
   if (fdsockfile==-1) {
     fdsockfile=mkstemp(listener);
     M_TRACE(MTRACE_DETAILED,MTRACE_RREPOS,
@@ -176,5 +176,47 @@ int add_subscription_listener(char *listenerid, SubscriptionRequest *sr,
     cbl->cb_next = prev->cb_next;
     prev->cb_next = cbl;
   }
+  return 0;
+}
+
+int remove_subscription_listener(const char *listenerid, 
+				 SubscriptionRequest *sr,
+				 SubscriptionCallback *scb)
+{
+  CallbackEntry *cbl = cbHead;
+  CallbackEntry *prev = cbHead;
+  M_TRACE(MTRACE_FLOW,MTRACE_RREPOS,
+	  ("remove_subscription_listener"));
+  if (strcmp(listenerid,listener)) {
+    M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	    ("listener %s is not active",listenerid));
+    return -1;
+  }
+  while(cbl && sr->srCorrelatorId <= cbl->cb_corrid) {
+    if (cbl->cb_corrid == sr->srCorrelatorId && 
+	cbl->cb_metricid == sr->srMetricId && 
+	cbl->cb_callback == scb) {
+      /* unlink */
+      if (prev == cbl) {
+	cbHead = cbl->cb_next;
+      } else {
+	prev->cb_next = cbl->cb_next;
+      }
+      free(cbl);
+      /* stop listening ? */
+      return 0;
+    }
+    prev = cbl;
+    cbl = cbl->cb_next;
+  }
+  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	  ("subscription request (%d,%d) not found",
+	   sr->srMetricId,sr->srCorrelatorId));
+  return -1;
+}
+
+int current_subscription_listener(char *listenerid)
+{
+  strcpy(listenerid,listener);
   return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: sforward.h,v 1.1 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: sforward.h,v 1.2 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -26,6 +26,7 @@ extern "C" {
 #endif
 
 int subs_enable_forwarding(SubscriptionRequest *sr, const char *listenerid);
+int subs_disable_forwarding(SubscriptionRequest *sr, const char *listenerid);
 void subs_forward(int corrid, ValueRequest *vr);
 
 #ifdef __cplusplus

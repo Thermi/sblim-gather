@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.h,v 1.6 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: rrepos.h,v 1.7 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -101,9 +101,12 @@ int rreposplugin_list(const char *pluginname,
 		      COMMHEAP ch);
 
 /*
- * Control interface, subscribe to repository events
+ * Control interface, subscribe and unsubscribe to repository events
  */
 int rrepos_subscribe(SubscriptionRequest *sr,  SubscriptionCallback *scb);
+
+
+int rrepos_unsubscribe(SubscriptionRequest *sr,  SubscriptionCallback *scb);
 
 /*
  * Retrieve resource list from remote repository

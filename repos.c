@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.12 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: repos.c,v 1.13 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -54,7 +54,7 @@ typedef struct _RepositorySubscription {
 
 static RepositorySubscription *subscriptions=NULL;
 static int sub_add(SubscriptionRequest *, SubscriptionCallback*);
-static void sub_remove(SubscriptionRequest *);
+static int sub_remove(SubscriptionRequest *, SubscriptionCallback*);
 static int  matchCommonCriteria(SubscriptionRequest *, MetricValue*);
 static int  matchValue(SubscriptionRequest *, ValueRequest *);
 
@@ -387,6 +387,21 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
   return -1;
 }
 
+int repos_unsubscribe(SubscriptionRequest *sr, SubscriptionCallback *scb)
+{
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	  ("repos_unsubscribe %p %p", sr, scb));
+  if (sr && scb && sub_remove(sr,scb) == 0) {
+    return MetricRepository->
+      mrep_regcallback(RepositorySubscriptionCallback,
+			 sr->srBaseMetricId,
+			 MCB_STATE_UNREGISTER);
+  };
+  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	  ("repos_unsubscribe invalid parameter %p %p", sr, scb));
+  return -1;
+}
+
 int repos_subscribe(SubscriptionRequest *sr, SubscriptionCallback *scb)
 {
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
@@ -499,6 +514,60 @@ static int sub_add(SubscriptionRequest *sr, SubscriptionCallback *scb)
   }
   M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 	  ("sub_add invalid parameters %p %p", sr, scb));
+  return -1;
+}
+
+static int sub_remove(SubscriptionRequest *sr, SubscriptionCallback *scb)
+{
+  /* TODO: add locks */
+  if (sr) {
+    RepositorySubscription *subs = subscriptions;
+    RepositorySubscription *prev = subscriptions;
+    MetricCalculationDefinition *mc=RPR_GetMetric(sr->srMetricId);
+    if (mc == NULL) {
+      M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	      ("sub_remove failed to retrieve metric"
+	       " definition for %d", sr->srMetricId));
+      return -1;
+    }
+    sr->srBaseMetricId = 
+      (mc->mcMetricType&MD_CALCULATED) ? mc->mcAliasId : sr->srMetricId;
+    while (subs && subs->rsr_req) {
+      if (subs->rsr_req->srMetricId == sr->srMetricId &&
+	  subs->rsr_req->srBaseMetricId == sr->srBaseMetricId &&
+	  subs->rsr_cb == scb) {
+	/* unlink */
+	if (prev == subs) {
+	  subscriptions = subs->rsr_next;
+	} else {
+	  prev->rsr_next = subs->rsr_next;
+	}
+	if (subs->rsr_req->srValue) {
+	  free(subs->rsr_req->srValue);
+	}
+	if (subs->rsr_req->srSystemId) {
+	  free(subs->rsr_req->srSystemId);
+	}
+	if (subs->rsr_req->srResource) {
+	  free(subs->rsr_req->srResource);
+	}
+	free(subs->rsr_req);
+	return 0;
+      } else if (subs->rsr_next && 
+		 subs->rsr_next->rsr_req->srBaseMetricId > 
+		 sr->srBaseMetricId) {
+	/* not in list */
+	break;
+      }
+      prev = subs;
+      subs = subs->rsr_next;
+    }
+    M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	    ("sub_remove subscription not found (%d,%d)", 
+	     sr->srMetricId, sr->srCorrelatorId));
+  }
+  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	  ("sub_remove invalid parameters %p %p", sr, scb));
   return -1;
 }
 

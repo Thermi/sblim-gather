@@ -1,5 +1,5 @@
 /*
- * $Id: sforward.c,v 1.2 2004/11/18 15:53:32 mihajlov Exp $
+ * $Id: sforward.c,v 1.3 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -48,8 +48,9 @@ int subs_enable_forwarding(SubscriptionRequest *sr, const char *listenerid)
     ForwardingEntry *fwl = fwHead;
     ForwardingEntry *prev = fwHead;
     while (fwl) {
-      if (fwl->fw_id == sr->srMetricId && fwl->fw_origcorrid == sr->srCorrelatorId &&
-	  strcmp(listenerid,fwl->fw_listener.sun_path)) {
+      if (fwl->fw_id == sr->srMetricId && 
+	  fwl->fw_origcorrid == sr->srCorrelatorId &&
+	  strcmp(listenerid,fwl->fw_listener.sun_path)==0) {
 	/* already there */
 	M_TRACE(MTRACE_DETAILED,MTRACE_REPOS,
 		("already forwarding metric id %d for listener %s", sr->srMetricId, listenerid));
@@ -78,6 +79,42 @@ int subs_enable_forwarding(SubscriptionRequest *sr, const char *listenerid)
   }
   M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 	  ("subs_enable_forwarding invalid parameter %p %s", sr, listenerid));
+  return -1;
+}
+
+int subs_disable_forwarding(SubscriptionRequest *sr, const char *listenerid)
+{
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	  ("subs_disable_forwarding %p %s", sr, listenerid));
+  if (sr && listenerid) {
+    ForwardingEntry *fwl = fwHead;
+    ForwardingEntry *prev = fwHead;
+    while (fwl) {
+      if (fwl->fw_id == sr->srMetricId && 
+	  fwl->fw_origcorrid == sr->srCorrelatorId &&
+	  strcmp(listenerid,fwl->fw_listener.sun_path)==0) {
+	/* already there */
+	M_TRACE(MTRACE_DETAILED,MTRACE_REPOS,
+		("disable forwarding metric id %d for listener %s", 
+		 sr->srMetricId, listenerid));
+	if (prev == fwl) {
+	  fwHead = fwl->fw_next;
+	} else {
+	  prev->fw_next = fwl->fw_next;
+	}
+	free(fwl);
+	return 0;
+      }
+      prev = fwl;
+      fwl = fwl->fw_next;
+    }    
+    M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	    ("subs_disable_forwarding entry not found (%d, %d)", 
+	     sr->srMetricId, sr->srCorrelatorId));
+    return -1;
+  }
+  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+	  ("subs_disable_forwarding invalid parameter %p %s", sr, listenerid));
   return -1;
 }
 

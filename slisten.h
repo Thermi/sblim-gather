@@ -1,5 +1,5 @@
 /*
- * $Id: slisten.h,v 1.1 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: slisten.h,v 1.2 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -27,6 +27,12 @@ extern "C" {
 
 int add_subscription_listener(char *listenerid, SubscriptionRequest *sr,
 			      SubscriptionCallback * scb);
+
+int remove_subscription_listener(const char *listenerid, 
+				 SubscriptionRequest *sr,
+				 SubscriptionCallback * scb);
+
+int current_subscription_listener(char *listenerid);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv_ip.c,v 1.5 2004/11/22 09:22:59 mihajlov Exp $
+ * $Id: rcserv_ip.c,v 1.6 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -41,8 +41,9 @@
 
 
 /* ---------------------------------------------------------------------------*/
-
-#define HOST_NAME_MAX  255
+#ifndef HOST_NAME_MAY
+#define HOST_NAME_MAX  64
+#endif
 #define PORT 6363
 
 static int srvhdl=-1;

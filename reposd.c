@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.19 2004/11/22 09:22:59 mihajlov Exp $
+ * $Id: reposd.c,v 1.20 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -299,6 +299,26 @@ int main(int argc, char * argv[])
 	} else {
 	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		  ("Unmarshalling subscription request failed %d/%d.",
+		   offset,sizeof(buffer)));
+	  comm->gc_result=-1;
+	}
+	comm->gc_datalen=0;
+	break;
+      case GCMD_UNSUBSCRIBE:
+	offset = sizeof(GATHERCOMM);
+	if (unmarshal_string(&listener,buffer,&offset,sizeof(buffer),1) == 0 &&
+	    unmarshal_subscriptionrequest(&sr,buffer,&offset,sizeof(buffer)) 
+	    == 0) {
+	  if (subs_disable_forwarding(sr,listener)==0) {
+	    comm->gc_result=repos_unsubscribe(sr,subs_forward);
+	  } else {
+	    M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		    ("Disabling of susbcription forwarding failed."));
+	    comm->gc_result=-1;
+	  }
+	} else {
+	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		  ("Unmarshalling unsubscription request failed %d/%d.",
 		   offset,sizeof(buffer)));
 	  comm->gc_result=-1;
 	}

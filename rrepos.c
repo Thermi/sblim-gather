@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.18 2004/11/22 09:22:59 mihajlov Exp $
+ * $Id: rrepos.c,v 1.19 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -590,6 +590,51 @@ int rrepos_subscribe(SubscriptionRequest *sr,  SubscriptionCallback *scb)
     M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
 	    ("srepos_subscribe marshalling error, %d/%d",
 	     offset,sizeof(xbuf)));    
+    return -1;
+  }
+}
+
+int rrepos_unsubscribe(SubscriptionRequest *sr,  SubscriptionCallback *scb)
+{
+  MC_REQHDR   hdr;
+  char        xbuf[GATHERBUFLEN];
+  GATHERCOMM *comm=(GATHERCOMM*)xbuf;
+  size_t      commlen=sizeof(xbuf);
+  off_t       offset;
+  char        listener[260];
+
+  M_TRACE(MTRACE_FLOW,MTRACE_RREPOS,
+	  ("srepos_unsubscribe %p %p", sr, scb));
+  INITCHECK();
+  hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
+  comm->gc_cmd=GCMD_UNSUBSCRIBE;
+  offset = sizeof(GATHERCOMM);
+  current_subscription_listener(listener);
+  if (marshal_string(listener,xbuf,&offset,sizeof(xbuf),1) == 0 && 
+      marshal_subscriptionrequest(sr,xbuf,&offset,sizeof(xbuf)) == 0) {
+    comm->gc_datalen=offset;
+    pthread_mutex_lock(&rrepos_mutex);
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	mcc_response(&hdr,comm,&commlen)==0) {
+      pthread_mutex_unlock(&rrepos_mutex);
+      return comm->gc_result;
+    } else {
+      pthread_mutex_unlock(&rrepos_mutex);
+      M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	      ("srepos_unsubscribe remote request error"));    
+      return -1;
+    }
+  } else {
+    M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	    ("srepos_unsubscribe marshalling error, %d/%d",
+	     offset,sizeof(xbuf)));    
+    return -1;
+  }
+  if (remove_subscription_listener(listener,sr,scb)==-1) {
+    M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	    ("srepos_unsubscribe could not remove listener"));    
     return -1;
   }
 }

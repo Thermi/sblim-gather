@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.8 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: reposctl.c,v 1.9 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -33,7 +33,8 @@ static const char* commands[] = {
   "\tl plugin\tload plugin\n",
   "\tu plugin\tunload plugin\n",
   "\tv plugin\tview/list metrics for plugin\n",
-  "\ts\t\tsubscribe\n",
+  "\tb\t\tsubscribe\n",
+  "\tn\t\tunsubscribe\n",
   "\tq\t\tquit\n",
   "\tg id [system [resource [from [to]]]]\tget metric value\n",
   "\tk\t\tkill daemon\n",
@@ -210,6 +211,16 @@ int main()
       sr.srResourceOp = SUBSCR_OP_ANY;
       sr.srValueOp = SUBSCR_OP_ANY;
       if(rrepos_subscribe(&sr,test_callback))
+	printf("Failed\n");
+      break;
+    case 'n':
+      sscanf(arg,"%s",argbuf);
+      sr.srMetricId = atoi(arg);
+      sr.srCorrelatorId = 1;
+      sr.srSystemOp = SUBSCR_OP_ANY;
+      sr.srResourceOp = SUBSCR_OP_ANY;
+      sr.srValueOp = SUBSCR_OP_ANY;
+      if(rrepos_unsubscribe(&sr,test_callback))
 	printf("Failed\n");
       break;
     case 'k':

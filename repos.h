@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.10 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: repos.h,v 1.11 2004/11/26 15:25:34 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -123,6 +123,7 @@ typedef struct _SubscriptionRequest {
 typedef void (SubscriptionCallback) (int corrid, ValueRequest *vr);
 
 int repos_subscribe(SubscriptionRequest *sr, SubscriptionCallback *mcb);
+int repos_unsubscribe(SubscriptionRequest *sr, SubscriptionCallback *mcb);
 
 #ifdef __cplusplus
 }
