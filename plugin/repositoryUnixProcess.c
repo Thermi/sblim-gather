@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryUnixProcess.c,v 1.3 2004/09/13 15:26:46 heidineu Exp $
+ * $Id: repositoryUnixProcess.c,v 1.4 2004/09/14 08:52:20 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -33,6 +33,8 @@
  * AccumulatedTotalCPUTime
  * VirtualSize
  * SharedSize
+ * PageOutCounter
+ * PageOutRate
  *
  */
 
@@ -45,7 +47,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[18];
+static MetricCalculationDefinition metricCalcDef[20];
 
 /* --- CPUTime is base for :
  * KernelModeTime, UserModeTime, TotalCPUTime,
@@ -78,6 +80,10 @@ static MetricCalculator  metricCalcResSetSize;
 /* --- PageInCounter, PageInRate --- */
 static MetricCalculator  metricCalcPageInCounter;
 static MetricCalculator  metricCalcPageInRate;
+
+/* --- PageOutCounter, PageOutRate --- */
+static MetricCalculator  metricCalcPageOutCounter;
+static MetricCalculator  metricCalcPageOutRate;
 
 /* --- VirtualSize --- */
 static MetricCalculator  metricCalcVirtualSize;
@@ -264,7 +270,22 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[17].mcDataType=MD_UINT64;
   metricCalcDef[17].mcCalc=metricCalcSharedSize;
 
-  *mcnum=18;
+  metricCalcDef[18].mcVersion=MD_VERSION;
+  metricCalcDef[18].mcName="PageOutCounter";
+  metricCalcDef[18].mcId=mr(pluginname,metricCalcDef[18].mcName);
+  metricCalcDef[18].mcMetricType=MD_RETRIEVED|MD_POINT;
+  metricCalcDef[18].mcDataType=MD_UINT64;
+  metricCalcDef[18].mcCalc=metricCalcPageOutCounter;
+
+  metricCalcDef[19].mcVersion=MD_VERSION;
+  metricCalcDef[19].mcName="PageOutRate";
+  metricCalcDef[19].mcId=mr(pluginname,metricCalcDef[19].mcName);
+  metricCalcDef[19].mcMetricType=MD_CALCULATED|MD_RATE;
+  metricCalcDef[19].mcDataType=MD_UINT64;
+  metricCalcDef[19].mcAliasId=metricCalcDef[18].mcId;
+  metricCalcDef[19].mcCalc=metricCalcPageOutRate;
+
+  *mcnum=20;
   *mc=metricCalcDef;
   return 0;
 }
@@ -492,6 +513,52 @@ size_t metricCalcPageInRate( MetricValue *mv,
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Calculate PageInRate\n",
+	  __FILE__,__LINE__);
+#endif
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=2) ) {
+    total = (*(unsigned long long*)mv[0].mvData - *(unsigned long long*)mv[mnum-1].mvData) / 
+            (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
+    memcpy(v, &total, sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* PageOutCounter                                                             */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcPageOutCounter( MetricValue *mv,   
+				 int mnum,
+				 void *v, 
+				 size_t vlen ) {
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PageOutCounter\n",
+	  __FILE__,__LINE__);
+#endif
+  /* plain copy */
+  if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
+    memcpy(v,mv->mvData,mv->mvDataLength);
+    return mv->mvDataLength;
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* PageOutRate                                                                */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcPageOutRate( MetricValue *mv,   
+			      int mnum,
+			      void *v, 
+			      size_t vlen ) {
+  unsigned long long total = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PageOutRate\n",
 	  __FILE__,__LINE__);
 #endif
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=2) ) {

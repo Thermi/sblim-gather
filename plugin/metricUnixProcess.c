@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.6 2004/09/13 15:26:46 heidineu Exp $
+ * $Id: metricUnixProcess.c,v 1.7 2004/09/14 08:52:20 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -19,6 +19,7 @@
  * CPUTime
  * ResidentSetSize
  * PageInCounter
+ * PageOutCounter
  * VirtualSize
  * SharedSize
  *
@@ -38,7 +39,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricDefinition  metricDef[5];
+static MetricDefinition  metricDef[6];
 
 /* --- CPUTime is base for :
  * KernelModeTime, UserModeTime, TotalCPUTime,
@@ -55,6 +56,9 @@ static MetricRetriever   metricRetrResSetSize;
 
 /* --- PageInCounter, PageInRate --- */
 static MetricRetriever   metricRetrPageInCounter;
+
+/* --- PageOutCounter, PageOutRate --- */
+static MetricRetriever   metricRetrPageOutCounter;
 
 /* --- VirtualSize --- */
 static MetricRetriever   metricRetrVirtualSize;
@@ -121,7 +125,15 @@ int _DefinedMetrics ( MetricRegisterId *mr,
   metricDef[4].mproc=metricRetrSharedSize;
   metricDef[4].mdeal=free;
 
-  *mdnum=5;
+  metricDef[5].mdVersion=MD_VERSION;
+  metricDef[5].mdName="PageOutCounter";
+  metricDef[5].mdReposPluginName="librepositoryUnixProcess.so";
+  metricDef[5].mdId=mr(pluginname,metricDef[5].mdName);
+  metricDef[5].mdSampleInterval=60;
+  metricDef[5].mproc=metricRetrPageOutCounter;
+  metricDef[5].mdeal=free;
+
+  *mdnum=6;
   *md=metricDef;
   return 0;
 }
@@ -342,8 +354,75 @@ int metricRetrPageInCounter( int mid,
 	strcat(buf,"/stat");
 	if( (fhd = fopen(buf,"r")) != NULL ) {
 	  fscanf(fhd,
-	     "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lld",
-	     &page);
+		 "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %lld",
+		 &page);
+	  fclose(fhd);
+	}
+
+	mv = calloc( 1, sizeof(MetricValue) + 
+		     sizeof(unsigned long long) +
+		     (strlen(_enum_pid + (i*64))+1) );
+	if (mv) {
+	  mv->mvId = mid;
+	  mv->mvTimeStamp = time(NULL);
+	  mv->mvDataType = MD_UINT64;
+	  mv->mvDataLength = sizeof(unsigned long long);
+	  mv->mvData = (void*)mv + sizeof(MetricValue);
+	  *(unsigned long long*)mv->mvData = page;	 
+	  mv->mvResource = (void*)mv + sizeof(MetricValue) + sizeof(unsigned long long);
+	  strcpy(mv->mvResource,_enum_pid + (i*64));
+	  mret(mv);
+	}	
+      }
+      if(_enum_pid) free(_enum_pid);
+      return _enum_size;
+    }
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* PageOutCounter                                                             */
+/* ---------------------------------------------------------------------------*/
+
+int metricRetrPageOutCounter( int mid, 
+			      MetricReturner mret ) { 
+  MetricValue      * mv         = NULL; 
+  FILE             * fhd        = NULL;
+  char             * _enum_pid  = NULL;
+  char               buf[254];
+  int                _enum_size = 0;
+  int                i          = 0;
+  unsigned long long page = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Retrieving PageOutCounter\n",
+	  __FILE__,__LINE__);
+#endif
+  if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
+  else {
+#ifdef DEBUG
+    fprintf(stderr,"--- %s(%i) : Sampling for metric PageOutCounter ID %d\n",
+	    __FILE__,__LINE__,mid);
+#endif
+
+    /* get number of processes */
+    _enum_size = enum_all_pid( &_enum_pid );
+    if( _enum_size > 0 ) {
+      for(i=0;i<_enum_size;i++) {
+
+	page = 0;
+	memset(buf,0,sizeof(buf));
+	strcpy(buf,"/proc/");
+	strcat(buf,_enum_pid + (i*64));
+	strcat(buf,"/stat");
+	if( (fhd = fopen(buf,"r")) != NULL ) {
+	  fscanf(fhd,
+		 "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s "
+		 "%*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s %*s "
+		 "%*s %*s %*s %*s %lld",
+		 &page);
 	  fclose(fhd);
 	}
 
