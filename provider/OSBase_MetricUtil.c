@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.6 2004/11/04 09:47:04 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.7 2004/11/05 08:33:19 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -303,7 +303,7 @@ int metricValueClassName(CMPIBroker *broker, CMPIContext *ctx,
   
   MReadLock(&MdefLock);
   while (metricValueList && metricValueList[i].mval_classname) {
-    if (strcmp(defname,metricValueList[i].mdef_classname)==0){
+    if (strcasecmp(defname,metricValueList[i].mdef_classname)==0){
       strcpy(clsname,metricValueList[i].mval_classname);
       MReadUnlock(&MdefLock);
       return 0;
@@ -504,7 +504,7 @@ static int pluginForClass(CMPIBroker *broker, CMPIContext *ctx,
 
   MReadLock(&MdefLock);
   while(metricDefinitionList && metricDefinitionList[i].mdef_metricname) {
-    if (strcmp(metricclass,metricDefinitionList[i].mdef_classname)==0) {
+    if (strcasecmp(metricclass,metricDefinitionList[i].mdef_classname)==0) {
       strcpy(pluginname,metricDefinitionList[i].mdef_pluginname);
       MReadUnlock(&MdefLock);
       return 0;
@@ -536,10 +536,10 @@ int getPluginNamesForValueClass(CMPIBroker *broker, CMPIContext *ctx,
   valclassname=CMGetCharPtr(CMGetClassName(cop,NULL));
   pluginname[0]=0;
   while(metricValueList && metricValueList[i].mval_classname) {
-    if (strcmp(valclassname,metricValueList[i].mval_classname)==0) {
+    if (strcasecmp(valclassname,metricValueList[i].mval_classname)==0) {
       /* found definition class for valu class - now get plugin */
       while(metricDefinitionList && metricDefinitionList[j].mdef_metricname) {
-	if (strcmp(metricValueList[i].mdef_classname,
+	if (strcasecmp(metricValueList[i].mdef_classname,
 		   metricDefinitionList[j].mdef_classname)==0) {
 	  strcpy(pluginname, metricDefinitionList[j].mdef_pluginname);
 	  break;
@@ -1020,6 +1020,24 @@ CMPIObjectPath * makeResourcePath(CMPIBroker * broker,
     }
   }
   return NULL;
+}
+
+/* adjust namespace for the resource object path.
+ * this is the default implementation that uses the systemid
+ * to construct to compute a namespace for a remote resource if needed.
+ * NOTE: For special purposes, i.e. remote namespaces with remote CMPI
+ *       under Pegasus, it will be necessary to write alternative
+ *       namespace computing functions and load them via a plugin mechanism.
+ */ 
+void computeResourceNamespace(CMPIObjectPath *rescop,
+			      CMPIObjectPath *mcop,
+			      const char *systemid)
+{
+  char * namespace = CMGetCharPtr(CMGetNameSpace(mcop,NULL));
+  if (namespace) {
+    CMSetNameSpace(rescop,namespace);
+    CMSetHostname(rescop,systemid);
+  }
 }
 
 static void removePluginList()

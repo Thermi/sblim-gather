@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.h,v 1.5 2004/11/04 09:47:04 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.h,v 1.6 2004/11/05 08:33:19 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -108,5 +108,9 @@ CMPIObjectPath * makeResourcePath(CMPIBroker * broker,
 				  int defid,
 				  const char * resourcename,
 				  const char * systemid);
+
+void computeResourceNamespace(CMPIObjectPath *rescop,
+			      CMPIObjectPath *mcop,
+			      const char *systemid);
 
 #endif

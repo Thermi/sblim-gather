@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricForMEProvider.c,v 1.2 2004/11/04 09:47:03 mihajlov Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.3 2004/11/05 08:33:19 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -100,8 +100,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
       co = makeResourcePath(_broker,ctx,CMGetCharPtr(namesp),
 			    metricname,metricid,resource,systemid);
       if (co) {
-	/* Todo: namespace plugin must be used */
-	CMSetNameSpaceFromObjectPath(co,cop);
+	computeResourceNamespace(co,cop,systemid);
 	if (names && associators) {
 	  CMReturnObjectPath(rslt,co);
 	} else if (!names && associators) {
