@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.7 2004/09/13 15:26:12 heidineu Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.8 2004/09/15 11:28:30 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -126,7 +126,6 @@ static MetricCalculator metricCalcContextSwitchRate;
 /* --- HardwareInterruptCounter, HardwareInterruptRate --- */
 static MetricCalculator metricCalcHardwareInterruptCounter;
 static MetricCalculator metricCalcHardwareInterruptRate;
-
 
 /* ---------------------------------------------------------------------------*/
 
