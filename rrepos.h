@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.h,v 1.4 2004/11/09 15:54:46 mihajlov Exp $
+ * $Id: rrepos.h,v 1.5 2004/11/10 16:08:24 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -99,6 +99,20 @@ int rreposplugin_remove(const char *pluginname);
 int rreposplugin_list(const char *pluginname,
 		      RepositoryPluginDefinition **pdef, 
 		      COMMHEAP ch);
+
+
+
+
+
+/*
+ * Retrieve resource list from remote repository
+ * 0  OK
+ * -1 Failure
+ */
+int rreposresource_list(const char * metricid,
+			MetricResourceId **rid, 
+			COMMHEAP ch);
+
 
  /*
   * dummy for testing

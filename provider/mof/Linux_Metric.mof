@@ -1,5 +1,5 @@
 //
-// $Id: Linux_Metric.mof,v 1.7 2004/10/07 06:22:00 mihajlov Exp $
+// $Id: Linux_Metric.mof,v 1.8 2004/11/10 16:08:24 heidineu Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004
 //
@@ -81,6 +81,17 @@ class Linux_MetricForME : CIM_MetricForME
 { 
   CIM_ManagedElement REF Antecedent;
   CIM_BaseMetricValue REF Dependent;
+};
+
+[ 
+  Association,
+  Provider("cmpi:OSBase_MetricDefForMEProvider"),
+  Description ("MetricDefForME Association for Linux")
+]
+class Linux_MetricDefForME : CIM_MetricDefForME
+{ 
+  CIM_ManagedElement REF Antecedent;
+  CIM_BaseMetricDefinition REF Dependent;
 };
 
 [  Description ("Plugin Control")

@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.8 2004/11/09 15:54:46 mihajlov Exp $
+ * $Id: repos.h,v 1.9 2004/11/10 16:08:24 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -24,6 +24,7 @@
 
 /* for quick test purposes use metric.h directly */
 #include "metric.h"
+#include "mrepos.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,6 +67,10 @@ typedef struct _RepositoryStatus {
 } RepositoryStatus;
 
 void repos_status(RepositoryStatus *rs); 
+
+int reposresource_list(const char * metricid,
+		       MetricResourceId **rid,
+		       COMMHEAP ch);
 
 typedef struct _ValueItem {
   time_t viCaptureTime;

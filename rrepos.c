@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.15 2004/11/09 15:54:46 mihajlov Exp $
+ * $Id: rrepos.c,v 1.16 2004/11/10 16:08:24 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -442,6 +442,60 @@ int rreposplugin_list(const char *pluginname,
   }        
   return -1;  
   
+}
+
+int rreposresource_list(const char * metricid,
+			MetricResourceId **rid, 
+			COMMHEAP ch)
+{
+  MC_REQHDR     hdr;
+  char          xbuf[GATHERVALBUFLEN];
+  GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
+  size_t        commlen=sizeof(xbuf);
+  int           i;
+  char         *stringpool;
+
+  if (atoi(metricid)!=-1 && rid) {
+    INITCHECK();
+    hdr.mc_type=GATHERMC_REQ;
+    hdr.mc_handle=-1;
+    comm->gc_cmd=GCMD_LISTRESOURCES;
+    comm->gc_datalen=strlen(metricid)+1;
+    comm->gc_result=0;
+    memcpy(xbuf+sizeof(GATHERCOMM),metricid,comm->gc_datalen);
+    pthread_mutex_lock(&rrepos_mutex);
+    /* send request to remote repository */
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	mcc_response(&hdr,comm,&commlen)==0 &&
+	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+      /* copy data into result buffer and adjust string pointers */
+      if (comm->gc_result>0) {
+	*rid = ch_alloc(ch,comm->gc_result*sizeof(MetricResourceId));
+	memcpy(*rid,xbuf+sizeof(GATHERCOMM)+strlen(metricid)+1,
+	       sizeof(MetricResourceId)*comm->gc_result);
+	stringpool=
+	  ch_alloc(ch,
+		   comm->gc_datalen - 
+		   sizeof(GATHERCOMM)+strlen(metricid)+1+
+		   comm->gc_result*sizeof(MetricResourceId));
+	memcpy(stringpool,xbuf+sizeof(GATHERCOMM)+strlen(metricid)+1+
+	       comm->gc_result*sizeof(MetricResourceId),
+	       comm->gc_datalen - sizeof(GATHERCOMM)+strlen(metricid)+1+
+	       comm->gc_result*sizeof(MetricResourceId));
+	for (i=0;i<comm->gc_result;i++) {
+	  (*rid)[i].mrid_resource = stringpool;
+	  stringpool += strlen(stringpool) + 1;
+	  (*rid)[i].mrid_system = stringpool;
+	  stringpool += strlen(stringpool) + 1;
+	}
+      }
+      pthread_mutex_unlock(&rrepos_mutex);
+      return comm->gc_result;
+    }
+    pthread_mutex_lock(&rrepos_mutex);	
+  }        
+  return -1;
 }
 
 int rrepos_load()

@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.10 2004/11/10 09:40:54 mihajlov Exp $
+ * $Id: repos.c,v 1.11 2004/11/10 16:08:24 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -197,6 +197,40 @@ int reposplugin_list(const char *pluginname,
     }
   }
   return i;
+}
+
+int reposresource_list(const char * metricid,
+		       MetricResourceId **rid,
+		       COMMHEAP ch)
+{
+  MetricResourceId *resources=NULL;
+  int resnum=0;
+  int i;
+
+  if (atoi(metricid)==-1 || !rid) { return -1; }
+
+  resnum = MetricRepository->mres_retrieve(atoi(metricid),
+					   &resources,
+					   NULL,
+					   NULL);
+  if(resnum) {
+    *rid = ch_alloc(ch,
+		    sizeof(MetricResourceId)*resnum);
+    /* store all resource infos for this metric id */
+    for (i=0;i<resnum;i++) {
+      (*rid)[i].mrid_resource =	ch_alloc(ch,strlen(resources[i].mrid_resource)+1);	    
+      strcpy((*rid)[i].mrid_resource,
+	     resources[i].mrid_resource);
+      (*rid)[i].mrid_system = ch_alloc(ch,strlen(resources[i].mrid_system)+1);	    
+      strcpy((*rid)[i].mrid_system,
+	     resources[i].mrid_system);
+    }
+    if (resources) {
+      MetricRepository->mres_release(resources);
+    }
+    return resnum;
+  }
+  return -1;
 }
 
 int reposvalue_put(const char *reposplugin, const char *metric, 

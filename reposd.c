@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.16 2004/11/09 15:54:46 mihajlov Exp $
+ * $Id: reposd.c,v 1.17 2004/11/10 16:08:24 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -98,6 +98,7 @@ int main(int argc, char * argv[])
   size_t        valreslen;
   size_t        valsyslen;
   RepositoryPluginDefinition *rdef;
+  MetricResourceId *rid;
   char         *pluginname, *metricname;
   MetricValue  *mv;
   pthread_t     rcomm;
@@ -251,6 +252,45 @@ int main(int argc, char * argv[])
 	}
 	ch_release(ch);
 	break;
+      case GCMD_LISTRESOURCES:
+	ch=ch_init();
+	comm->gc_result=reposresource_list(buffer+sizeof(GATHERCOMM),
+					   &rid,
+					   ch);
+	if (comm->gc_result > 0) {
+	  if (CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
+			  comm->gc_result*sizeof(MetricResourceId))) {
+	    comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
+	      comm->gc_result*sizeof(MetricResourceId);
+	    memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
+		   rid,
+		   comm->gc_result*sizeof(MetricResourceId));
+	    for (i=0; i < comm->gc_result; i++) {
+	      if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_resource) + 1)) {
+		comm->gc_result=-1;
+		break;
+	      }
+	      memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
+		     rid[i].mrid_resource,
+		     strlen(rid[i].mrid_resource) + 1);
+	      comm->gc_datalen += strlen(rid[i].mrid_resource) + 1;
+	      if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_system) + 1)) {
+		comm->gc_result=-1;
+		break;
+	      }
+	      memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
+		     rid[i].mrid_system,
+		     strlen(rid[i].mrid_system) + 1);
+	      comm->gc_datalen += strlen(rid[i].mrid_system) + 1;
+	    }
+	  } else {
+	    comm->gc_result=-1;
+	  }
+	} else {
+	  comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1;
+	}
+	ch_release(ch);
+	break;
       case GCMD_SUBSCRIBE:
 	sr.srMetricId=atoi(buffer+sizeof(GATHERCOMM));
 	sr.srResourceOp=SUBSCR_OP_ANY;
@@ -282,7 +322,7 @@ int main(int argc, char * argv[])
       case GCMD_GETVALUE:
 	/* the transmitted ValueRequest contains
 	 * 1: Header
-	 * 2: ResourceName
+	 * 2: ResourceNresourceame
 	 * 3: System Id
 	 * 4: ValueItems
 	 */
