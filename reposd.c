@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.11 2004/10/20 09:08:53 heidineu Exp $
+ * $Id: reposd.c,v 1.12 2004/10/20 14:43:31 heidineu Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -25,6 +25,7 @@
 #include "gatherc.h"
 #include "commheap.h"
 #include "mlog.h"
+#include "reposcfg.h"
 #include <mcserv.h>
 #include <rcserv.h>
 #include <stdio.h>
@@ -37,32 +38,58 @@
 
 /* ---------------------------------------------------------------------------*/
 
-#define MAXCONN 100
-
-static int       clthdl[MAXCONN] = {0};
-static pthread_t thread_id[MAXCONN];
-static int       connects = 0;
+static char rreposport_s[10] = {0};
+static int  rreposport       = 0;
+static char rmaxconn_s[10]   = {0};
+static int  rmaxconn         = 0;
+static int  connects         = 0;
 static pthread_mutex_t connect_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t  connect_cond  = PTHREAD_COND_INITIALIZER;
 
-static void * _get_request(void * hdl)
+#define RINITCHECK() \
+pthread_mutex_lock(&connect_mutex); \
+if (rreposport==0) { \
+  if (reposcfg_getitem("RepositoryPort",rreposport_s,sizeof(rreposport_s)) == 0) {  \
+    rreposport=atoi(rreposport_s); \
+  } else { \
+    rreposport=6363; \
+  } \
+  if (reposcfg_getitem("RepositoryMaxConnections",rmaxconn_s,sizeof(rmaxconn_s)) == 0) {  \
+    rmaxconn=atoi(rmaxconn_s); \
+  } else { \
+    rmaxconn=100; \
+  } \
+  rcs_init(&rreposport); \
+} \
+pthread_mutex_unlock(&connect_mutex); 
+
+
+static void * rrepos_getrequest(void * hdl)
 {
   GATHERCOMM   *comm;
   char          buffer[GATHERVALBUFLEN];
   size_t        bufferlen;
   char         *pluginname, *metricname;
   MetricValue  *mv;
-  int           i;
+
+  if (pthread_detach(pthread_self()) != 0) {
+    perror("detaching thread");
+  }
 
   //  fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
   while (1) {
     memset(buffer, 0, sizeof(buffer));
     bufferlen=sizeof(buffer);
+    pthread_mutex_lock(&connect_mutex);
     if (rcs_getrequest((int)hdl,buffer,&bufferlen) == -1) {
       //      fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
+      connects--;
+      pthread_cond_signal(&connect_cond);
+      pthread_mutex_unlock(&connect_mutex);
       break;
     }
     //    fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buffer);
+    pthread_mutex_unlock(&connect_mutex);
 
     /* write data to repository */
     comm=(GATHERCOMM*)buffer;    
@@ -97,60 +124,40 @@ static void * _get_request(void * hdl)
     mv->mvDataType   = ntohl((unsigned)mv->mvDataType);
     mv->mvDataLength = ntohl((size_t)mv->mvDataLength);
     mv->mvSystemId=mv->mvData+mv->mvDataLength;
+    //    fprintf(stderr,"socket %i : %s %s\n",(int)hdl,mv->mvSystemId,metricname);
     if ((comm->gc_result=reposvalue_put(pluginname,metricname,mv)) != 0) {
       fprintf(stderr,"write %s to repository failed\n",metricname);
     }
   }
-
-  pthread_mutex_lock(&connect_mutex);
-  for(i=0;i<MAXCONN;i++) {
-    if (clthdl[i] == (int)hdl) {
-      clthdl[i] = -1;
-      connects--;
-      break;
-    }
-  }
-  pthread_cond_signal(&connect_cond);
-  pthread_mutex_unlock(&connect_mutex);
   //  fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
   return NULL;
 }
 
-static void * _reposd_remote()
+static void * repos_remote()
 {
-  int hdl  = -1;
-  int port = 6363;
-  int i    = 0;
+  pthread_t thread;
+  int       hdl = -1;
 
-  if (rcs_init(&port)) { return 0; }
-  memset(thread_id,0,sizeof(thread_id));
-   
   while (1) {
-    pthread_mutex_lock(&connect_mutex);
-    if(connects==MAXCONN) { 
-      /* wait for at least one finished thread */
-      pthread_cond_wait(&connect_cond,&connect_mutex);
-      fprintf(stderr,"at least one thread finished\n");
-    }
-    pthread_mutex_unlock(&connect_mutex);
     if (hdl == -1) {
-      if (rcs_accept(&hdl) == -1) { return 0; }
-      pthread_mutex_lock(&connect_mutex);
-      connects++;
-      pthread_mutex_unlock(&connect_mutex);
+      if (rcs_accept(&hdl) == -1) { 
+	perror("_reposd_remote() rcs_accept"); 
+	return 0; 
+      }
     }
     pthread_mutex_lock(&connect_mutex);
-    for(i=0;i<MAXCONN;i++) {
-      if (clthdl[i] <= 0) {
-	clthdl[i] = hdl;
-	break;
-      } 
-    }
+    connects++;
     pthread_mutex_unlock(&connect_mutex);
-    if (pthread_create(&thread_id[i],NULL,_get_request,(void*)clthdl[i]) != 0) {
+    if (pthread_create(&thread,NULL,rrepos_getrequest,(void*)hdl) != 0) {
       perror("_reposd_remote create thread");
       return 0;
+    }   
+    pthread_mutex_lock(&connect_mutex);
+    if(connects==rmaxconn) {
+      /* wait for at least one finished thread */
+      pthread_cond_wait(&connect_cond,&connect_mutex);
     }
+    pthread_mutex_unlock(&connect_mutex);
     hdl = -1;
   }
   rcs_term();
@@ -187,7 +194,8 @@ int main(int argc, char * argv[])
   }
   
   /* start remote reposd in separate thread */
-  if (pthread_create(&rcomm,NULL,_reposd_remote,NULL) != 0) {
+  RINITCHECK();
+  if (pthread_create(&rcomm,NULL,repos_remote,NULL) != 0) {
     perror("Could not create thread for remote reposd");
   }
 
