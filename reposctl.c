@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.9 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: reposctl.c,v 1.10 2004/12/01 16:13:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -44,6 +44,7 @@ static const char* commands[] = {
 };
 
 static void printhelp();
+static void printvalue(ValueRequest *vr);
 static void test_callback(int corrid, ValueRequest *vr);
 
 
@@ -149,57 +150,7 @@ int main()
       if (rrepos_get(&vr,commh)) {
 	printf("Failed\n");
       } else {
-	printf("Value id %d has value data \n",
-	       vr.vsId);
-	for (i=0; i < vr.vsNumValues; i++) {
-	  printf("\t on %s for resource %s ",vr.vsValues[i].viSystemId,vr.vsValues[i].viResource);
-	  switch(vr.vsDataType) {
-	  case MD_BOOL:
-	    printf("%s", *vr.vsValues[i].viValue ? "true" : "false" );
-	    break;
-	  case MD_SINT8:
-	    printf("%hhd",*vr.vsValues[i].viValue);
-	    break;
-	  case MD_UINT8:
-	    printf("%hhu",*(unsigned char*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_UINT16:
-	  case MD_CHAR16:
-	    printf("%hu",*(unsigned short*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_SINT16:
-	    printf("%hd",*(short*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_UINT32:
-	    printf("%lu",*(unsigned long*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_SINT32:
-	    printf("%ld",*(long*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_UINT64:
-	    printf("%llu",*(unsigned long long*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_SINT64:
-	    printf("%lld",*(long long*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_FLOAT32:
-	    printf("%f",*(float*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_FLOAT64:
-	    printf("%f",*(double*)vr.vsValues[i].viValue);
-	    break;
-	  case MD_STRING:
-	    printf(vr.vsValues[i].viValue);
-	    break;
-	  default:
-	    printf("datatype %0x not supported",vr.vsDataType);
-	    break;
-	  }
-	  printf(", sample time %ld duration %ld",
-		 vr.vsValues[i].viCaptureTime,
-		 vr.vsValues[i].viDuration);
-	  printf ("\n");
-	}
+	printvalue(&vr);
       }
       ch_release(commh);
       break;
@@ -251,6 +202,62 @@ static void printhelp()
     printf(commands[i]);
 }
 
+static void printvalue(ValueRequest *vr)
+{
+  int i;
+  printf("Value id %d has value data \n",
+	 vr->vsId);
+  for (i=0; i < vr->vsNumValues; i++) {
+    printf("\t on %s for resource %s ",vr->vsValues[i].viSystemId,vr->vsValues[i].viResource);
+    switch(vr->vsDataType) {
+    case MD_BOOL:
+      printf("%s", *vr->vsValues[i].viValue ? "true" : "false" );
+      break;
+    case MD_SINT8:
+      printf("%hhd",*vr->vsValues[i].viValue);
+      break;
+    case MD_UINT8:
+      printf("%hhu",*(unsigned char*)vr->vsValues[i].viValue);
+      break;
+    case MD_UINT16:
+    case MD_CHAR16:
+      printf("%hu",*(unsigned short*)vr->vsValues[i].viValue);
+      break;
+    case MD_SINT16:
+      printf("%hd",*(short*)vr->vsValues[i].viValue);
+      break;
+    case MD_UINT32:
+      printf("%lu",*(unsigned long*)vr->vsValues[i].viValue);
+      break;
+    case MD_SINT32:
+      printf("%ld",*(long*)vr->vsValues[i].viValue);
+      break;
+    case MD_UINT64:
+      printf("%llu",*(unsigned long long*)vr->vsValues[i].viValue);
+      break;
+    case MD_SINT64:
+      printf("%lld",*(long long*)vr->vsValues[i].viValue);
+      break;
+    case MD_FLOAT32:
+      printf("%f",*(float*)vr->vsValues[i].viValue);
+      break;
+    case MD_FLOAT64:
+      printf("%f",*(double*)vr->vsValues[i].viValue);
+      break;
+    case MD_STRING:
+      printf(vr->vsValues[i].viValue);
+      break;
+    default:
+      printf("datatype %0x not supported",vr->vsDataType);
+      break;
+    }
+    printf(", sample time %ld duration %ld",
+	   vr->vsValues[i].viCaptureTime,
+	   vr->vsValues[i].viDuration);
+    printf ("\n");
+  }
+}
+
 static void test_callback(int corrid, ValueRequest *vr)
 {
   printf("*** event notification: ");
@@ -258,6 +265,7 @@ static void test_callback(int corrid, ValueRequest *vr)
   printf("correlation id=%d ", corrid);
   printf("metric id=%d ",vr->vsId);
   printf("resource=%s ",vr->vsValues[0].viResource);
+  printvalue(vr);
   printf("\n");
 }
 

@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.13 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: repos.c,v 1.14 2004/12/01 16:13:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -45,7 +45,7 @@ static void pl_unlink(RepositoryPlugin *);
 static RepositoryPlugin* pl_find(const char *);
 
 /* Subscription Support */
-static void RepositorySubscriptionCallback(MetricValue *mv);
+static void RepositorySubscriptionCallback(MetricValue *mv, int num);
 typedef struct _RepositorySubscription {
   SubscriptionRequest            *rsr_req;
   SubscriptionCallback           *rsr_cb;
@@ -417,13 +417,14 @@ int repos_subscribe(SubscriptionRequest *sr, SubscriptionCallback *scb)
   return -1;
 }
 
-static void RepositorySubscriptionCallback(MetricValue *mv)
+static void RepositorySubscriptionCallback(MetricValue *mv, int num)
 {
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
 	  ("RepositorySubscriptionCallback %p (%d)", mv, mv?mv->mvId:-1));
   if (mv) {
     MetricCalculationDefinition *mc=NULL;
     RepositorySubscription *subs = subscriptions;
+    int mcnum;
     while (subs && subs->rsr_req) {
       ValueRequest vr;
       ValueItem    vi;
@@ -432,21 +433,26 @@ static void RepositorySubscriptionCallback(MetricValue *mv)
 	break;
       }
       if (matchCommonCriteria(subs->rsr_req,mv)) {
-	/* NOTE: at the moment we handle only point metrics (correctly) */
 	/* calculate if common criteria matches */
 	mc=RPR_GetMetric(subs->rsr_req->srMetricId);
 	if (mc && mc->mcCalc) {
+	  if ((mc->mcMetricType&MD_POINT)) {
+	    mcnum=1; /* only one for point metrics, check interval semantics */
+	  } else {
+	    mcnum=num;
+	  }
 	  vr.vsId=subs->rsr_req->srMetricId;
+	  vr.vsDataType=mc->mcDataType;
 	  vr.vsSystemId=vr.vsResource=NULL;
 	  vr.vsNumValues=1;
 	  vr.vsValues=&vi;
 	  vi.viCaptureTime=mv->mvTimeStamp;
-	  vi.viDuration=0;
+	  vi.viDuration=vi.viCaptureTime - mv[num-1].mvTimeStamp;
 	  vi.viResource=mv->mvResource;
 	  vi.viSystemId=mv->mvSystemId;
 	  vi.viValueLen=sizeof(valbuf);
 	  vi.viValue=valbuf;
-	  if (mc->mcCalc(mv,1,vi.viValue,vi.viValueLen) == -1) {
+	  if (mc->mcCalc(mv,mcnum,vi.viValue,vi.viValueLen) == -1) {
 	    M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		    ("RepositorySubscriptionCallback failed to calculate metric"
 		     " value for %d", subs->rsr_req->srMetricId));

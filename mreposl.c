@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.7 2004/11/09 15:54:45 mihajlov Exp $
+ * $Id: mreposl.c,v 1.8 2004/12/01 16:13:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -92,6 +92,9 @@ static int addIndex(int mid);
 static int resourceTest(MetricValue * actual, MetricResourceId * required);
 
 static int pruneRepository();
+static int _MetricRetrieveNoLock (int mid, MetricResourceId *resource,
+				  MetricValue **mv, int *num, 
+				  time_t from, time_t to, int maxnum);
 
 int LocalMetricAdd (MetricValue *mv)
 {
@@ -116,15 +119,6 @@ int LocalMetricAdd (MetricValue *mv)
       idx=addIndex(mv->mvId);
     }
     if (idx!=-1) {
-      if (LocalReposHeader[idx].mrh_cb) {
-	M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
-		("LocalMetricAdd processing callbacks for mid=%d", mv->mvId));
-	MReposCallback *cblist = LocalReposHeader[idx].mrh_cb;
-	while (cblist && cblist->mrc_callback) {
-	  cblist->mrc_callback(mv);
-	  cblist = cblist->mrc_next;
-	}
-      } 
       mrv=malloc(sizeof(MReposValue));
       mrv->mrv_next=LocalReposHeader[idx].mrh_first;
       mrv->mrv_value=malloc(sizeof(MetricValue));
@@ -134,6 +128,26 @@ int LocalMetricAdd (MetricValue *mv)
       memcpy(mrv->mrv_value->mvData,mv->mvData,mv->mvDataLength);
       mrv->mrv_value->mvSystemId=strdup(mv->mvSystemId);
       LocalReposHeader[idx].mrh_first=mrv;
+      if (LocalReposHeader[idx].mrh_cb) {
+	MetricValue     *mvList;
+	int              num;
+	MetricResourceId mrId = {mv->mvResource,mv->mvSystemId};
+	MReposCallback *cblist = LocalReposHeader[idx].mrh_cb;
+	M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+		("LocalMetricAdd processing callbacks for mid=%d", mv->mvId));
+	/* It is not really expensive to call the retrieval function 
+	   as the new value is at the list head.
+	   Further, we don't bother whether it's a point or interval
+	   metric: we always return the previous element, if available.
+	 */
+	rc = _MetricRetrieveNoLock(mv->mvId,&mrId,
+				   &mvList,&num,0,mv->mvTimeStamp,2);
+	while (rc == 0 && cblist && cblist->mrc_callback) {
+	  cblist->mrc_callback(mvList,num);
+	  cblist = cblist->mrc_next;
+	}
+	LocalMetricRelease(mvList);
+      } 
       rc=0;
     }
     MWriteUnlock(&LocalRepLock);
@@ -156,9 +170,9 @@ int LocalMetricAdd (MetricValue *mv)
  *    ii) from == 0 retrieve the newest "maxnum" entries 
  */
 
-int LocalMetricRetrieve (int mid, MetricResourceId *resource,
-			 MetricValue **mv, int *num, 
-			 time_t from, time_t to, int maxnum)
+static int _MetricRetrieveNoLock (int mid, MetricResourceId *resource,
+				  MetricValue **mv, int *num, 
+				  time_t from, time_t to, int maxnum)
 {
   int          idx;
   int          actnum=0;
@@ -166,66 +180,75 @@ int LocalMetricRetrieve (int mid, MetricResourceId *resource,
   int          rc=-1;
   MReposValue *mrv = NULL;  
   MReposValue *first;
-  if (mv && num && from >=0 && MReadLock(&LocalRepLock)==0) {
-    idx=locateIndex(mid);
-    if (idx!=-1) {
-      if (to==0 || to ==-1) {
-	to=LONG_MAX;
-      }
-      if (maxnum<=0) {
-	maxnum=INT_MAX;
-      }	else if (to==from) {
-	/* maximum number requested: only "from" timestamp relevant */
-	to=LONG_MAX;
-      }
-      mrv=LocalReposHeader[idx].mrh_first;
-      first=NULL;
-      *mv=NULL;
-      while(mrv && from <= mrv->mrv_value->mvTimeStamp) {
-	if (to >= mrv->mrv_value->mvTimeStamp && 
-	    resourceTest(mrv->mrv_value,resource)==0) {
-	  /* mark */
-	  if (actnum < maxnum) {
-	    if (first==NULL)
-	      first=mrv;
-	    actnum+=1;
-	    if (from ==0 && actnum==maxnum)
-	      break;
-	  } else {
-	    if (first==NULL)
-	      first=mrv;
-	    else
-	      first=first->mrv_next;
-	  }
-	}
-	mrv=mrv->mrv_next;
-      }
-      if (actnum) {
-	*mv=calloc(actnum+1,sizeof(MetricValue));	
-	for (i=0, mrv=first; i<actnum; mrv=mrv->mrv_next) {
-	  if (resourceTest(mrv->mrv_value,resource)==0) {
-	    /* copy over */
-	    memcpy(&(*mv)[i+1],mrv->mrv_value,sizeof(MetricValue));
-	    (*mv)[i+1].mvData=malloc(mrv->mrv_value->mvDataLength);
-	    memcpy((*mv)[i+1].mvData,
-		   mrv->mrv_value->mvData,
-		   mrv->mrv_value->mvDataLength);
-	    (*mv)[i+1].mvResource=strdup(mrv->mrv_value->mvResource);
-	    (*mv)[i+1].mvSystemId=strdup(mrv->mrv_value->mvSystemId);
-	    i+=1;
-	  }
+  idx=locateIndex(mid);
+  if (idx!=-1) {
+    if (to==0 || to ==-1) {
+      to=LONG_MAX;
+    }
+    if (maxnum<=0) {
+      maxnum=INT_MAX;
+    }	else if (to==from) {
+      /* maximum number requested: only "from" timestamp relevant */
+      to=LONG_MAX;
+    }
+    mrv=LocalReposHeader[idx].mrh_first;
+    first=NULL;
+    *mv=NULL;
+    while(mrv && from <= mrv->mrv_value->mvTimeStamp) {
+      if (to >= mrv->mrv_value->mvTimeStamp && 
+	  resourceTest(mrv->mrv_value,resource)==0) {
+	/* mark */
+	if (actnum < maxnum) {
+	  if (first==NULL)
+	    first=mrv;
+	  actnum+=1;
+	  if (from ==0 && actnum==maxnum)
+	    break;
+	} else {
+	  if (first==NULL)
+	    first=mrv;
+	  else
+	    first=first->mrv_next;
 	}
       }
-      if (*mv) {
-	/* use the first entry to record array length */
-	(*mv)[0].mvDataLength=actnum;
-	(*mv)+=1;
-	rc = 0;
+      mrv=mrv->mrv_next;
+    }
+    if (actnum) {
+      *mv=calloc(actnum+1,sizeof(MetricValue));	
+      for (i=0, mrv=first; i<actnum; mrv=mrv->mrv_next) {
+	if (resourceTest(mrv->mrv_value,resource)==0) {
+	  /* copy over */
+	  memcpy(&(*mv)[i+1],mrv->mrv_value,sizeof(MetricValue));
+	  (*mv)[i+1].mvData=malloc(mrv->mrv_value->mvDataLength);
+	  memcpy((*mv)[i+1].mvData,
+		 mrv->mrv_value->mvData,
+		 mrv->mrv_value->mvDataLength);
+	  (*mv)[i+1].mvResource=strdup(mrv->mrv_value->mvResource);
+	  (*mv)[i+1].mvSystemId=strdup(mrv->mrv_value->mvSystemId);
+	  i+=1;
+	}
       }
     }
-    MReadUnlock(&LocalRepLock);
+    if (*mv) {
+      /* use the first entry to record array length */
+      (*mv)[0].mvDataLength=actnum;
+      (*mv)+=1;
+      rc = 0;
+    }
   }
   *num=actnum;
+  return rc;
+}
+
+int LocalMetricRetrieve (int mid, MetricResourceId *resource,
+			 MetricValue **mv, int *num, 
+			 time_t from, time_t to, int maxnum)
+{
+  int          rc=-1;
+  if (mv && num && from >=0 && MReadLock(&LocalRepLock)==0) {
+    rc = _MetricRetrieveNoLock(mid,resource,mv,num,from,to,maxnum);
+    MReadUnlock(&LocalRepLock);
+  }
   return rc;
 }
 
@@ -263,7 +286,6 @@ int LocalMetricRegisterCallback (MetricCallback *mcb, int mid, int state)
   if (state == MCB_STATE_REGISTER ) {
     while(cblist && cblist->mrc_callback) {
       if (mcb == cblist->mrc_callback) {
-	cblist->mrc_usecount ++;
 	break;
       }
       cblist = cblist->mrc_next;
@@ -274,6 +296,7 @@ int LocalMetricRegisterCallback (MetricCallback *mcb, int mid, int state)
       cblist->mrc_next = LocalReposHeader[idx].mrh_cb;
       LocalReposHeader[idx].mrh_cb = cblist;
     }
+    cblist->mrc_usecount ++;
   } else if ( state == MCB_STATE_UNREGISTER) {
     while(cblist && cblist->mrc_callback) {
       if (mcb == cblist->mrc_callback) {
