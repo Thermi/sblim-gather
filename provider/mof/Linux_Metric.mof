@@ -1,5 +1,5 @@
 //
-// $Id: Linux_Metric.mof,v 1.8 2004/11/10 16:08:24 heidineu Exp $
+// $Id: Linux_Metric.mof,v 1.9 2004/12/13 14:00:53 mihajlov Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004
 //
@@ -28,10 +28,6 @@
 // -------------------------------------------------------------------
 
 
-
-// ===================================================================
-// 	Linux_OperatingSystemMetricDefinition
-// ===================================================================
 
 [ Provider("cmpi:OSBase_MetricGathererProvider"),
   Description ("Data Gatherer Service")
@@ -130,4 +126,15 @@ class Linux_MetricValueDefinition : CIM_Setting
   String MetricDefinitionClassName; 
 };
 
+[ Indication,
+  Description ("Metric Process Indication"),
+  Provider("cmpi:OSBase_MetricIndicationProvider")
+]
+class Linux_MetricIndication : CIM_ProcessIndication
+{
+  [Description("Metric Id for Indication")]
+  String MetricId;
+  [Description("Metric Value for Indication")]
+  String MetricValue;
+};
 

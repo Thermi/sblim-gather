@@ -1,5 +1,5 @@
 //
-// $Id: Linux_MetricRegistration.mof,v 1.5 2004/11/10 16:08:24 heidineu Exp $
+// $Id: Linux_MetricRegistration.mof,v 1.6 2004/12/13 14:00:53 mihajlov Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004
 //
@@ -263,3 +263,40 @@ instance of PG_ProviderCapabilities
    SupportedMethods = NULL; // All methods
 };
 
+// ===================================================================
+// 	Linux_MetricIndication
+// ===================================================================
+
+instance of PG_ProviderModule
+{
+   Name = "OSBase_MetricIndicationProviderModule";
+   //The library name on disk
+   Location = "OSBase_MetricIndicationProvider";
+   Vendor = "SBLIM";
+   Version = "2.0.0";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricIndicationProviderModule";
+   // The provider name as referenced in the code
+   Name = "OSBase_MetricIndicationProvider";
+};
+
+instance of PG_ProviderCapabilities
+{
+   //The provider module as defined in PG_ProviderModule
+   ProviderModuleName = "OSBase_MetricIndicationProviderModule";
+   //The provider name as defined in PG_Provider
+   ProviderName = "OSBase_MetricIndicationProvider";
+   CapabilityID = "2";
+   //Name of the CIM class as defined in the mof
+   ClassName = "Linux_MetricIndication";
+   Namespaces = {"root/cimv2"};
+   ProviderType = { 4 }; // Indication
+   SupportedProperties = NULL; // All properties
+   SupportedMethods = NULL; // All methods
+};
