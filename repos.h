@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.11 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: repos.h,v 1.12 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -52,8 +52,9 @@ typedef struct _RepositoryPluginDefinition {
   unsigned rdMetricType;
   unsigned rdChangeType;
   unsigned char rdIsContinuous;
+  unsigned rdCalculable;
+  char    *rdUnits;
   char    *rdName; 
-  char   **rdResource; 
 } RepositoryPluginDefinition;
 
 int reposplugin_list(const char *pluginname,

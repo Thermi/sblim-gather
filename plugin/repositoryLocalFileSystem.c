@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryLocalFileSystem.c,v 1.5 2004/12/03 13:06:14 mihajlov Exp $
+ * $Id: repositoryLocalFileSystem.c,v 1.6 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -39,6 +39,11 @@ static MetricCalculator  metricCalcAvSpace;
 /* --- AvailableSpacePercentage --- */
 static MetricCalculator  metricCalcAvSpacePerc;
 
+/* unit definitions */
+static char * muBytes = "Bytes";
+static char * muPercent = "Percent";
+
+
 /* ---------------------------------------------------------------------------*/
 
 int _DefinedRepositoryMetrics( MetricRegisterId *mr,
@@ -60,8 +65,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[0].mcChangeType=MD_GAUGE;
   metricCalcDef[0].mcIsContinuous=MD_TRUE;
+  metricCalcDef[0].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[0].mcDataType=MD_UINT64;
   metricCalcDef[0].mcCalc=metricCalcAvSpace;
+  metricCalcDef[0].mcUnits=muBytes;
 
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="AvailableSpacePercentage";
@@ -69,8 +76,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
+  metricCalcDef[1].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[1].mcDataType=MD_FLOAT32;
   metricCalcDef[1].mcCalc=metricCalcAvSpacePerc;
+  metricCalcDef[1].mcUnits=muPercent;
 
   *mcnum=2;
   *mc=metricCalcDef;

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.8 2004/12/15 07:27:25 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.9 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -52,6 +52,8 @@ static struct _MdefList {
   int    mdef_metrictype;
   int    mdef_changetype;
   int    mdef_iscontinuous;
+  unsigned short mdef_calculable;
+  char * mdef_units;
 } * metricDefinitionList = NULL;
 
 static struct _MvalList {
@@ -102,6 +104,7 @@ static void removeDefinitionList()
       free(metricDefinitionList[i].mdef_metricname);
       free(metricDefinitionList[i].mdef_classname);
       free(metricDefinitionList[i].mdef_pluginname);
+      free(metricDefinitionList[i].mdef_units);
       free(metricDefinitionList[i].mdef_cimpluginname);
       i++;
     }
@@ -199,6 +202,8 @@ int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx,
 	  metricDefinitionList[totalnum+i].mdef_metrictype = rdef[i].rdMetricType;
 	  metricDefinitionList[totalnum+i].mdef_changetype = rdef[i].rdChangeType;
 	  metricDefinitionList[totalnum+i].mdef_iscontinuous = rdef[i].rdIsContinuous;
+	  metricDefinitionList[totalnum+i].mdef_calculable = rdef[i].rdCalculable;
+	  metricDefinitionList[totalnum+i].mdef_units = strdup(rdef[i].rdUnits);
 	}
 	/* identify last element with null name */
 	totalnum += rdefnum;
@@ -1049,6 +1054,13 @@ CMPIInstance * makeMetricDefInst(CMPIBroker * broker,
 	dt=2;
 	CMSetProperty(ci,"ChangeType",&dt,CMPI_uint16);
       }
+      /* Calculable */
+      CMSetProperty(ci, "Calculable", 
+		    &metricDefinitionList[i].mdef_calculable, 
+		    CMPI_uint16);
+      /* Units */
+      CMSetProperty(ci, "Units", metricDefinitionList[i].mdef_units, 
+		    CMPI_chars);
       return ci;
     }
   }

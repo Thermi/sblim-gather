@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.21 2004/11/30 13:16:50 mihajlov Exp $
+ * $Id: reposd.c,v 1.22 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -87,7 +87,7 @@ int main(int argc, char * argv[])
   ValueItem    *vi;
   void         *vp;
   char         *vpmax;
-  int           i,j;
+  int           i;
   size_t        valreslen;
   size_t        valsyslen;
   off_t         offset;
@@ -188,62 +188,88 @@ int main(int argc, char * argv[])
 	comm->gc_datalen=sizeof(RepositoryToken);
 	break;
       case GCMD_ADDPLUGIN:
-	comm->gc_result=reposplugin_add(buffer+sizeof(GATHERCOMM));
+	offset = sizeof(GATHERCOMM);
+	if (unmarshal_string(&pluginname,buffer,&offset,sizeof(buffer),1) == 0) {
+	  comm->gc_result=reposplugin_add(pluginname);
+	} else {
+	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		  ("Unmarshalling add plugin request failed %d/%d.",
+		   offset,sizeof(buffer)));
+	  m_log(M_ERROR,M_QUIET,
+		"Unmarshalling add plugin request failed %d/%d.",
+		offset,sizeof(buffer));
+	  comm->gc_result=-1;
+	}
+	if (comm->gc_result != 0) {
+	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		  ("Could not load repository plugin %s.",
+		   pluginname));
+	  m_log(M_ERROR,M_QUIET,
+		"Could not load repository plugin %s.",
+		pluginname);		
+	}
 	comm->gc_datalen=0;
 	break;
       case GCMD_REMPLUGIN:
-	comm->gc_result=reposplugin_remove(buffer+sizeof(GATHERCOMM));
+	offset = sizeof(GATHERCOMM);
+	if (unmarshal_string(&pluginname,buffer,&offset,sizeof(buffer),1) == 0) {
+	  comm->gc_result=reposplugin_remove(pluginname);
+	} else {
+	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		  ("Unmarshalling remove plugin request failed %d/%d.",
+		   offset,sizeof(buffer)));
+	  m_log(M_ERROR,M_QUIET,
+		"Unmarshalling remove plugin request failed %d/%d.",
+		offset,sizeof(buffer));
+	  comm->gc_result=-1;
+	}
+	if (comm->gc_result != 0) {
+	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		  ("Could not unload repository plugin %s.",
+		   pluginname));
+	  m_log(M_ERROR,M_QUIET,
+		"Could not unload repository plugin %s.",
+		pluginname);		
+	}
 	comm->gc_datalen=0;
 	break;
       case GCMD_LISTPLUGIN:
+	offset = sizeof(GATHERCOMM);
 	ch=ch_init();
-	comm->gc_result=reposplugin_list(buffer+sizeof(GATHERCOMM),
-					 &rdef,
-					 ch);
-	if (comm->gc_result > 0) {
-	  if (CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
-			  comm->gc_result*sizeof(RepositoryPluginDefinition))) {
-	    comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
-	      comm->gc_result*sizeof(RepositoryPluginDefinition);
-	    memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
-		   rdef,
-		   comm->gc_result*sizeof(RepositoryPluginDefinition));
-	    for (i=0; i < comm->gc_result; i++) {
-	      if (!CHECKBUFFER(comm,buffer,strlen(rdef[i].rdName) + 1)) {
-		comm->gc_result=-1;
-		break;
-	      }
-	      memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		     rdef[i].rdName,
-		     strlen(rdef[i].rdName) + 1);
-	      comm->gc_datalen += strlen(rdef[i].rdName) + 1;
-	      /* add pointer block for resources */
-	      if (rdef[i].rdResource)
-		for (j=0;rdef[i].rdResource[j];j++) {
-		  if (!CHECKBUFFER(comm,buffer,strlen(rdef[i].rdResource[j]) + 1)) {
-		    comm->gc_result=-1;
-		    break;
-		  }
-		  memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-			 rdef[i].rdResource[j],
-			 strlen(rdef[i].rdResource[j]) + 1);
-		  comm->gc_datalen += strlen(rdef[i].rdResource[j]) + 1;	    
-		}
-	      else if CHECKBUFFER(comm,buffer,1) {
-		memset(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		       0,
-		       1);
-		comm->gc_datalen += 1;
-	      } else {
-		comm->gc_result=-1;
-	      }
-	    }  
-	  } else {
-	    comm->gc_result=-1;
+	if (unmarshal_string(&pluginname,buffer,&offset,sizeof(buffer),1) == 0) {
+	  comm->gc_result=reposplugin_list(pluginname,
+					   &rdef,
+					   ch);
+	  if (comm->gc_result > 0) {
+	    if (marshal_reposplugindefinition(rdef,comm->gc_result,buffer,
+					      &offset,sizeof(buffer))) {
+	      M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		      ("Marshalling list plugin response failed %d/%d.",
+		       offset,sizeof(buffer)));
+	      m_log(M_ERROR,M_QUIET,
+		    "Marshalling list plugin response failed %d/%d.",
+		    offset,sizeof(buffer));
+	      comm->gc_result=-1;
+	    }
 	  }
 	} else {
-	  comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1;
+	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		  ("Unmarshalling list plugin request failed %d/%d.",
+		   offset,sizeof(buffer)));
+	  m_log(M_ERROR,M_QUIET,
+		"Unmarshalling list plugin request failed %d/%d.",
+		 offset,sizeof(buffer));
+	  comm->gc_result=-1;
 	}
+	if (comm->gc_result == -1) {
+	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
+		  ("Could not list repository plugin %s definitions.",
+		   pluginname));
+	  m_log(M_ERROR,M_QUIET,
+		"Could not list repository plugin %s definitions.",
+		pluginname);		
+	}
+	comm->gc_datalen=offset;
 	ch_release(ch);
 	break;
       case GCMD_LISTRESOURCES:

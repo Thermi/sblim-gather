@@ -1,5 +1,5 @@
 /*
- * $Id: marshal.c,v 1.2 2004/11/22 09:22:59 mihajlov Exp $
+ * $Id: marshal.c,v 1.3 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -187,6 +187,46 @@ int unmarshal_subscriptionrequest(SubscriptionRequest **sr, const char *mbuf,
 	unmarshal_string(&(*sr)->srResource,mbuf,offset,mbuflen,0) == 0 &&
 	unmarshal_string(&(*sr)->srSystemId,mbuf,offset,mbuflen,0) == 0 &&
 	unmarshal_string(&(*sr)->srValue,mbuf,offset,mbuflen,0) == 0) {
+      return 0;
+    }
+  }
+  return -1;
+}
+
+int marshal_reposplugindefinition(const RepositoryPluginDefinition *rdef, 
+				  size_t num, char *mbuf,
+				  off_t * offset, size_t mbuflen)
+{
+  int i;
+  if (rdef && mbuf && offset) {
+    if (marshal_data(rdef,num*sizeof(RepositoryPluginDefinition),
+		     mbuf,offset,mbuflen) == 0) {
+      for (i=0; i < num; i++) {
+	if (marshal_string(rdef[i].rdUnits,mbuf,offset,mbuflen,0) ||
+	    marshal_string(rdef[i].rdName,mbuf,offset,mbuflen,0)) {
+	  return -1;
+	}
+      }
+      return 0;
+    }
+  }
+  return -1;
+}
+
+int unmarshal_reposplugindefinition(RepositoryPluginDefinition **rdef, 
+				    size_t num, char *mbuf,
+				    off_t * offset, size_t mbuflen)
+{
+  int i;
+  if (rdef && mbuf && offset) {
+    if (unmarshal_data((void**)rdef,num*sizeof(RepositoryPluginDefinition),
+		       mbuf,offset,mbuflen) == 0) {
+      for (i=0; i<num; i++) {
+	if (unmarshal_string(&(*rdef)[i].rdUnits,mbuf,offset,mbuflen,0) ||
+	    unmarshal_string(&(*rdef)[i].rdName,mbuf,offset,mbuflen,0)) {
+	  return -1;
+	}
+      }
       return 0;
     }
   }

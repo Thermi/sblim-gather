@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.7 2004/11/22 09:22:59 mihajlov Exp $
+ * $Id: gather.c,v 1.8 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -208,7 +208,6 @@ int metricplugin_list(const char *pluginname, PluginDefinition **pdef,
       for (i=0;i<mp->mpNumMetricDefs;i++) {
 	(*pdef)[i].pdId=mp->mpMetricDefs[i].mdId;
 	(*pdef)[i].pdName=mp->mpMetricDefs[i].mdName;
-	(*pdef)[i].pdResource=NULL; /* todo must specify resource listing fnc */
       }
     }
   }

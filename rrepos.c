@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.20 2004/12/13 14:01:46 mihajlov Exp $
+ * $Id: rrepos.c,v 1.21 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -339,23 +339,30 @@ int rreposplugin_add(const char *pluginname)
   char          xbuf[GATHERBUFLEN];
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
   size_t        commlen=sizeof(xbuf);
+  off_t         offset=sizeof(GATHERCOMM);
   
   if (pluginname && *pluginname) {
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     hdr.mc_handle=-1;
-    comm->gc_cmd=GCMD_ADDPLUGIN;
-    comm->gc_datalen=strlen(pluginname)+1;
-    comm->gc_result=0;
-    memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    pthread_mutex_lock(&rrepos_mutex);
-    if (mcc_request(rreposhandle,&hdr,comm,
-		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
-	mcc_response(&hdr,comm,&commlen)==0) {
+    if (marshal_string(pluginname,xbuf,&offset,sizeof(xbuf),1) == 0) {
+      comm->gc_cmd=GCMD_ADDPLUGIN;
+      comm->gc_datalen=offset;
+      comm->gc_result=0;
+      memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+      pthread_mutex_lock(&rrepos_mutex);
+      if (mcc_request(rreposhandle,&hdr,comm,
+		      sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	  mcc_response(&hdr,comm,&commlen)==0) {
+	pthread_mutex_unlock(&rrepos_mutex);
+	return comm->gc_result;
+      } 
       pthread_mutex_unlock(&rrepos_mutex);
-      return comm->gc_result;
-    } 
-    pthread_mutex_unlock(&rrepos_mutex);
+    } else {
+      M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	      ("rreposplugin_add marshalling error, %d/%d",
+	       offset,sizeof(xbuf)));    
+    }
   }
   return -1;
 }
@@ -366,24 +373,31 @@ int rreposplugin_remove(const char *pluginname)
   char          xbuf[GATHERBUFLEN];
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
   size_t        commlen=sizeof(xbuf);
+  off_t         offset=sizeof(GATHERCOMM);
 
   if (pluginname && *pluginname) {
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     hdr.mc_handle=-1;
-    comm->gc_cmd=GCMD_REMPLUGIN;
-    comm->gc_datalen=strlen(pluginname)+1;
-    comm->gc_result=0;
-    memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    pthread_mutex_lock(&rrepos_mutex);
-    if (mcc_request(rreposhandle,&hdr,comm,
-		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
-	mcc_response(&hdr,comm,&commlen)==0) {
+    if (marshal_string(pluginname,xbuf,&offset,sizeof(xbuf),1) == 0) {
+      comm->gc_cmd=GCMD_REMPLUGIN;
+      comm->gc_datalen=offset;
+      comm->gc_result=0;
+      memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+      pthread_mutex_lock(&rrepos_mutex);
+      if (mcc_request(rreposhandle,&hdr,comm,
+		      sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	  mcc_response(&hdr,comm,&commlen)==0) {
+	pthread_mutex_unlock(&rrepos_mutex);
+	return comm->gc_result;
+      } 
       pthread_mutex_unlock(&rrepos_mutex);
-      return comm->gc_result;
+    } else {
+      M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	      ("rreposplugin_add marshalling error, %d/%d",
+	       offset,sizeof(xbuf)));    
     }
-    pthread_mutex_unlock(&rrepos_mutex);
-  }        
+  }
   return -1;  
 }
 
@@ -395,57 +409,47 @@ int rreposplugin_list(const char *pluginname,
   char          xbuf[GATHERVALBUFLEN];
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
   size_t        commlen=sizeof(xbuf);
-  int           i,j;
-  char         *stringpool;
+  off_t         offset=sizeof(GATHERCOMM);
+  char         *rbuf;
 
-  if (pluginname && *pluginname && rdef) {
+  if (pluginname && *pluginname) {
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     hdr.mc_handle=-1;
-    comm->gc_cmd=GCMD_LISTPLUGIN;
-    comm->gc_datalen=strlen(pluginname)+1;
-    comm->gc_result=0;
-    memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
-    pthread_mutex_lock(&rrepos_mutex);
-    if (mcc_request(rreposhandle,&hdr,comm,
-		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
-	mcc_response(&hdr,comm,&commlen)==0 &&
-	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
-      /* copy data into result buffer and adjust string pointers */
-      if (comm->gc_result>0) {
-	*rdef = 
-	  ch_alloc(ch,comm->gc_result*sizeof(RepositoryPluginDefinition));
-	memcpy(*rdef,xbuf+sizeof(GATHERCOMM)+strlen(pluginname)+1,
-	       sizeof(RepositoryPluginDefinition)*comm->gc_result);
-	stringpool=
-	  ch_alloc(ch,
-		   comm->gc_datalen - 
-		   sizeof(GATHERCOMM)+strlen(pluginname)+1+
-		   comm->gc_result*sizeof(RepositoryPluginDefinition));
-	memcpy(stringpool,xbuf+sizeof(GATHERCOMM)+strlen(pluginname)+1+
-	       comm->gc_result*sizeof(RepositoryPluginDefinition),
-	       comm->gc_datalen - sizeof(GATHERCOMM)+strlen(pluginname)+1+
-	       comm->gc_result*sizeof(RepositoryPluginDefinition));
-	for (i=0;i<comm->gc_result;i++) {
-	  /* extract plugin name and resource names from string pool */
-	  (*rdef)[i].rdName = stringpool;
-	  stringpool += strlen(stringpool) + 1;
-	  (*rdef)[i].rdResource=ch_alloc(ch,sizeof(char*)*100);
-	  for (j=0;strlen(stringpool)>0;j++) {
-	    (*rdef)[i].rdResource[j]=stringpool;
-	    stringpool += sizeof(char*) + strlen(stringpool) + 1;
+    if (marshal_string(pluginname,xbuf,&offset,sizeof(xbuf),1) == 0) {
+      comm->gc_cmd=GCMD_LISTPLUGIN;
+      comm->gc_datalen=offset;
+      comm->gc_result=0;
+      memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+      pthread_mutex_lock(&rrepos_mutex);
+      if (mcc_request(rreposhandle,&hdr,comm,
+		      sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	  mcc_response(&hdr,comm,&commlen)==0 &&
+	  commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+	pthread_mutex_unlock(&rrepos_mutex);
+	if (comm->gc_result > 0) {
+	  /* allocate COMMHEAP buffer for return data and unmarshall */
+	  rbuf = ch_alloc(ch,commlen);
+	  memcpy(rbuf,xbuf,commlen);
+	  if (unmarshal_reposplugindefinition(rdef,comm->gc_result,rbuf,
+					      &offset,commlen)) {
+	    M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+		    ("rreposplugin_list result unmarshalling error, %d/%d",
+		     offset,sizeof(xbuf)));    
+	    return -1;
 	  }
-	  (*rdef)[i].rdResource[j]=NULL;
-	  stringpool += 1;
-	}
+	} 
+	return comm->gc_result;
+      } else {
+	pthread_mutex_unlock(&rrepos_mutex);
       }
-      pthread_mutex_unlock(&rrepos_mutex);
-      return comm->gc_result;
+    } else {
+      M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	      ("rreposplugin_list marshalling error, %d/%d",
+	       offset,sizeof(xbuf)));    
     }
-    pthread_mutex_lock(&rrepos_mutex);	
-  }        
-  return -1;  
-  
+  }
+  return -1;   
 }
 
 int rreposresource_list(const char * metricid,

@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.8 2004/11/03 08:16:36 heidineu Exp $
+ * $Id: metric.h,v 1.9 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -82,6 +82,11 @@ extern "C" {
 #define MD_VERSION_MINOR_MAX 0x00ff
 #define MD_VERSION (MD_VERSION_MAJOR+MD_VERSION_MINOR)
 
+/* CIM_BaseMetricDefinition.Calculable */
+#define MD_NONCALCULABLE  1
+#define MD_SUMMABLE       2
+#define MD_NONSUMMABLE    3
+
 typedef struct _MetricValue {
   int       mvId;       /* Metric Id */
   time_t    mvTimeStamp;
@@ -136,8 +141,10 @@ typedef struct _MetricCalculationDefinition {
   int               mcMetricType;
   int               mcChangeType;
   unsigned char     mcIsContinuous;
+  int               mcCalculable;
   int               mcDataType;
   char             *mcCimPlugin;  /* CIM Name Translation Plugin */
+  char             *mcUnits;      
   MetricCalculator *mcCalc;
 } MetricCalculationDefinition;
 

@@ -1,5 +1,5 @@
 /*
- * $Id: marshal.h,v 1.1 2004/11/12 16:40:12 mihajlov Exp $
+ * $Id: marshal.h,v 1.2 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -44,6 +44,13 @@ int marshal_subscriptionrequest(const SubscriptionRequest *vr, char *mbuf,
 				off_t * offset, size_t mbuflen);
 int unmarshal_subscriptionrequest(SubscriptionRequest **vr, const char *mbuf, 
 				  off_t * offset, size_t mbuflen);
+
+int marshal_reposplugindefinition(const RepositoryPluginDefinition *rdef, 
+				  size_t num, char *mbuf,
+				  off_t * offset, size_t mbuflen);
+int unmarshal_reposplugindefinition(RepositoryPluginDefinition **rdef, 
+				    size_t num, char *mbuf,
+				    off_t * offset, size_t mbuflen);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.12 2004/12/03 14:30:59 mihajlov Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.13 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -129,10 +129,25 @@ static MetricCalculator metricCalcContextSwitchRate;
 static MetricCalculator metricCalcHardwareInterruptCounter;
 static MetricCalculator metricCalcHardwareInterruptRate;
 
+
+/* unit definitions */
+static char * muMilliSeconds = "Milliseconds";
+static char * muPagesPerSecond = "Pages per second";
+static char * muBytes = "Bytes";
+static char * muPercent = "Percent";
+static char * muUsers = "Users";
+static char * muProcesses = "Processes";
+static char * muQueueLength = "Queue length";
+static char * muIndex = "Index";
+static char * muEventsPerSecond = "Events per second";
+static char * muNa ="N/A";
+
 /* ---------------------------------------------------------------------------*/
 
 static unsigned long long os_getCPUUserTime( char * data );
+#ifdef NOTNOW
 static unsigned long long os_getCPUNiceTime( char * data );
+#endif
 static unsigned long long os_getCPUKernelTime( char * data );
 static unsigned long long os_getCPUIdleTime( char * data );
 static unsigned long long os_getCPUTotalTime( char * data );
@@ -163,8 +178,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[0].mcChangeType=MD_GAUGE;
   metricCalcDef[0].mcIsContinuous=MD_TRUE;
+  metricCalcDef[0].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[0].mcDataType=MD_UINT32;
   metricCalcDef[0].mcCalc=metricCalcNumOfUser;
+  metricCalcDef[0].mcUnits=muUsers;
 
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="NumberOfProcesses";
@@ -172,16 +189,20 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
+  metricCalcDef[1].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[1].mcDataType=MD_UINT32;
   metricCalcDef[1].mcCalc=metricCalcNumOfProc;
+  metricCalcDef[1].mcUnits=muProcesses;
 
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="CPUTime";
   metricCalcDef[2].mcId=mr(pluginname,metricCalcDef[2].mcName);
   metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[2].mcIsContinuous=MD_FALSE;
+  metricCalcDef[2].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[2].mcDataType=MD_STRING;
   metricCalcDef[2].mcCalc=metricCalcCPUTime;
+  metricCalcDef[2].mcUnits=muNa;
 
   metricCalcDef[3].mcVersion=MD_VERSION;
   metricCalcDef[3].mcName="KernelModeTime";
@@ -189,9 +210,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[3].mcChangeType=MD_GAUGE;
   metricCalcDef[3].mcIsContinuous=MD_TRUE;
+  metricCalcDef[3].mcCalculable=MD_SUMMABLE;
   metricCalcDef[3].mcDataType=MD_UINT64;
   metricCalcDef[3].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[3].mcCalc=metricCalcKernelTime;
+  metricCalcDef[3].mcUnits=muMilliSeconds;
 
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="UserModeTime";
@@ -199,9 +222,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[4].mcChangeType=MD_GAUGE;
   metricCalcDef[4].mcIsContinuous=MD_TRUE;
+  metricCalcDef[4].mcCalculable=MD_SUMMABLE;
   metricCalcDef[4].mcDataType=MD_UINT64;
   metricCalcDef[4].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[4].mcCalc=metricCalcUserTime;
+  metricCalcDef[4].mcUnits=muMilliSeconds;
 
   metricCalcDef[5].mcVersion=MD_VERSION;
   metricCalcDef[5].mcName="TotalCPUTime";
@@ -209,17 +234,21 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[5].mcChangeType=MD_GAUGE;
   metricCalcDef[5].mcIsContinuous=MD_TRUE;
+  metricCalcDef[5].mcCalculable=MD_SUMMABLE;
   metricCalcDef[5].mcDataType=MD_UINT64;
   metricCalcDef[5].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[5].mcCalc=metricCalcTotalCPUTime;
+  metricCalcDef[5].mcUnits=muMilliSeconds;
 
   metricCalcDef[6].mcVersion=MD_VERSION;
   metricCalcDef[6].mcName="MemorySize";
   metricCalcDef[6].mcId=mr(pluginname,metricCalcDef[6].mcName);
   metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[6].mcIsContinuous=MD_FALSE;
+  metricCalcDef[6].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[6].mcDataType=MD_STRING;
   metricCalcDef[6].mcCalc=metricCalcMemorySize;
+  metricCalcDef[6].mcUnits=muBytes;
 
   metricCalcDef[7].mcVersion=MD_VERSION;
   metricCalcDef[7].mcName="TotalVisibleMemorySize";
@@ -227,9 +256,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
   metricCalcDef[7].mcChangeType=MD_GAUGE;
   metricCalcDef[7].mcIsContinuous=MD_TRUE;
+  metricCalcDef[7].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[7].mcDataType=MD_UINT64;
   metricCalcDef[7].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[7].mcCalc=metricCalcTotalPhysMem;
+  metricCalcDef[7].mcUnits=muBytes;
 
   metricCalcDef[8].mcVersion=MD_VERSION;
   metricCalcDef[8].mcName="FreePhysicalMemory";
@@ -237,9 +268,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[8].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
   metricCalcDef[8].mcChangeType=MD_GAUGE;
   metricCalcDef[8].mcIsContinuous=MD_TRUE;
+  metricCalcDef[8].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[8].mcDataType=MD_UINT64;
   metricCalcDef[8].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[8].mcCalc=metricCalcFreePhysMem;
+  metricCalcDef[8].mcUnits=muBytes;
 
   metricCalcDef[9].mcVersion=MD_VERSION;
   metricCalcDef[9].mcName="SizeStoredInPagingFiles";
@@ -247,9 +280,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[9].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
   metricCalcDef[9].mcChangeType=MD_GAUGE;
   metricCalcDef[9].mcIsContinuous=MD_TRUE;
+  metricCalcDef[9].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[9].mcDataType=MD_UINT64;
   metricCalcDef[9].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[9].mcCalc=metricCalcTotalSwapMem;
+  metricCalcDef[9].mcUnits=muBytes;
 
   metricCalcDef[10].mcVersion=MD_VERSION;
   metricCalcDef[10].mcName="FreeSpaceInPagingFiles";
@@ -257,9 +292,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[10].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
   metricCalcDef[10].mcChangeType=MD_GAUGE;
   metricCalcDef[10].mcIsContinuous=MD_TRUE;
+  metricCalcDef[10].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[10].mcDataType=MD_UINT64;
   metricCalcDef[10].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[10].mcCalc=metricCalcFreeSwapMem;
+  metricCalcDef[10].mcUnits=muBytes;
 
   metricCalcDef[11].mcVersion=MD_VERSION;
   metricCalcDef[11].mcName="TotalVirtualMemorySize";
@@ -267,9 +304,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[11].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
   metricCalcDef[11].mcChangeType=MD_GAUGE;
   metricCalcDef[11].mcIsContinuous=MD_TRUE;
+  metricCalcDef[11].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[11].mcDataType=MD_UINT64;
   metricCalcDef[11].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[11].mcCalc=metricCalcTotalVirtMem;
+  metricCalcDef[11].mcUnits=muBytes;
 
   metricCalcDef[12].mcVersion=MD_VERSION;
   metricCalcDef[12].mcName="FreeVirtualMemory";
@@ -277,9 +316,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[12].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
   metricCalcDef[12].mcChangeType=MD_GAUGE;
   metricCalcDef[12].mcIsContinuous=MD_TRUE;
+  metricCalcDef[12].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[12].mcDataType=MD_UINT64;
   metricCalcDef[12].mcAliasId=metricCalcDef[6].mcId;
   metricCalcDef[12].mcCalc=metricCalcFreeVirtMem;
+  metricCalcDef[12].mcUnits=muBytes;
 
   metricCalcDef[13].mcVersion=MD_VERSION;
   metricCalcDef[13].mcName="PageInCounter";
@@ -287,8 +328,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[13].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[13].mcChangeType=MD_COUNTER;
   metricCalcDef[13].mcIsContinuous=MD_TRUE;
+  metricCalcDef[13].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[13].mcDataType=MD_UINT64;
   metricCalcDef[13].mcCalc=metricCalcPageInCounter;
+  metricCalcDef[13].mcUnits=muNa;
 
   metricCalcDef[14].mcVersion=MD_VERSION;
   metricCalcDef[14].mcName="PageInRate";
@@ -296,9 +339,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[14].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
   metricCalcDef[14].mcChangeType=MD_GAUGE;
   metricCalcDef[14].mcIsContinuous=MD_TRUE;
+  metricCalcDef[14].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[14].mcDataType=MD_UINT64;
   metricCalcDef[14].mcAliasId=metricCalcDef[13].mcId;
   metricCalcDef[14].mcCalc=metricCalcPageInRate;
+  metricCalcDef[14].mcUnits=muPagesPerSecond;
 
   metricCalcDef[15].mcVersion=MD_VERSION;
   metricCalcDef[15].mcName="LoadCounter";
@@ -306,8 +351,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[15].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[15].mcChangeType=MD_COUNTER;
   metricCalcDef[15].mcIsContinuous=MD_TRUE;
+  metricCalcDef[15].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[15].mcDataType=MD_FLOAT32;
   metricCalcDef[15].mcCalc=metricCalcLoadCounter;
+  metricCalcDef[15].mcUnits=muNa;
 
   metricCalcDef[16].mcVersion=MD_VERSION;
   metricCalcDef[16].mcName="LoadAverage";
@@ -315,9 +362,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[16].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_AVERAGE;
   metricCalcDef[16].mcChangeType=MD_GAUGE;
   metricCalcDef[16].mcIsContinuous=MD_TRUE;
+  metricCalcDef[16].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[16].mcDataType=MD_FLOAT32;
   metricCalcDef[16].mcAliasId=metricCalcDef[15].mcId;
   metricCalcDef[16].mcCalc=metricCalcLoadAverage;
+  metricCalcDef[16].mcUnits=muQueueLength;
 
   metricCalcDef[17].mcVersion=MD_VERSION;
   metricCalcDef[17].mcName="InternalViewKernelModePercentage";
@@ -325,9 +374,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[17].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[17].mcChangeType=MD_GAUGE;
   metricCalcDef[17].mcIsContinuous=MD_TRUE;
+  metricCalcDef[17].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[17].mcDataType=MD_FLOAT32;
   metricCalcDef[17].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[17].mcCalc=metricCalcInternKernelTimePerc;
+  metricCalcDef[17].mcUnits=muPercent;
 
   metricCalcDef[18].mcVersion=MD_VERSION;
   metricCalcDef[18].mcName="InternalViewUserModePercentage";
@@ -335,9 +386,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[18].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[18].mcChangeType=MD_GAUGE;
   metricCalcDef[18].mcIsContinuous=MD_TRUE;
+  metricCalcDef[18].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[18].mcDataType=MD_FLOAT32;
   metricCalcDef[18].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[18].mcCalc=metricCalcInternUserTimePerc;
+  metricCalcDef[18].mcUnits=muPercent;
 
   metricCalcDef[19].mcVersion=MD_VERSION;
   metricCalcDef[19].mcName="InternalViewIdlePercentage";
@@ -345,9 +398,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[19].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[19].mcChangeType=MD_GAUGE;
   metricCalcDef[19].mcIsContinuous=MD_TRUE;
+  metricCalcDef[19].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[19].mcDataType=MD_FLOAT32;
   metricCalcDef[19].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[19].mcCalc=metricCalcInternIdleTimePerc;
+  metricCalcDef[19].mcUnits=muPercent;
 
   metricCalcDef[20].mcVersion=MD_VERSION;
   metricCalcDef[20].mcName="InternalViewTotalCPUPercentage";
@@ -355,9 +410,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[20].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[20].mcChangeType=MD_GAUGE;
   metricCalcDef[20].mcIsContinuous=MD_TRUE;
+  metricCalcDef[20].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[20].mcDataType=MD_FLOAT32;
   metricCalcDef[20].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[20].mcCalc=metricCalcInternTotalCPUTimePerc;
+  metricCalcDef[20].mcUnits=muPercent;
 
   metricCalcDef[21].mcVersion=MD_VERSION;
   metricCalcDef[21].mcName="ExternalViewKernelModePercentage";
@@ -365,9 +422,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[21].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[21].mcChangeType=MD_GAUGE;
   metricCalcDef[21].mcIsContinuous=MD_TRUE;
+  metricCalcDef[21].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[21].mcDataType=MD_FLOAT32;
   metricCalcDef[21].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[21].mcCalc=metricCalcExternKernelTimePerc;
+  metricCalcDef[21].mcUnits=muPercent;
 
   metricCalcDef[22].mcVersion=MD_VERSION;
   metricCalcDef[22].mcName="ExternalViewUserModePercentage";
@@ -375,9 +434,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[22].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[22].mcChangeType=MD_GAUGE;
   metricCalcDef[22].mcIsContinuous=MD_TRUE;
+  metricCalcDef[22].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[22].mcDataType=MD_FLOAT32;
   metricCalcDef[22].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[22].mcCalc=metricCalcExternUserTimePerc;
+  metricCalcDef[22].mcUnits=muPercent;
 
   metricCalcDef[23].mcVersion=MD_VERSION;
   metricCalcDef[23].mcName="ExternalViewTotalCPUPercentage";
@@ -385,9 +446,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[23].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[23].mcChangeType=MD_GAUGE;
   metricCalcDef[23].mcIsContinuous=MD_TRUE;
+  metricCalcDef[23].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[23].mcDataType=MD_FLOAT32;
   metricCalcDef[23].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[23].mcCalc=metricCalcExternTotalCPUTimePerc;
+  metricCalcDef[23].mcUnits=muPercent;
 
   metricCalcDef[24].mcVersion=MD_VERSION;
   metricCalcDef[24].mcName="PageOutCounter";
@@ -395,8 +458,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[24].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[24].mcChangeType=MD_COUNTER;
   metricCalcDef[24].mcIsContinuous=MD_TRUE;
+  metricCalcDef[24].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[24].mcDataType=MD_UINT64;
   metricCalcDef[24].mcCalc=metricCalcPageOutCounter;
+  metricCalcDef[24].mcUnits=muNa;
 
   metricCalcDef[25].mcVersion=MD_VERSION;
   metricCalcDef[25].mcName="PageOutRate";
@@ -404,9 +469,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[25].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
   metricCalcDef[25].mcChangeType=MD_GAUGE;
   metricCalcDef[25].mcIsContinuous=MD_TRUE;
+  metricCalcDef[25].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[25].mcDataType=MD_UINT64;
   metricCalcDef[25].mcAliasId=metricCalcDef[24].mcId;
   metricCalcDef[25].mcCalc=metricCalcPageOutRate;
+  metricCalcDef[25].mcUnits=muPagesPerSecond;
 
   metricCalcDef[26].mcVersion=MD_VERSION;
   metricCalcDef[26].mcName="CPUConsumptionIndex";
@@ -414,9 +481,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[26].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[26].mcChangeType=MD_GAUGE;
   metricCalcDef[26].mcIsContinuous=MD_TRUE;
+  metricCalcDef[26].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[26].mcDataType=MD_FLOAT32;
   metricCalcDef[26].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[26].mcCalc=metricCalcCPUConsumptionIndex;
+  metricCalcDef[26].mcUnits=muIndex;
 
   metricCalcDef[27].mcVersion=MD_VERSION;
   metricCalcDef[27].mcName="ContextSwitchCounter";
@@ -424,8 +493,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[27].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[27].mcChangeType=MD_COUNTER;
   metricCalcDef[27].mcIsContinuous=MD_TRUE;
+  metricCalcDef[27].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[27].mcDataType=MD_UINT64;
   metricCalcDef[27].mcCalc=metricCalcContextSwitchCounter;
+  metricCalcDef[27].mcUnits=muNa;
 
   metricCalcDef[28].mcVersion=MD_VERSION;
   metricCalcDef[28].mcName="ContextSwitchRate";
@@ -433,9 +504,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[28].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
   metricCalcDef[28].mcChangeType=MD_GAUGE;
   metricCalcDef[28].mcIsContinuous=MD_TRUE;
+  metricCalcDef[28].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[28].mcDataType=MD_UINT64;
   metricCalcDef[28].mcAliasId=metricCalcDef[27].mcId;
   metricCalcDef[28].mcCalc=metricCalcContextSwitchRate;
+  metricCalcDef[28].mcUnits=muEventsPerSecond;
 
   metricCalcDef[29].mcVersion=MD_VERSION;
   metricCalcDef[29].mcName="HardwareInterruptCounter";
@@ -443,8 +516,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[29].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[29].mcChangeType=MD_COUNTER;
   metricCalcDef[29].mcIsContinuous=MD_TRUE;
+  metricCalcDef[30].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[29].mcDataType=MD_UINT64;
   metricCalcDef[29].mcCalc=metricCalcHardwareInterruptCounter;
+  metricCalcDef[29].mcUnits=muNa;
 
   metricCalcDef[30].mcVersion=MD_VERSION;
   metricCalcDef[30].mcName="HardwareInterruptRate";
@@ -452,9 +527,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[30].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
   metricCalcDef[30].mcChangeType=MD_GAUGE;
   metricCalcDef[30].mcIsContinuous=MD_TRUE;
+  metricCalcDef[30].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[30].mcDataType=MD_UINT64;
   metricCalcDef[30].mcAliasId=metricCalcDef[29].mcId;
   metricCalcDef[30].mcCalc=metricCalcHardwareInterruptRate;
+  metricCalcDef[30].mcUnits=muPagesPerSecond;
 
   *mcnum=31;
   *mc=metricCalcDef;
@@ -1580,6 +1657,8 @@ unsigned long long os_getCPUUserTime( char * data ) {
   return val;
 }
 
+#ifdef NOTNOW
+
 unsigned long long os_getCPUNiceTime( char * data ) {
 
   char * hlp = NULL;
@@ -1597,6 +1676,8 @@ unsigned long long os_getCPUNiceTime( char * data ) {
 
   return val;
 }
+
+#endif
 
 unsigned long long os_getCPUKernelTime( char * data ) {
 

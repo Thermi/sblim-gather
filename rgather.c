@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.9 2004/10/12 08:44:53 mihajlov Exp $
+ * $Id: rgather.c,v 1.10 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -271,7 +271,7 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
   char          xbuf[GATHERVALBUFLEN];
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
   size_t        commlen=sizeof(xbuf);
-  int           i,j;
+  int           i;
   char         *stringpool;
 
   if (pluginname && *pluginname && pdef) {
@@ -304,13 +304,6 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
 	  /* extract plugin name and resource names from string pool */
 	  (*pdef)[i].pdName = stringpool;
 	  stringpool += strlen(stringpool) + 1;
-	  (*pdef)[i].pdResource=ch_alloc(ch,sizeof(char*)*100);
-	  for (j=0;strlen(stringpool)>0;j++) {
-	    (*pdef)[i].pdResource[j]=stringpool;
-	    stringpool += sizeof(char*) + strlen(stringpool) + 1;
-	  }
-	  (*pdef)[i].pdResource[j]=NULL;
-	  stringpool += 1;
 	}
       }
       pthread_mutex_unlock(&rgather_mutex);

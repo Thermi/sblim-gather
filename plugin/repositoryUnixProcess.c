@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryUnixProcess.c,v 1.7 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: repositoryUnixProcess.c,v 1.8 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -92,6 +92,13 @@ static MetricCalculator  metricCalcVirtualSize;
 /* --- SharedSize --- */
 static MetricCalculator  metricCalcSharedSize;
 
+/* unit definitions */
+static char * muMilliSeconds = "Milliseconds";
+static char * muPagesPerSecond = "Pages per second";
+static char * muBytes = "Bytes";
+static char * muPercent = "Percent";
+static char * muNa ="N/A";
+
 
 /* ---------------------------------------------------------------------------*/
 
@@ -107,15 +114,18 @@ static float getTotalCPUTimePercentage( char * start, char * end );
 /* TODO : move to lib repositoryTool */
 
 static unsigned long long os_getCPUUserTime( char * data );
-static unsigned long long os_getCPUNiceTime( char * data );
 static unsigned long long os_getCPUKernelTime( char * data );
 static unsigned long long os_getCPUIdleTime( char * data );
 static unsigned long long os_getCPUTotalTime( char * data );
-static float os_getCPUKernelTimePercentage( char * start, char * end ); 
-static float os_getCPUUserTimePercentage( char * start, char * end );
 static float os_getCPUIdleTimePercentage( char * start, char * end );
 static float os_getTotalCPUTimePercentage( char * start, char * end );
+
+#ifdef NOTNOW
+static float os_getCPUKernelTimePercentage( char * start, char * end ); 
+static float os_getCPUUserTimePercentage( char * start, char * end );
 static float os_getCPUConsumptionIndex( char * start, char * end );
+static unsigned long long os_getCPUNiceTime( char * data );
+#endif
 
 /* ---------------------------------------------------------------------------*/
 
@@ -137,8 +147,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
   metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[0].mcIsContinuous=MD_FALSE;
+  metricCalcDef[0].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[0].mcDataType=MD_STRING;
   metricCalcDef[0].mcCalc=metricCalcCPUTime;
+  metricCalcDef[0].mcUnits=muNa;
 
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="KernelModeTime";
@@ -146,9 +158,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
+  metricCalcDef[1].mcCalculable=MD_SUMMABLE;
   metricCalcDef[1].mcDataType=MD_UINT64;
   metricCalcDef[1].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[1].mcCalc=metricCalcKernelTime;
+  metricCalcDef[1].mcUnits=muMilliSeconds;
 
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="UserModeTime";
@@ -157,8 +171,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[2].mcChangeType=MD_GAUGE;
   metricCalcDef[2].mcIsContinuous=MD_TRUE;
   metricCalcDef[2].mcDataType=MD_UINT64;
+  metricCalcDef[2].mcCalculable=MD_SUMMABLE;
   metricCalcDef[2].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[2].mcCalc=metricCalcUserTime;
+  metricCalcDef[2].mcUnits=muMilliSeconds;
 
   metricCalcDef[3].mcVersion=MD_VERSION;
   metricCalcDef[3].mcName="TotalCPUTime";
@@ -166,9 +182,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[3].mcChangeType=MD_GAUGE;
   metricCalcDef[3].mcIsContinuous=MD_TRUE;
+  metricCalcDef[3].mcCalculable=MD_SUMMABLE;
   metricCalcDef[3].mcDataType=MD_UINT64;
   metricCalcDef[3].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[3].mcCalc=metricCalcTotalCPUTime;
+  metricCalcDef[3].mcUnits=muMilliSeconds;
 
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="ResidentSetSize";
@@ -176,8 +194,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[4].mcChangeType=MD_GAUGE;
   metricCalcDef[4].mcIsContinuous=MD_TRUE;
+  metricCalcDef[4].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[4].mcDataType=MD_UINT64;
   metricCalcDef[4].mcCalc=metricCalcResSetSize;
+  metricCalcDef[4].mcUnits=muBytes;
 
   metricCalcDef[5].mcVersion=MD_VERSION;
   metricCalcDef[5].mcName="PageInCounter";
@@ -185,8 +205,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[5].mcChangeType=MD_COUNTER;
   metricCalcDef[5].mcIsContinuous=MD_TRUE;
+  metricCalcDef[5].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[5].mcDataType=MD_UINT64;
   metricCalcDef[5].mcCalc=metricCalcPageInCounter;
+  metricCalcDef[5].mcUnits=muNa;
 
   metricCalcDef[6].mcVersion=MD_VERSION;
   metricCalcDef[6].mcName="PageInRate";
@@ -194,9 +216,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
   metricCalcDef[6].mcChangeType=MD_GAUGE;
   metricCalcDef[6].mcIsContinuous=MD_TRUE;
+  metricCalcDef[6].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[6].mcDataType=MD_UINT64;
   metricCalcDef[6].mcAliasId=metricCalcDef[5].mcId;
   metricCalcDef[6].mcCalc=metricCalcPageInRate;
+  metricCalcDef[6].mcUnits=muPagesPerSecond;
 
   metricCalcDef[7].mcVersion=MD_VERSION;
   metricCalcDef[7].mcName="InternalViewKernelModePercentage";
@@ -204,9 +228,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[7].mcChangeType=MD_GAUGE;
   metricCalcDef[7].mcIsContinuous=MD_TRUE;
+  metricCalcDef[7].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[7].mcDataType=MD_FLOAT32;
   metricCalcDef[7].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[7].mcCalc=metricCalcInternKernelTimePerc;
+  metricCalcDef[7].mcUnits=muPercent;
 
   metricCalcDef[8].mcVersion=MD_VERSION;
   metricCalcDef[8].mcName="InternalViewUserModePercentage";
@@ -214,9 +240,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[8].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[8].mcChangeType=MD_GAUGE;
   metricCalcDef[8].mcIsContinuous=MD_TRUE;
+  metricCalcDef[8].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[8].mcDataType=MD_FLOAT32;
   metricCalcDef[8].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[8].mcCalc=metricCalcInternUserTimePerc;
+  metricCalcDef[8].mcUnits=muPercent;
 
   metricCalcDef[9].mcVersion=MD_VERSION;
   metricCalcDef[9].mcName="InternalViewTotalCPUPercentage";
@@ -224,9 +252,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[9].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[9].mcChangeType=MD_GAUGE;
   metricCalcDef[9].mcIsContinuous=MD_TRUE;
+  metricCalcDef[9].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[9].mcDataType=MD_FLOAT32;
   metricCalcDef[9].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[9].mcCalc=metricCalcInternTotalCPUTimePerc;
+  metricCalcDef[9].mcUnits=muPercent;
 
   metricCalcDef[10].mcVersion=MD_VERSION;
   metricCalcDef[10].mcName="ExternalViewKernelModePercentage";
@@ -234,9 +264,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[10].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[10].mcChangeType=MD_GAUGE;
   metricCalcDef[10].mcIsContinuous=MD_TRUE;
+  metricCalcDef[10].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[10].mcDataType=MD_FLOAT32;
   metricCalcDef[10].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[10].mcCalc=metricCalcExternKernelTimePerc;
+  metricCalcDef[10].mcUnits=muPercent;
 
   metricCalcDef[11].mcVersion=MD_VERSION;
   metricCalcDef[11].mcName="ExternalViewUserModePercentage";
@@ -244,9 +276,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[11].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[11].mcChangeType=MD_GAUGE;
   metricCalcDef[11].mcIsContinuous=MD_TRUE;
+  metricCalcDef[11].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[11].mcDataType=MD_FLOAT32;
   metricCalcDef[11].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[11].mcCalc=metricCalcExternUserTimePerc;
+  metricCalcDef[11].mcUnits=muPercent;
 
   metricCalcDef[12].mcVersion=MD_VERSION;
   metricCalcDef[12].mcName="ExternalViewTotalCPUPercentage";
@@ -254,9 +288,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[12].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[12].mcChangeType=MD_GAUGE;
   metricCalcDef[12].mcIsContinuous=MD_TRUE;
+  metricCalcDef[12].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[12].mcDataType=MD_FLOAT32;
   metricCalcDef[12].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[12].mcCalc=metricCalcExternTotalCPUTimePerc;
+  metricCalcDef[12].mcUnits=muPercent;
 
   metricCalcDef[13].mcVersion=MD_VERSION;
   metricCalcDef[13].mcName="AccumulatedKernelModeTime";
@@ -264,9 +300,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[13].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[13].mcChangeType=MD_COUNTER;
   metricCalcDef[13].mcIsContinuous=MD_TRUE;
+  metricCalcDef[13].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[13].mcDataType=MD_UINT64;
   metricCalcDef[13].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[13].mcCalc=metricCalcAccKernelTime;
+  metricCalcDef[13].mcUnits=muMilliSeconds;
 
   metricCalcDef[14].mcVersion=MD_VERSION;
   metricCalcDef[14].mcName="AccumulatedUserModeTime";
@@ -274,9 +312,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[14].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[14].mcChangeType=MD_COUNTER;
   metricCalcDef[14].mcIsContinuous=MD_TRUE;
+  metricCalcDef[14].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[14].mcDataType=MD_UINT64;
   metricCalcDef[14].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[14].mcCalc=metricCalcAccUserTime;
+  metricCalcDef[14].mcUnits=muMilliSeconds;
 
   metricCalcDef[15].mcVersion=MD_VERSION;
   metricCalcDef[15].mcName="AccumulatedTotalCPUTime";
@@ -284,9 +324,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[15].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
   metricCalcDef[15].mcChangeType=MD_COUNTER;
   metricCalcDef[15].mcIsContinuous=MD_TRUE;
+  metricCalcDef[15].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[15].mcDataType=MD_UINT64;
   metricCalcDef[15].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[15].mcCalc=metricCalcAccTotalCPUTime;
+  metricCalcDef[15].mcUnits=muMilliSeconds;
 
   metricCalcDef[16].mcVersion=MD_VERSION;
   metricCalcDef[16].mcName="VirtualSize";
@@ -294,8 +336,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[16].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[16].mcChangeType=MD_GAUGE;
   metricCalcDef[16].mcIsContinuous=MD_TRUE;
+  metricCalcDef[16].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[16].mcDataType=MD_UINT64;
   metricCalcDef[16].mcCalc=metricCalcVirtualSize;
+  metricCalcDef[16].mcUnits=muBytes;
 
   metricCalcDef[17].mcVersion=MD_VERSION;
   metricCalcDef[17].mcName="SharedSize";
@@ -303,8 +347,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[17].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[17].mcChangeType=MD_GAUGE;
   metricCalcDef[17].mcIsContinuous=MD_TRUE;
+  metricCalcDef[17].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[17].mcDataType=MD_UINT64;
   metricCalcDef[17].mcCalc=metricCalcSharedSize;
+  metricCalcDef[17].mcUnits=muBytes;
 
   metricCalcDef[18].mcVersion=MD_VERSION;
   metricCalcDef[18].mcName="PageOutCounter";
@@ -312,8 +358,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[18].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[18].mcChangeType=MD_COUNTER;
   metricCalcDef[18].mcIsContinuous=MD_TRUE;
+  metricCalcDef[18].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[18].mcDataType=MD_UINT64;
   metricCalcDef[18].mcCalc=metricCalcPageOutCounter;
+  metricCalcDef[18].mcUnits=muNa;
 
   metricCalcDef[19].mcVersion=MD_VERSION;
   metricCalcDef[19].mcName="PageOutRate";
@@ -321,9 +369,11 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[19].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
   metricCalcDef[19].mcChangeType=MD_GAUGE;
   metricCalcDef[19].mcIsContinuous=MD_TRUE;
+  metricCalcDef[19].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[19].mcDataType=MD_UINT64;
   metricCalcDef[19].mcAliasId=metricCalcDef[18].mcId;
   metricCalcDef[19].mcCalc=metricCalcPageOutRate;
+  metricCalcDef[19].mcUnits=muPagesPerSecond;
 
   *mcnum=20;
   *mc=metricCalcDef;
@@ -1195,29 +1245,6 @@ unsigned long long os_getCPUUserTime( char * data ) {
   return val;
 }
 
-unsigned long long os_getCPUNiceTime( char * data ) {
-
-  char * hlp = NULL;
-  char * end = NULL;
-  char   time[128];
-  unsigned long long val = 0;
-
-  /* fourth entry of data (CPUTime) */
-  if( (hlp = strchr(data, ':')) != NULL ) {
-    hlp++;
-    hlp = strchr(data, ':');
-    hlp++;
-    hlp = strchr(data, ':');
-    hlp++;
-    end = strchr(hlp, ':');
-    memset(time,0,sizeof(time));
-    strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
-    val = strtoll(time,(char**)NULL,10)*10;
-  }
-
-  return val;
-}
-
 unsigned long long os_getCPUKernelTime( char * data ) {
 
   char * hlp = NULL;
@@ -1271,6 +1298,72 @@ unsigned long long os_getCPUTotalTime( char * data ) {
 }
 
 /* ---------------------------------------------------------------------------*/
+
+
+float os_getCPUIdleTimePercentage( char * start, char * end ) {
+
+  float end_idle    = 0;
+  float end_total   = 0;
+  float start_idle  = 0;
+  float start_total = 0;
+  float idlePerc    = 0;
+
+  if(!end) return -1;
+
+  end_idle  = os_getCPUIdleTime(end);
+  end_total = os_getCPUTotalTime(end);
+
+  if( start != NULL ) {
+    start_idle = os_getCPUIdleTime(start);
+    start_total = os_getCPUTotalTime(start);
+
+    idlePerc = ((end_idle - start_idle) / 
+		((end_idle+end_total)-(start_idle+start_total)) ) * 100;
+    if(idlePerc<0) { idlePerc = 0; }
+  }
+  else { idlePerc = (end_idle/(end_idle+end_total))*100; }
+
+  return idlePerc;
+}
+
+
+float os_getTotalCPUTimePercentage( char * start, char * end ) {
+
+  float idlePerc  = 0;
+  float totalPerc = 0;
+
+  if(!end) return -1;
+
+  idlePerc = os_getCPUIdleTimePercentage(start,end);
+  totalPerc = 100 - idlePerc;
+
+  return totalPerc;
+}
+
+#ifdef NOTNOW
+
+unsigned long long os_getCPUNiceTime( char * data ) {
+
+  char * hlp = NULL;
+  char * end = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  /* fourth entry of data (CPUTime) */
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    hlp++;
+    hlp = strchr(data, ':');
+    hlp++;
+    hlp = strchr(data, ':');
+    hlp++;
+    end = strchr(hlp, ':');
+    memset(time,0,sizeof(time));
+    strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+    val = strtoll(time,(char**)NULL,10)*10;
+  }
+
+  return val;
+}
 
 float os_getCPUKernelTimePercentage( char * start, char * end ) {
 
@@ -1327,48 +1420,6 @@ float os_getCPUUserTimePercentage( char * start, char * end ) {
   return userPerc;
 }
 
-
-float os_getCPUIdleTimePercentage( char * start, char * end ) {
-
-  float end_idle    = 0;
-  float end_total   = 0;
-  float start_idle  = 0;
-  float start_total = 0;
-  float idlePerc    = 0;
-
-  if(!end) return -1;
-
-  end_idle  = os_getCPUIdleTime(end);
-  end_total = os_getCPUTotalTime(end);
-
-  if( start != NULL ) {
-    start_idle = os_getCPUIdleTime(start);
-    start_total = os_getCPUTotalTime(start);
-
-    idlePerc = ((end_idle - start_idle) / 
-		((end_idle+end_total)-(start_idle+start_total)) ) * 100;
-    if(idlePerc<0) { idlePerc = 0; }
-  }
-  else { idlePerc = (end_idle/(end_idle+end_total))*100; }
-
-  return idlePerc;
-}
-
-
-float os_getTotalCPUTimePercentage( char * start, char * end ) {
-
-  float idlePerc  = 0;
-  float totalPerc = 0;
-
-  if(!end) return -1;
-
-  idlePerc = os_getCPUIdleTimePercentage(start,end);
-  totalPerc = 100 - idlePerc;
-
-  return totalPerc;
-}
-
-
 float os_getCPUConsumptionIndex( char * start, char * end ) {
 
   float end_idle    = 0;
@@ -1394,6 +1445,7 @@ float os_getCPUConsumptionIndex( char * start, char * end ) {
   return index;
 }
 
+#endif
 
 /* ---------------------------------------------------------------------------*/
 /*                       end of repositoryUnixProcess.c                       */

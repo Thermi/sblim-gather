@@ -1,5 +1,5 @@
 /*
- * $Id: gatherctl.c,v 1.3 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: gatherctl.c,v 1.4 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -49,7 +49,7 @@ int main()
   char   buf[500];
   char   argbuf[500];
   int    quit=0;
-  int    i, j;
+  int    i;
   GatherStatus gs;
   PluginDefinition *pdef;
   int              pnum;
@@ -109,9 +109,6 @@ int main()
 	for (i=0;i<pnum;i++) {
 	  printf("Plugin metric \"%s\" has id %d\n",
 		 pdef[i].pdName, pdef[i].pdId);
-	  for (j=0;pdef[i].pdResource[j];j++) {
-	    printf("\t for resource \"%s\"\n",pdef[i].pdResource[j]);
-	  }
 	}
       }
       ch_release(commh);

@@ -1,5 +1,5 @@
 /*
- * $Id: gather.h,v 1.4 2004/08/03 10:19:33 mihajlov Exp $
+ * $Id: gather.h,v 1.5 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -37,7 +37,6 @@ int metricplugin_remove(const char *pluginname);
 typedef struct _PluginDefinition {
   int      pdId;
   char    *pdName; 
-  char   **pdResource; 
 } PluginDefinition;
 
 int metricplugin_list(const char *pluginname,

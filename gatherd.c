@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.8 2004/10/20 14:08:58 mihajlov Exp $
+ * $Id: gatherd.c,v 1.9 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -44,7 +44,7 @@ int main(int argc, char * argv[])
   size_t        bufferlen=sizeof(buffer);
   char          cfgbuf[1000];
   char         *cfgidx1, *cfgidx2;
-  int           i, j;
+  int           i;
   PluginDefinition *pdef;
 
   m_start_logging("gatherd");
@@ -161,26 +161,6 @@ int main(int argc, char * argv[])
 		     pdef[i].pdName,
 		     strlen(pdef[i].pdName) + 1);
 	      comm->gc_datalen += strlen(pdef[i].pdName) + 1;
-	      /* add pointer block for resources */
-	      if (pdef[i].pdResource)
-		for (j=0;pdef[i].pdResource[j];j++) {
-		  if (!CHECKBUFFER(comm,buffer,strlen(pdef[i].pdResource[j]) + 1)) {
-		    comm->gc_result=-1;
-		    break;
-		  }
-		  memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-			 pdef[i].pdResource[j],
-			 strlen(pdef[i].pdResource[j]) + 1);
-		  comm->gc_datalen += strlen(pdef[i].pdResource[j]) + 1;	    
-		}
-	      else if CHECKBUFFER(comm,buffer,1) {
-		memset(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		       0,
-		       1);
-		comm->gc_datalen += 1;
-	      } else {
-		comm->gc_result=-1;
-	      }
 	    }  
 	  } else {
 	    comm->gc_result=-1;

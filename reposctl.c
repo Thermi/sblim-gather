@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.10 2004/12/01 16:13:33 mihajlov Exp $
+ * $Id: reposctl.c,v 1.11 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -56,7 +56,7 @@ int main()
   char              argbuf[500];
   char              argbuf2[500];
   int               quit=0;
-  int               i, j;
+  int               i;
   RepositoryStatus  rs;
   int               pnum;
   COMMHEAP          commh;
@@ -114,11 +114,8 @@ int main()
 	printf("Failed\n");
       } else {
 	for (i=0;i<pnum;i++) {
-	  printf("Plugin metric \"%s\" has id %d and data type %x\n",
-		 rdef[i].rdName, rdef[i].rdId, rdef[i].rdDataType);
-	  for (j=0;rdef[i].rdResource[j];j++) {
-	    printf("\t for resource \"%s\"\n",rdef[i].rdResource[j]);
-	  }
+	  printf("Plugin metric \"%s\" has id %d, units %s and data type %x\n",
+		 rdef[i].rdName, rdef[i].rdId, rdef[i].rdUnits, rdef[i].rdDataType);
 	}
       }
       ch_release(commh);

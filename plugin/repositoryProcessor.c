@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryProcessor.c,v 1.3 2004/12/03 15:57:22 mihajlov Exp $
+ * $Id: repositoryProcessor.c,v 1.4 2004/12/22 15:43:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -35,6 +35,10 @@ static MetricCalculationDefinition metricCalcDef[1];
 /* --- TotalCPUTimePercentage --- */
 static MetricCalculator  metricCalcCPUTimePerc;
 
+/* unit definitions */
+static char * muPercent = "Percent";
+
+
 /* ---------------------------------------------------------------------------*/
 
 int _DefinedRepositoryMetrics( MetricRegisterId *mr,
@@ -56,8 +60,10 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_AVERAGE;
   metricCalcDef[0].mcChangeType=MD_GAUGE;
   metricCalcDef[0].mcIsContinuous=MD_TRUE;
+  metricCalcDef[0].mcCalculable=MD_NONSUMMABLE;
   metricCalcDef[0].mcDataType=MD_FLOAT32;
   metricCalcDef[0].mcCalc=metricCalcCPUTimePerc;
+  metricCalcDef[0].mcUnits=muPercent;
 
   *mcnum=1;
   *mc=metricCalcDef;
