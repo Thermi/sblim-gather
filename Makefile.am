@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.1 2005/06/24 12:09:36 mihajlov Exp $
+# $Id: Makefile.am,v 1.2 2005/06/24 16:02:35 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -181,7 +181,7 @@ sysconf_DATA = gatherd.conf reposd.conf
 EXTRA_DIST += $(sysconf_DATA)
 
 # We must explicity add the RPM spec file to the distribution package
-#EXTRA_DIST+=sblim-cmpi-fad.spec
+EXTRA_DIST+=sblim-gather.spec
 
 EXTRA_DIST += samples
 

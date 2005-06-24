@@ -79,7 +79,7 @@ CHECK_SBLIM_BASE
 # Check for SBLIM Test Suite (defined in acinclude.m4)
 CHECK_TESTSUITE
 
-AC_CONFIG_FILES([Makefile provider/Makefile])
+AC_CONFIG_FILES([Makefile sblim-gather.spec provider/Makefile])
 
 AC_SUBST(ARCHDEF)
 
