@@ -1,6 +1,0 @@
-# Makefile for OperatingSystem Metric Installation
-include ../setting.cmpi
-
-install:	
-	install Linux_OperatingSystemMetric.mof $(CIMOMMOF)
-	install Linux_OperatingSystemMetricRegistration.mof $(CIMOMMOF)

@@ -1,5 +1,0 @@
-# Makefile for IPProtocolEndpoint Metric Installation
-
-install:	
-	cimmofl -I. -nroot/cimv2 Linux_IPProtocolEndpointMetric.mof
-	cimmofl -I. -nroot/PG_InterOp Linux_IPProtocolEndpointMetricRegistration.mof

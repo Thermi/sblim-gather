@@ -1,6 +1,0 @@
-# Makefile for Processor Metric Installation
-include ../setting.cmpi
-
-install:	
-	install  Linux_ProcessorMetric.mof $(CIMOMMOF)
-	install  Linux_ProcessorMetricRegistration.mof $(CIMOMMOF)

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.3 2004/12/22 16:45:53 mihajlov Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.4 2005/06/24 12:04:56 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -34,7 +34,11 @@
 #include <OSBase_Common.h> 
 #include <cmpiOSBase_Common.h> 
 
+#ifdef DEBUG
 #define _debug 1
+#else
+#define _debug 0
+#endif
 
 CMPIBroker * _broker;
 

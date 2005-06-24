@@ -57,7 +57,7 @@ fi
 #echo k | gatherctl
 #echo d | gatherctl
 GATHER=`wbemein http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricGatherer 2>&1`
-if echo $GATHER | grep Linux_MetricDataGatherer > /dev/null
+if echo $GATHER | grep -v Linux_MetricGatherer > /dev/null
 then
     echo "Error occurred listing the Metric Gatherer ... are the providers installed?"
     echo $GATHER
@@ -75,6 +75,22 @@ then
     echo "The Metric Gather is not sampling - have to quit"
     exit -1
 fi
+
+# Initialize Repository Service 
+#echo k | reposctl
+#echo d | reposctl
+REPOS=`wbemein http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricRepositoryService 2>&1`
+if echo $REPOS | grep -v Linux_MetricRepositoryService > /dev/null
+then
+    echo "Error occurred listing the Repository Service ... are the providers installed?"
+    echo $REPOS
+    exit -1
+fi
+
+# Stopping everything to be in a defined state then start
+wbemcm http://${SBLIM_TESTSUITE_ACCESS}$REPOS StopService > /dev/null
+
+wbemcm http://${SBLIM_TESTSUITE_ACCESS}$REPOS StartService > /dev/null
 
 # Wait 60 seconds to make sure that enough samples are generated
 echo "need to wait 60 seconds for gatherd and sampling initialization ... please stand by ... we will be back ;-) ...";

@@ -1,6 +1,0 @@
-# Makefile for SBLIM Metric Instrumentation
-include ../setting.cmpi
-
-install:
-	install Linux_Metric.mof $(CIMOMMOF)
-	install Linux_MetricRegistration.mof $(CIMOMMOF)

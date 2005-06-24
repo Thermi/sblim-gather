@@ -1,6 +1,6 @@
 
 /*
- * $Id: OSBase_MetricIndicationProvider.c,v 1.3 2004/12/15 15:12:54 mihajlov Exp $
+ * $Id: OSBase_MetricIndicationProvider.c,v 1.4 2005/06/24 12:04:56 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -21,7 +21,12 @@
  */
 
 #define CMPI_VERSION 90
+#ifdef DEBUG
 #define _debug 1
+#else
+#define _debug 0
+#endif
+
 
 #include "cmpidt.h"
 #include "cmpift.h"
