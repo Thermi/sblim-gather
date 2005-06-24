@@ -1,5 +1,5 @@
 /*
- * $Id: gathercfg.c,v 1.2 2004/10/20 14:08:58 mihajlov Exp $
+ * $Id: gathercfg.c,v 1.3 2005/06/24 12:09:37 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -20,6 +20,10 @@
 #include "gathercfg.h"
 #include "mcfg.h"
 
+#ifndef GATHER_CONFDIR
+#define GATHER_CONFDIR "/etc"
+#endif
+
 static int gathercfg_handle;
 
 int gathercfg_init()
@@ -32,7 +36,7 @@ int gathercfg_init()
     "TraceComponents",
     NULL
   };
-  gathercfg_handle=set_configfile("/etc/gatherd.conf",allowed);
+  gathercfg_handle=set_configfile(GATHER_CONFDIR "/gatherd.conf",allowed);
   return gathercfg_handle > 0 ? 0 : 1;
 }
 

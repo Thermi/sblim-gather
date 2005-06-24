@@ -18,6 +18,8 @@
  * Trace Support based on the SBLIM OSBASE Providers
  */
 
+#undef NOTRACE
+
 #include "mtrace.h"
 #include <stdio.h>
 #include <unistd.h>

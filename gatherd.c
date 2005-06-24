@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.9 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: gatherd.c,v 1.10 2005/06/24 12:09:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -42,8 +42,10 @@ int main(int argc, char * argv[])
   COMMHEAP     *ch;
   char          buffer[GATHERVALBUFLEN];
   size_t        bufferlen=sizeof(buffer);
+#ifndef NOTRACE
   char          cfgbuf[1000];
   char         *cfgidx1, *cfgidx2;
+#endif
   int           i;
   PluginDefinition *pdef;
 

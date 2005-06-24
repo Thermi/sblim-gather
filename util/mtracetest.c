@@ -1,5 +1,5 @@
 /*
- * $Id: mtracetest.c,v 1.1 2004/10/20 12:49:15 mihajlov Exp $
+ * $Id: mtracetest.c,v 1.2 2005/06/24 12:09:37 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -16,6 +16,8 @@
  * Description: Trace Support Test
  *
  */
+
+#undef NOTRACE
 
 #include "mtrace.h"
 #include <stdio.h>

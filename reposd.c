@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.22 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: reposd.c,v 1.23 2005/06/24 12:09:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -96,8 +96,10 @@ int main(int argc, char * argv[])
   MetricResourceId *rid;
   MetricValue  *mv;
   pthread_t     rcomm;
+#ifndef NOTRACE
   char          cfgbuf[1000];
   char         *cfgidx1, *cfgidx2;
+#endif
 
   m_start_logging("reposd");
   m_log(M_INFO,M_QUIET,"Reposd is starting up.\n");

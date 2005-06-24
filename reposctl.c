@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.12 2004/12/22 16:45:53 mihajlov Exp $
+ * $Id: reposctl.c,v 1.13 2005/06/24 12:09:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -156,8 +156,11 @@ int main()
       sscanf(arg,"%s",argbuf);
       sr.srMetricId = atoi(arg);
       sr.srCorrelatorId = 1;
+      sr.srSystemId = NULL;
       sr.srSystemOp = SUBSCR_OP_ANY;
+      sr.srResource = NULL;
       sr.srResourceOp = SUBSCR_OP_ANY;
+      sr.srValue = NULL;
       sr.srValueOp = SUBSCR_OP_ANY;
       if(rrepos_subscribe(&sr,test_callback))
 	printf("Failed\n");
@@ -166,8 +169,11 @@ int main()
       sscanf(arg,"%s",argbuf);
       sr.srMetricId = atoi(arg);
       sr.srCorrelatorId = 1;
+      sr.srSystemId = NULL;
       sr.srSystemOp = SUBSCR_OP_ANY;
+      sr.srResource = NULL;
       sr.srResourceOp = SUBSCR_OP_ANY;
+      sr.srValue = NULL;
       sr.srValueOp = SUBSCR_OP_ANY;
       if(rrepos_unsubscribe(&sr,test_callback))
 	printf("Failed\n");

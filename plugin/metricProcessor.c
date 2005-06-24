@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.c,v 1.6 2004/12/03 15:57:22 mihajlov Exp $
+ * $Id: metricProcessor.c,v 1.7 2005/06/24 12:09:37 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -254,14 +254,14 @@ int enum_all_proc() {
       str = strchr(ptr,'\n'); 
       ptr = strchr(ptr,':');
       
-#if defined (INTEL) || defined (PPC)
+#if defined (S390)
       while( (ptr=strchr(ptr,' ')) != NULL) { 
 	if( ptr > str) { break; }
 	id = ptr+1; 
 	ptr++;
       }
       end = str;
-#elif defined (S390)
+#else
       id = ptr-1;
       end = ptr;
 #endif

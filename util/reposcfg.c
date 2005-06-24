@@ -1,5 +1,5 @@
 /*
- * $Id: reposcfg.c,v 1.2 2004/10/21 13:55:11 heidineu Exp $
+ * $Id: reposcfg.c,v 1.3 2005/06/24 12:09:37 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -20,6 +20,10 @@
 #include "reposcfg.h"
 #include "mcfg.h"
 
+#ifndef GATHER_CONFDIR
+#define GATHER_CONFDIR "/etc"
+#endif
+
 static int reposcfg_handle;
 
 int reposcfg_init()
@@ -32,7 +36,7 @@ int reposcfg_init()
     "TraceComponents",
     NULL
   };
-  reposcfg_handle=set_configfile("/etc/reposd.conf",allowed);
+  reposcfg_handle=set_configfile(GATHER_CONFDIR "/reposd.conf",allowed);
   return reposcfg_handle > 0 ? 0 : 1;
 }
 
