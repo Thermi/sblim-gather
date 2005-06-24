@@ -1,5 +1,5 @@
 dnl
-dnl $Id: acinclude.m4,v 1.1 2005/06/24 12:04:56 mihajlov Exp $
+dnl $Id: acinclude.m4,v 1.1 2005/06/24 14:30:27 mihajlov Exp $
 dnl
  dnl 
  dnl (C) Copyright IBM Corp. 2004, 2005

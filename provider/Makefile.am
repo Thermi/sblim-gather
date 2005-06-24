@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.1 2005/06/24 12:04:56 mihajlov Exp $
+# $Id: Makefile.am,v 1.2 2005/06/24 14:30:27 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -38,7 +38,7 @@ cimplugindir=$(libdir)
 providerdir = @PROVIDERDIR@
 
 # Generally useful flags
-AM_CPPFLAGS = -I $(srcdir)/.. -I $(srcdir)/../util -I $(srcdir)/../comms
+AM_CPPFLAGS =  -I $(srcdir)/../util -I $(srcdir)/../comms
 AM_CFLAGS = -Wall
 AM_LDFLAGS = -L..
 

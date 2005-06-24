@@ -1,6 +1,0 @@
-Changes in Version 2.0.0
-========================
-
-Gatherer is now fully distributable: a central repository node
-can collect data from a large number of remote nodes running the
-gatherd daemon.

@@ -7,5 +7,4 @@ autoheader --force &&
 libtoolize --force && 
 automake --add-missing --force-missing &&
 autoconf --force &&
-if test -d provider; then cd provider && ../autoconfiscate.sh; fi &&
-if test `basename $PWD` != provider; then echo "You may now run ./configure"; fi
+echo "You may now run ./configure"

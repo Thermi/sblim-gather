@@ -29,7 +29,7 @@ AC_ARG_ENABLE(debug,
 	[AS_HELP_STRING(--enable-debug,enable debug output.)])
 
 # DECLARE ANY SPECIAL CUSTOM CONFIGURE COMMAND LINE OPTIONS HERE
-AC_ARG_VAR([PROVIDERDIR],[the directory where the CMPI providers will be installed.])
+AC_ARG_VAR([TESTSUITEDIR],[the directory where the SBLIM testsuite resides.])AC_ARG_VAR([PROVIDERDIR],[the directory where the CMPI providers will be installed.])
 AC_ARG_VAR([CIMSERVER],[the target CIM server (pegasus|sfcb|openwbem|sniacimom).])
 
 # Checks for libraries.
@@ -61,7 +61,25 @@ AC_FUNC_STRFTIME
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit dup2 gethostbyname gethostname getmntent gettimeofday inet_ntoa memmove memset socket strcasecmp strchr strdup strerror strrchr strspn strstr uname])
 
-AC_CONFIG_FILES([Makefile])
+# CPPFLAGS for Provider Compilation
+CPPFLAGS="-DCMPI_VERSION=90 $CPPFLAGS"
+
+# Check for required CMPI header files (defined in acinclude.m4)
+CHECK_CMPI
+
+# Check for required libraries (defined in acinclude.m4)
+CHECK_PROVIDERDIR
+
+# Check for CIM Server (defined in acinclude.m4)
+CHECK_CIMSERVER
+
+# Check for SBLIM Include (defined in acinclude.m4)
+CHECK_SBLIM_BASE
+
+# Check for SBLIM Test Suite (defined in acinclude.m4)
+CHECK_TESTSUITE
+
+AC_CONFIG_FILES([Makefile provider/Makefile])
 
 AC_SUBST(ARCHDEF)
 
@@ -72,14 +90,13 @@ then
 	CPPFLAGS="-DDEBUG $CPPFLAGS"
 else
 	enable_debug=no
-	CPPFLAGS="-DNOTRACE"
+	CPPFLAGS="-DNOTRACE $CPPFLAGS"
 fi
 
 if test $enable_provider == "yes"
 then
 PROVIDER_SUBDIR=provider
 AC_SUBST(PROVIDER_SUBDIR)
-AC_CONFIG_SUBDIRS([provider])
 fi
 
 # Display configuration options
@@ -89,6 +106,20 @@ echo ""
 echo "The following configuration options have been selected:"
 echo "Enable Debug: " $enable_debug
 echo "Enable Provider: " $enable_provider
+if test $enable_provider == yes
+then
+echo "CIMSERVER: " $CIMSERVER
+echo "PROVIDERDIR: " $PROVIDERDIR
+if test x"$TESTSUITEDIR" == x; then
+   TESTSUITE_SUPPORT=Disabled
+else	
+   TESTSUITE_SUPPORT=Enabled
+fi
+echo "Test Suite Support" $TESTSUITE_SUPPORT
+if test x"$TESTSUITEDIR" != x; then
+echo "TESTSUITEDIR " $TESTSUITEDIR
+fi
+fi
 echo "CPPFLAGS:" $CPPFLAGS
 echo "-------------------------------------------------------"
 
