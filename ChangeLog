@@ -1,0 +1,5 @@
+2005-07-28    <mihajlov@dyn-9-152-143-97.boeblingen.de.ibm.com>
+
+	* provider/provider-register.sh: 
+	Bug 1236584: Enhance compatibility with tog-pegasus.
+

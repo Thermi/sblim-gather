@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([sblim-gather],[2.0.0],[sblim-devel@lists.sourceforge.net])
+AC_INIT([sblim-gather],[2.0.1],[sblim-devel@lists.sourceforge.net])
 AC_CONFIG_SRCDIR([cimplug.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -29,7 +29,8 @@ AC_ARG_ENABLE(debug,
 	[AS_HELP_STRING(--enable-debug,enable debug output.)])
 
 # DECLARE ANY SPECIAL CUSTOM CONFIGURE COMMAND LINE OPTIONS HERE
-AC_ARG_VAR([TESTSUITEDIR],[the directory where the SBLIM testsuite resides.])AC_ARG_VAR([PROVIDERDIR],[the directory where the CMPI providers will be installed.])
+AC_ARG_VAR([TESTSUITEDIR],[the directory where the SBLIM testsuite resides.])
+AC_ARG_VAR([PROVIDERDIR],[the directory where the CMPI providers will be installed.])
 AC_ARG_VAR([CIMSERVER],[the target CIM server (pegasus|sfcb|openwbem|sniacimom).])
 
 # Checks for libraries.
@@ -61,6 +62,8 @@ AC_FUNC_STRFTIME
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit dup2 gethostbyname gethostname getmntent gettimeofday inet_ntoa memmove memset socket strcasecmp strchr strdup strerror strrchr strspn strstr uname])
 
+if test $enable_provider == "yes"
+then
 # CPPFLAGS for Provider Compilation
 CPPFLAGS="-DCMPI_VERSION=90 $CPPFLAGS"
 
@@ -76,10 +79,15 @@ CHECK_CIMSERVER
 # Check for SBLIM Include (defined in acinclude.m4)
 CHECK_SBLIM_BASE
 
+PROVIDER_SUBDIR=provider
+AC_SUBST(PROVIDER_SUBDIR)
+AC_CONFIG_FILES([provider/Makefile])
+fi
+
 # Check for SBLIM Test Suite (defined in acinclude.m4)
 CHECK_TESTSUITE
 
-AC_CONFIG_FILES([Makefile sblim-gather.spec provider/Makefile])
+AC_CONFIG_FILES([Makefile sblim-gather.spec])
 
 AC_SUBST(ARCHDEF)
 
@@ -91,12 +99,6 @@ then
 else
 	enable_debug=no
 	CPPFLAGS="-DNOTRACE $CPPFLAGS"
-fi
-
-if test $enable_provider == "yes"
-then
-PROVIDER_SUBDIR=provider
-AC_SUBST(PROVIDER_SUBDIR)
 fi
 
 # Display configuration options
