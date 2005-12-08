@@ -2,7 +2,7 @@
 class : Linux_NetworkPortMetricValue
 
 --------------------------------------------------------------------------------
-Linux_NetworkPortMetricValue : -gt 4
+Linux_NetworkPortMetricValue : -ge 4
 
 --------------------------------------------------------------------------------
 InstanceId: -set

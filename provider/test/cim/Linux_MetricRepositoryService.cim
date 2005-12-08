@@ -1,6 +1,6 @@
 ********************************************************************************
-class : Linux_MetricGatherer
-objectPath : Linux_MetricGatherer.SystemCreationClassName=Linux_ComputerSystem,SystemName=testsystem,CreationClassName=Linux_MetricGatherer,Name=gatherd
+class : Linux_MetricRepositoryService
+objectPath : Linux_MetricRepositoryService.SystemCreationClassName=Linux_ComputerSystem,SystemName=testsystem,CreationClassName=Linux_MetricRepositoryService,Name=reposd
 
 --------------------------------------------------------------------------------
 Instance                                                       enumInstanceNames

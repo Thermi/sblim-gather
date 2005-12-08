@@ -2,7 +2,7 @@
 class : Linux_OperatingSystemMetricValue
 
 --------------------------------------------------------------------------------
-Linux_OperatingSystemMetricValue : -gt 17
+Linux_OperatingSystemMetricValue : -ge 15
 
 --------------------------------------------------------------------------------
 InstanceId: -set

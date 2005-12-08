@@ -1,3 +1,17 @@
+2005-12-08    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* provider/test/system/linux/Linux_MetricGatherer.system,
+	* provider/test/system/linux/Linux_OperatingSystemMetric.system,
+	* provider/test/system/linux/Linux_OperatingSystemMetricValue.system,
+	* provider/test/system/linux/Linux_NetworkPortMetricValue.system,
+	* provider/test/system/linux/Linux_IPProtocolEndpointMetricValue.system,
+	* provider/test/system/linux/Linux_UnixProcessMetric.system:
+	Bug 1376211: Corrected expected property values.
+
+	* provider/test/test-gather.sh: 
+	Bug 1376211: Removed wbemcli version check and environment variable
+	priming. Added new testcase for repository service.
+
 2005-07-28    <mihajlov@dyn-9-152-143-97.boeblingen.de.ibm.com>
 
 	* provider/provider-register.sh: 

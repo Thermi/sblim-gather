@@ -1,17 +1,16 @@
 ********************************************************************************
-class : Linux_MetricGatherer
+class : Linux_MetricRepositoryService
 
 --------------------------------------------------------------------------------
-Linux_MetricGatherer : -eq 1
+Linux_MetricRepositoryService : -eq 1
 
 --------------------------------------------------------------------------------
 SystemCreationClassName : -eq Linux_ComputerSystem
 SystemName : -eq -cmd gather-systemname.sh
-CreationClassName: -eq Linux_MetricGatherer
-Name : -eq gatherd
+CreationClassName: -eq Linux_MetricRepositoryService
+Name : -eq reposd
 
 EnabledState: -eq 2
 Started: -eq TRUE
-Sampling: -eq TRUE
 NumberOfPlugins: -eq 6
-NumberOfMetrics: -eq 20
+NumberOfMetrics: -eq 64

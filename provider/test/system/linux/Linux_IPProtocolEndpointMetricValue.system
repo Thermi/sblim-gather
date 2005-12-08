@@ -2,7 +2,7 @@
 class : Linux_IPProtocolEndpointMetricValue
 
 --------------------------------------------------------------------------------
-Linux_IPProtocolEndpointMetricValue : -gt 4
+Linux_IPProtocolEndpointMetricValue : -ge 4
 
 --------------------------------------------------------------------------------
 InstanceId: -set

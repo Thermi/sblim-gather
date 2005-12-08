@@ -7,17 +7,6 @@
 #export SBLIM_TESTSUITE_RUN=1;
 
 #******************************************************************************#
-# WBEMCLI available in version 1.4 ?
-if ! wbemcli -v 2>&1 | grep 1.4 > /dev/null
-then
-    echo "wbemcli 1.4 must be installed"
-    exit -1
-fi
-    
-USERID=
-PASSWORD=
-SBLIM_TESTSUITE_ACCESS=
-
 while [ "$#" -gt 0 ]
 do
   COMMAND=$1
@@ -54,8 +43,8 @@ then
 fi
 
 # Initialize Gatherer Service 
-#echo k | gatherctl
-#echo d | gatherctl
+echo k | gatherctl
+echo d | gatherctl
 GATHER=`wbemein http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricGatherer 2>&1`
 if echo $GATHER | grep -v Linux_MetricGatherer > /dev/null
 then
@@ -99,21 +88,22 @@ echo "... back ...";
 
 declare -a CLASSNAMES[];
 CLASSNAMES=([0]=Linux_MetricGatherer \
-    [1]=Linux_NetworkPortMetric \
-    [2]=Linux_LocalFileSystemMetric \
-    [3]=Linux_ProcessorMetric \
-    [4]=Linux_UnixProcessMetric \
-    [5]=Linux_OperatingSystemMetric \
-    [6]=Linux_NetworkPortMetricValue \
-    [7]=Linux_LocalFileSystemMetricValue \
-    [8]=Linux_ProcessorMetricValue \
-    [9]=Linux_UnixProcessMetricValue \
-    [10]=Linux_OperatingSystemMetricValue \
+    [1]=Linux_MetricRepositoryService \
+    [2]=Linux_NetworkPortMetric \
+    [3]=Linux_LocalFileSystemMetric \
+    [4]=Linux_ProcessorMetric \
+    [5]=Linux_UnixProcessMetric \
+    [6]=Linux_OperatingSystemMetric \
+    [7]=Linux_NetworkPortMetricValue \
+    [8]=Linux_LocalFileSystemMetricValue \
+    [9]=Linux_ProcessorMetricValue \
+    [10]=Linux_UnixProcessMetricValue \
+    [11]=Linux_OperatingSystemMetricValue \
     [12]=Linux_IPProtocolEndpointMetric \
-    [11]=Linux_IPProtocolEndpointMetricValue \
+    [13]=Linux_IPProtocolEndpointMetricValue \
     )
 
-declare -i max=12;
+declare -i max=13;
 declare -i i=0;
 
 OPTS=

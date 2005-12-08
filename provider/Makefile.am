@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.2 2005/06/24 14:30:27 mihajlov Exp $
+# $Id: Makefile.am,v 1.3 2005/12/08 12:31:35 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -38,7 +38,7 @@ cimplugindir=$(libdir)
 providerdir = @PROVIDERDIR@
 
 # Generally useful flags
-AM_CPPFLAGS =  -I $(srcdir)/../util -I $(srcdir)/../comms
+AM_CPPFLAGS = -I $(srcdir)/.. -I $(srcdir)/../util -I $(srcdir)/../comms
 AM_CFLAGS = -Wall
 AM_LDFLAGS = -L..
 
@@ -148,6 +148,7 @@ testsuitesystem_DATA= test/system/linux/Linux_IPProtocolEndpointMetric.system \
 	test/system/linux/Linux_LocalFileSystemMetric.system \
 	test/system/linux/Linux_LocalFileSystemMetricValue.system \
 	test/system/linux/Linux_MetricGatherer.system \
+	test/system/linux/Linux_MetricRepositoryService.system \
 	test/system/linux/Linux_NetworkPortMetric.system \
 	test/system/linux/Linux_NetworkPortMetricValue.system \
 	test/system/linux/Linux_OperatingSystemMetric.system \
@@ -164,6 +165,7 @@ testsuitecim_DATA= test/cim/Linux_IPProtocolEndpointMetric.cim \
 	test/cim/Linux_LocalFileSystemMetric.cim \
 	test/cim/Linux_LocalFileSystemMetricValue.cim \
 	test/cim/Linux_MetricGatherer.cim \
+	test/cim/Linux_MetricRepositoryService.cim \
 	test/cim/Linux_NetworkPortMetric.cim \
 	test/cim/Linux_NetworkPortMetricValue.cim \
 	test/cim/Linux_OperatingSystemMetric.cim \
