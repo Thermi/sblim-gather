@@ -1,3 +1,8 @@
+2006-02-01    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* provider/Makefile.am: 
+	Bug 1395363: Removed location dependence for postinstall step.
+
 2005-12-08    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* provider/test/system/linux/Linux_MetricGatherer.system,

@@ -1,3 +1,9 @@
+Changes in Version 2.1.0
+========================
+
+Bugs fixed:
+- 1395363 Removed provider postinstall location dependencies.
+
 Changes in Version 2.0.2
 ========================
 

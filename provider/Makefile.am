@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.3 2005/12/08 12:31:35 mihajlov Exp $
+# $Id: Makefile.am,v 1.4 2006/02/01 10:18:43 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -102,27 +102,27 @@ libOSBase_MetricIndicationProvider_la_LIBADD = -lOSBase_MetricUtil
 #
 # Automake instructions for ./mof subdir
 #
-MOFS=	mof/Linux_Metric.mof \
-        mof/Linux_IPProtocolEndpointMetric.mof \
-	mof/Linux_LocalFileSystemMetric.mof \
-	mof/Linux_NetworkPortMetric.mof \
-	mof/Linux_OperatingSystemMetric.mof \
-	mof/Linux_ProcessorMetric.mof \
-	mof/Linux_UnixProcessMetric.mof 
-REGS=mof/Linux_IPProtocolEndpointMetric.registration \
-	mof/Linux_LocalFileSystemMetric.registration \
-	mof/Linux_Metric.registration \
-	mof/Linux_NetworkPortMetric.registration \
-	mof/Linux_OperatingSystemMetric.registration \
-	mof/Linux_ProcessorMetric.registration \
-	mof/Linux_UnixProcessMetric.registration
+MOFS=	$(srcdir)/mof/Linux_Metric.mof \
+        $(srcdir)/mof/Linux_IPProtocolEndpointMetric.mof \
+	$(srcdir)/mof/Linux_LocalFileSystemMetric.mof \
+	$(srcdir)/mof/Linux_NetworkPortMetric.mof \
+	$(srcdir)/mof/Linux_OperatingSystemMetric.mof \
+	$(srcdir)/mof/Linux_ProcessorMetric.mof \
+	$(srcdir)/mof/Linux_UnixProcessMetric.mof 
+REGS=	$(srcdir)/mof/Linux_IPProtocolEndpointMetric.registration \
+	$(srcdir)/mof/Linux_LocalFileSystemMetric.registration \
+	$(srcdir)/mof/Linux_Metric.registration \
+	$(srcdir)/mof/Linux_NetworkPortMetric.registration \
+	$(srcdir)/mof/Linux_OperatingSystemMetric.registration \
+	$(srcdir)/mof/Linux_ProcessorMetric.registration \
+	$(srcdir)/mof/Linux_UnixProcessMetric.registration
 
 # Register the provider(s) and class definition(s) to the current CIM server/CIMOM
 postinstall:
-	sh provider-register.sh -t @CIMSERVER@ -r $(REGS) -m $(MOFS)
+	sh $(srcdir)/provider-register.sh -t @CIMSERVER@ -r $(REGS) -m $(MOFS)
 
 preuninstall:
-	sh provider-register.sh -d -t @CIMSERVER@ -r $(REGS) -m $(MOFS)
+	sh $(srcdir)/provider-register.sh -d -t @CIMSERVER@ -r $(REGS) -m $(MOFS)
 
 dist-hook:
 	test -d "$(distdir)" &&	rm -rf `find $(distdir) -type d -name CVS`
