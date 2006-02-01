@@ -1,5 +1,5 @@
 /*
- * $Id: slisten.c,v 1.4 2004/12/13 14:01:46 mihajlov Exp $
+ * $Id: slisten.c,v 1.5 2006/02/01 10:19:37 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -73,7 +73,7 @@ static void * subs_listener(void *unused)
 {
   int                fdsocket;
   struct sockaddr_un sockname;
-  int               *corrid;
+  void              *v_corrid;
   ValueRequest      *vr;
   char               buf[1000];
   off_t              offset;
@@ -94,13 +94,13 @@ static void * subs_listener(void *unused)
     while(1) {
       offset=0;
       if (recv(fdsocket,buf,sizeof(buf),0) != -1) {
-	if (unmarshal_data((void**)&corrid,sizeof(int),
+	if (unmarshal_data(&v_corrid,sizeof(int),
 			   buf,&offset,sizeof(buf)) == 0 &&
 	    unmarshal_valuerequest(&vr,buf,&offset,
 				   sizeof(buf)) == 0) {
 	  M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
 		  ("subs_listener received a metric packet for %d",vr->vsId));
-	  call_callbacks(*corrid,vr);
+	  call_callbacks(*(int*)v_corrid,vr);
 	} else {
 	  M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
 		  ("subs_listener unmmarshalling error"));
