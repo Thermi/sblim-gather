@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricInstanceProvider.c,v 1.6 2004/12/23 14:37:39 mihajlov Exp $
+ * $Id: OSBase_MetricInstanceProvider.c,v 1.7 2006/02/02 13:03:22 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -23,6 +23,7 @@
 #include <cmpift.h>
 #include <cmpimacs.h>
 #include <rrepos.h>
+#include <OSBase_Common.h>
 #include "OSBase_MetricUtil.h"
 
 #define LOCALCLASSNAME "Linux_MetricInstance"
@@ -79,7 +80,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
   ValueRequest    vr;
   COMMHEAP        ch;
 
-  fprintf(stderr,"--- associatorHelper()\n");
+  _OSBASE_TRACE(3,("%s associatorHelper() - associators = %d, names = %d\n",LOCALCLASSNAME,associators, names));
     
   clsname=CMGetClassName(cop,NULL);
   namesp=CMGetNameSpace(cop,NULL);
@@ -87,6 +88,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
    * Check if the object path belongs to a supported class
    */ 
   if (CMClassPathIsA(_broker,cop,"CIM_BaseMetricDefinition",NULL)) {
+    _OSBASE_TRACE(4,("%s associatorHelper(): lhs is %s\n",LOCALCLASSNAME,CMGetCharPtr(clsname)));
     iddata = CMGetKey(cop,"Id",NULL);
     /* Metric Definition - we search for Metric Values for this Id */
     if (iddata.value.string &&
@@ -129,6 +131,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
       }
     }
   } else if (CMClassPathIsA(_broker,cop,"CIM_BaseMetricValue",NULL)) {
+    _OSBASE_TRACE(4,("%s associatorHelper(): lhs is %s\n",LOCALCLASSNAME,CMGetCharPtr(clsname)));
     iddata = CMGetKey(cop,"MetricDefinitionId",NULL);
     /* Must be a metric value */
     if (iddata.value.string &&
@@ -140,7 +143,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
 	co = makeMetricDefPath(_broker,ctx,
 			       metricname,metricid,CMGetCharPtr(namesp),
 			       &st); 
-	if (co==NULL) {
+	if (co) {
 	  if (names && associators) {
 	    CMReturnObjectPath(rslt,co);
 	  } else if (!names && associators) {
@@ -159,7 +162,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
       
     }
   } else {
-    fprintf(stderr,"--- unsupported class %s\n",CMGetCharPtr(clsname));
+    _OSBASE_TRACE(4,("%s associatorHelper(): unsupported class %s\n",LOCALCLASSNAME,CMGetCharPtr(clsname)));
   }
   CMReturnDone(rslt);
   
