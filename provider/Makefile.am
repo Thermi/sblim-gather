@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.4 2006/02/01 10:18:43 mihajlov Exp $
+# $Id: Makefile.am,v 1.5 2006/02/07 12:56:09 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -21,7 +21,7 @@ EXTRA_DIST=
 #docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
 
 # plugin directories
-cimplugindir=$(libdir)
+cimplugindir=$(libdir)/gather/cplug
 
 #
 # Automake instructions for documentation
@@ -63,7 +63,8 @@ libcimplugIPProtocolEndpoint_la_SOURCES=$(srcdir)/../plugin/cimplugIPProtocolEnd
 # Gather CMPI provider utility libraries
 lib_LTLIBRARIES = libOSBase_MetricUtil.la
 libOSBase_MetricUtil_la_SOURCES=OSBase_MetricUtil.c
-libOSBase_MetricUtil_la_LIBADD=-lrrepos
+libOSBase_MetricUtil_la_CPPFLAGS= $(AM_CPPFLAGS) -DCIM_PLUGINDIR=\"$(cimplugindir)\"
+libOSBase_MetricUtil_la_LIBADD=-lrrepos -lcmpiOSBase_Common
 
 # Gather CMPI provider libraries
 provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \

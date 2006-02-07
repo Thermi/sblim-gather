@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.10 2004/12/22 16:45:53 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.11 2006/02/07 12:56:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -17,6 +17,7 @@
  */
 
 #include "OSBase_MetricUtil.h"
+#include <OSBase_Common.h>
 #include <string.h>
 #include <stdio.h>
 #include <rrepos.h>
@@ -25,6 +26,11 @@
 #include <cmpimacs.h>
 #include <cimplug.h>
 #include <dlfcn.h>
+
+
+#ifndef CIM_PLUGINDIR
+#define CIM_PLUGINDIR "/usr/lib/gather/cplug"
+#endif
 
 #define PLUGINCLASSNAME "Linux_RepositoryPlugin"
 #define VALDEFCLASSNAME "Linux_MetricValueDefinition"
@@ -122,6 +128,7 @@ static int refreshMetricValueList(CMPIBroker * broker, CMPIContext * ctx,
   CMPIEnumeration *en = CBEnumInstances(broker,ctx,co,NULL,NULL);
   int              totalnum = 0;
 
+  _OSBASE_TRACE(4,("refreshMetricValueList() - namespace %s\n",namesp));
   MWriteLock(&MdefLock);
   removeValueList();
   while (en && CMHasNext(en,NULL)) {
@@ -161,6 +168,7 @@ int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx,
   RepositoryPluginDefinition *rdef;
   COMMHEAP         ch;
 
+  _OSBASE_TRACE(4,("refreshMetricDefClasses() - namespace %s\n",namesp));
   /* refresh definition/value mapping list */
   if (refreshMetricValueList(broker,ctx,namesp)) {
     return -1;
@@ -218,6 +226,7 @@ int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx,
 
 void releaseMetricDefClasses()
 {
+  _OSBASE_TRACE(4,("releaseMetricDefClasses()\n"));
   MWriteLock(&MdefLock);
   if (metricDefinitionList) {
     removeDefinitionList();
@@ -1147,7 +1156,11 @@ static int locatePluginIndex(const char *pluginname, int alloc)
 
 static int dynaloadPlugin(const char *pluginname, int idx)
 {
-  pluginList[idx].plug_handle = dlopen(pluginname,RTLD_LAZY);
+  char pluginbuf[1000];
+  pluginbuf[sizeof(pluginbuf)-1]=0;
+  strncpy(pluginbuf,CIM_PLUGINDIR "/",sizeof(pluginbuf)-1);
+  strncat(pluginbuf,pluginname,sizeof(pluginbuf)-strlen(pluginbuf)-1);
+  pluginList[idx].plug_handle = dlopen(pluginbuf,RTLD_LAZY);
   if (pluginList[idx].plug_handle) {
     pluginList[idx].plug_cop4id = 
       dlsym(pluginList[idx].plug_handle,COP4VALID_S);
@@ -1163,8 +1176,10 @@ static int dynaloadPlugin(const char *pluginname, int idx)
       return 0;
     }
     /* failed to load syms*/
-    dlclose(pluginList[idx].plug_handle);
+      dlclose(pluginList[idx].plug_handle);
   }
+  _OSBASE_TRACE(1,("Failed loading CIM plugin %s at %d: %s\n",pluginbuf,
+		   idx, dlerror()));
   pluginList[idx].plug_name=NULL;
   pluginList[idx].plug_handle=NULL;
   pluginList[idx].plug_cop4id=NULL;

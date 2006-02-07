@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricDefForMEProvider.c,v 1.3 2004/12/23 14:37:39 mihajlov Exp $
+ * $Id: OSBase_MetricDefForMEProvider.c,v 1.4 2006/02/07 12:56:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -23,6 +23,7 @@
 #include <cmpift.h>
 #include <cmpimacs.h>
 #include <rrepos.h>
+#include <OSBase_Common.h>
 #include "OSBase_MetricUtil.h"
 
 #define LOCALCLASSNAME "Linux_MetricDefForME"
@@ -83,7 +84,7 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
   COMMHEAP        ch;
   MetricResourceId *rid;
 
-  fprintf(stderr,"--- Linux_MetricDefForME associatorHelper()\n");
+  _OSBASE_TRACE(3,("--- %s associatorHelper()\n",LOCALCLASSNAME));
     
   clsname=CMGetClassName(cop,NULL);
   namesp=CMGetNameSpace(cop,NULL);
