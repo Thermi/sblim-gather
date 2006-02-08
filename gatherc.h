@@ -1,5 +1,5 @@
 /*
- * $Id: gatherc.h,v 1.6 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: gatherc.h,v 1.7 2006/02/08 20:50:57 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -54,9 +54,9 @@ extern "C" {
 
 
 typedef struct _GATHERCOMM {
-  short  gc_cmd;
-  short  gc_result;
-  size_t gc_datalen;
+  short    gc_cmd;
+  short    gc_result;
+  unsigned gc_datalen;
 } GATHERCOMM;
 
 #ifdef __cplusplus

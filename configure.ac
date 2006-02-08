@@ -66,7 +66,44 @@ AC_FUNC_STRFTIME
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([atexit dup2 gethostbyname gethostname getmntent gettimeofday inet_ntoa memmove memset socket strcasecmp strchr strdup strerror strrchr strspn strstr uname])
 
-if test $enable_provider == "yes"
+# Local type checks
+AC_CHECK_SIZEOF([MetricValue],,[
+#include <stdio.h>
+#include "$srcdir/metric.h"
+])			          
+AC_CHECK_SIZEOF([MetricValue32],,[
+#include <stdio.h>
+#include "$srcdir/metric.h"
+])			          
+AC_CHECK_SIZEOF([MetricValue64],,[
+#include <stdio.h>
+#include "$srcdir/metric.h"
+])			          
+AC_CHECK_SIZEOF(long)
+
+if test $ac_cv_sizeof_MetricValue = 0
+then
+    AC_ERROR([Unsupported platform: sizeof(MetricValue) cannot be determined.])
+fi
+
+if test $ac_cv_sizeof_long = 8
+then
+  if test $ac_cv_sizeof_MetricValue != $ac_cv_sizeof_MetricValue64
+  then
+    AC_ERROR([Unsupported platform: sizeof(MetricValue) != sizeof(MetricValue64)])
+  fi
+elif test $ac_cv_sizeof_long = 4
+then
+  if test $ac_cv_sizeof_MetricValue != $ac_cv_sizeof_MetricValue32
+  then
+    AC_ERROR([Unsupported platform: sizeof(MetricValue) != sizeof(MetricValue32)])
+  fi
+else 
+  AC_ERROR([Unsupported platform: sizeof(long) == $ac_cv_sizeof_long])
+fi
+
+
+if test $enable_provider = "yes"
 then
 # CPPFLAGS for Provider Compilation
 CPPFLAGS="-DCMPI_VERSION=90 $CPPFLAGS"

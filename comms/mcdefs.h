@@ -1,5 +1,5 @@
 /*
- * $Id: mcdefs.h,v 1.4 2004/10/21 15:51:18 mihajlov Exp $ 
+ * $Id: mcdefs.h,v 1.5 2006/02/08 20:50:57 mihajlov Exp $ 
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -47,6 +47,8 @@ struct _MC_REQHDR
 };
 
 typedef struct _MC_REQHDR MC_REQHDR;
+
+typedef unsigned RC_SIZE_T;
 
 #ifdef __cplusplus
 }

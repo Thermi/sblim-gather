@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.9 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: metric.h,v 1.10 2006/02/08 20:50:57 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -20,6 +20,13 @@
 #ifndef METRIC_H
 #define METRIC_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#ifndef SIZEOF_LONG
+#error "SIZEOF_LONG must be defined for compilation."
+#endif
+
+#endif
 #include <time.h>
 
 #ifdef __cplusplus
@@ -89,13 +96,43 @@ extern "C" {
 
 typedef struct _MetricValue {
   int       mvId;       /* Metric Id */
+#if SIZEOF_LONG == 8
+  int       mv64Pad1;   /* explicit padding for 64 bit arch */
+#endif
   time_t    mvTimeStamp;
   char     *mvResource; /* Resource (measured element)  name */
   unsigned  mvDataType;
+#if SIZEOF_LONG == 8
+  int       mv64Pad2;   /* explicit padding */
+#endif
   size_t    mvDataLength;
   char     *mvData;
   char     *mvSystemId; /* System Id - this is needed for remote support */
 } MetricValue;
+
+/* support decls for mixed architectures */
+
+typedef struct _MetricValue64 {
+  int                mv64Id;      
+  int                mv64Filler1;   /* padding */
+  unsigned long long mv64TimeStamp; /* time_t 64 bit */
+  unsigned long long mv64Resource;  /* char*  64 bit */
+  unsigned           mv64DataType;  
+  int                mv64Filler2;   /* padding */
+  unsigned long long mv64DataLength;/* size_t 64 bit */
+  unsigned long long mv64Data;      /* char*  64 bit */
+  unsigned long long mv64SystemId;  /* char*  64 bit */
+} MetricValue64;
+
+typedef struct _MetricValue32 {
+  int       mv32Id;      
+  unsigned  mv32TimeStamp;  /* time_t 32 bit */
+  unsigned  mv32Resource;   /* char*  32 bit */
+  unsigned  mv32DataType;  
+  unsigned  mv32DataLength; /* size_t 32 bit */
+  unsigned  mv32Data;       /* char*  32 bit */
+  unsigned  mv32SystemId;   /* char*  32 bit */
+} MetricValue32;
 
 /* data returning callback for plugin */
 typedef int (MetricReturner) (MetricValue *mv); 

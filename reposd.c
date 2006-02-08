@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.24 2006/02/08 20:26:46 mihajlov Exp $
+ * $Id: reposd.c,v 1.25 2006/02/08 20:50:57 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -531,12 +531,15 @@ static void * repos_remote()
 
 static void * rrepos_getrequest(void * hdl)
 {
-  GATHERCOMM   *comm;
-  char *buffer = malloc(GATHERVALBUFLEN);
+  GATHERCOMM    *comm;
+  char          *buffer = malloc(GATHERVALBUFLEN);
 ;
-  size_t        bufferlen;
-  char         *pluginname, *metricname;
-  MetricValue  *mv;
+  size_t         bufferlen;
+  char          *pluginname, *metricname;
+  int            is64=0;
+  MetricValue    mvTemp;
+  MetricValue   *mv;
+  MetricValue64 *mv64;
 
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Starting thread on socket %i",(int)hdl));
   if (pthread_detach(pthread_self()) != 0) {
@@ -582,6 +585,56 @@ static void * rrepos_getrequest(void * hdl)
     pluginname=buffer+sizeof(GATHERCOMM);
     metricname=pluginname+strlen(pluginname)+1;
     mv=(MetricValue*)(metricname+strlen(metricname)+1);
+    mv64=(MetricValue64*)mv;
+
+    if (mv64->mv64Filler1 == 0xff0000ff && mv64->mv64Filler2 == 0x00ffff00) {
+      is64 = 1;
+    }
+ 
+#if SIZEOF_LONG == 8
+    if (!is64) {
+      MetricValue32 *mv32=mv;
+      /* bitness fixups for 32 bit source to 64 bit target */
+      /* must move data block "upwards" to create room for 32-bit structure */
+      if (bufferlen + sizeof(MetricValue) - sizeof(MetricValue32) > GATHERVALBUFLEN) {
+	/* not enough room to expand ! */
+	m_log(M_ERROR,M_SHOW,
+	      "Remote reposd short buffer on socket %i during 32-to-64-bit expansion.\n",
+	      hdl);
+	continue;    	
+      }
+      mvTemp.mvId         = mv32->mv32Id;
+      mvTemp.mvTimeStamp  = mv32->mv32TimeStamp;
+      mvTemp.mvDataType   = mv32->mv32DataType;
+      mvTemp.mvDataLength = mv32->mv32DataLength;
+      mvTemp.mvResource   = mv32->mv32Resource ? (char*)(mv+1) : NULL;
+      memmove(mv+1,mv32+1,
+	      comm->gc_datalen-(((char*)mv-pluginname)+sizeof(MetricValue32)));
+      mv->mvId         = mvTemp.mvId;
+      mv->mvTimeStamp  = mvTemp.mvTimeStamp;
+      mv->mvDataType   = mvTemp.mvDataType;
+      mv->mvDataLength = mvTemp.mvDataLength;
+      mv->mvResource   = mvTemp.mvResource;
+    }
+#else
+    if (is64) {
+      /* mv64=mv is already set */
+      /* bitness fixups for 64 bit source to 32 bit target */
+      /* must move data "downwards" to make it fit */
+      mvTemp.mvId         = mv64->mv64Id;
+      mvTemp.mvTimeStamp  = mv64->mv64TimeStamp;
+      mvTemp.mvDataType   = mv64->mv64DataType;
+      mvTemp.mvDataLength = mv64->mv64DataLength;
+      mvTemp.mvResource   = mv64->mv64Resource ? (char*)(mv+1) : NULL;
+      memmove(mv+1,mv64+1,
+	      comm->gc_datalen-(((char*)mv-pluginname)+sizeof(MetricValue64)));     
+      mv->mvId         = mvTemp.mvId;
+      mv->mvTimeStamp  = mvTemp.mvTimeStamp;
+      mv->mvDataType   = mvTemp.mvDataType;
+      mv->mvDataLength = mvTemp.mvDataLength;
+      mv->mvResource   = mvTemp.mvResource;
+    }
+#endif
 
     /* fixups */
     if (mv->mvResource) {

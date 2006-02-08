@@ -14,6 +14,19 @@
 	comms/mcserv_unix.c: 
 	Minor modifications for valgrind-friendliness.
 
+2006-02-07    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* gatherc.h, metric.h, reposd.c, rrepos.c:
+	Bug 1426051: Changed data structure definitions to allow
+	mixed 32 and 64 bit operations. Utilize the padding fields
+	in 64 bit structures to identify them as 64 bit.
+	The gatherd is always sending out data in native size (with
+	integers in network order).
+
+	* comms/mcdefs.h, comms/rcclt_ip.c, comms/rcserv_ip.c, 
+	comms/rcstest.c:
+	Bug 1426051: Fixed communication header encoding.
+
 2006-02-02    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* provider/OSBase_MetricInstanceProvider.c: 

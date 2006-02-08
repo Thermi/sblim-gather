@@ -1,5 +1,5 @@
 /*
- * $Id: rcclt_ip.c,v 1.7 2006/02/08 15:13:51 mihajlov Exp $
+ * $Id: rcclt_ip.c,v 1.8 2006/02/08 20:50:57 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -198,8 +198,9 @@ int _rcc_connect()
 
 int rcc_request(void *reqdata, size_t reqdatalen)
 {
-  int    sentlen = 0;
-  size_t reqlen  = 0;
+  ssize_t sentlen = 0;
+  size_t  reqlen  = 0;
+  RC_SIZE_T wirelen = htonl(reqdatalen);
 
   M_TRACE(MTRACE_FLOW,MTRACE_COMM,
 	  ("rcc_request(%p,%u) called",reqdata,reqdatalen));
@@ -225,9 +226,9 @@ int rcc_request(void *reqdata, size_t reqdatalen)
     }
   }
 
-  reqlen = reqdatalen+sizeof(size_t);
+  reqlen = reqdatalen+sizeof(RC_SIZE_T);
   M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("rcc_request socket %d write",srvhdl));
-  sentlen = write(srvhdl,&reqdatalen,sizeof(size_t)) +
+  sentlen = write(srvhdl,&wirelen,sizeof(RC_SIZE_T)) +
     write(srvhdl,reqdata,reqdatalen);
 
   if (sentlen <= 0) {
@@ -244,7 +245,7 @@ int rcc_request(void *reqdata, size_t reqdatalen)
     }
     else {
       M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("rcc_request socket %d retry write",srvhdl));
-      sentlen = write(srvhdl,&reqdatalen,sizeof(size_t)) +
+      sentlen = write(srvhdl,&wirelen,sizeof(RC_SIZE_T)) +
 	write(srvhdl,reqdata,reqdatalen);
     }
   }
@@ -260,11 +261,11 @@ int rcc_request(void *reqdata, size_t reqdatalen)
   m_seterrno(MC_ERR_IOFAIL);
   m_setstrerror("rcc_request send error, wanted %d got %d,"
 		" system error string: %s",
-		reqdatalen+sizeof(size_t),sentlen,strerror(errno));
+		reqdatalen+sizeof(RC_SIZE_T),sentlen,strerror(errno));
   M_TRACE(MTRACE_ERROR,MTRACE_COMM,
 	  ("rcc_request send error, wanted %d got %d,"
 	   " system error string: %s",
-	   reqdatalen+sizeof(size_t),sentlen,strerror(errno)));
+	   reqdatalen+sizeof(RC_SIZE_T),sentlen,strerror(errno)));
   return -1;
 }
 

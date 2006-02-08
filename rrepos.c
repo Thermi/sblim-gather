@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.21 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: rrepos.c,v 1.22 2006/02/08 20:50:57 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -150,6 +150,11 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
       gethostname(_systemId,sizeof(_systemId));
     }
     RINITCHECK();
+#if SIZEOF_LONG == 8
+    /* flag the padding areas */
+    mv-> mv64Pad1 = 0xff0000ff;
+    mv-> mv64Pad2 = 0x00ffff00;
+#endif
     comm->gc_cmd     = htons(GCMD_SETVALUE);
     comm->gc_datalen = htonl(strlen(reposplugin) + 1 +
 			     strlen(metric) + 1 +

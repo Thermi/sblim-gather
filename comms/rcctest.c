@@ -1,5 +1,5 @@
 /*
- * $Id: rcctest.c,v 1.4 2004/10/15 10:40:38 heidineu Exp $
+ * $Id: rcctest.c,v 1.5 2006/02/08 20:50:57 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -28,7 +28,7 @@ static int transactions = 0;
 
 /* ---------------------------------------------------------------------------*/
 
-int main()
+int main(int argc, char *argv[])
 {
   char   hostname[256];
   char   buf[500];
@@ -39,14 +39,18 @@ int main()
 
   start=time(NULL);
 
-  gethostname((char*)&hostname,sizeof(hostname));
-  //sprintf(hostname,"");
+  if (argc == 1) {
+    gethostname((char*)&hostname,sizeof(hostname));
+  } else {
+    sprintf(hostname,argv[1]);
+  }
+  printf("Contacting %s\n",hostname);
   if (rcc_init(hostname,&port) < 0 ) {
     return -1;
   }
 
   do {
-    sprintf(buf,"x%i",i);
+    sprintf(buf,"integer value %i",i);
     i++;
     //fprintf(stdout,"rcctest>");
     //fgets(buf,sizeof(buf),stdin);
@@ -55,7 +59,7 @@ int main()
       break;
     } else {
       buflen=sizeof(buf);
-      if (rcc_request(buf,strlen(buf))==0) {
+      if (rcc_request(buf,strlen(buf)+1)==0) {
 	fprintf(stderr,"send : %s\n",buf);
       }
       else { break; }
@@ -63,7 +67,7 @@ int main()
       if (transactions++ == 10) {
 	end = time(NULL);
 	fprintf(stderr,"Transactions %d in seconds %ld, rate = %ld\n",
-		transactions,end-start,transactions/(end-start));
+		transactions,end-start,end-start>0?transactions/(end-start):-1);
 	break;
       }
     }

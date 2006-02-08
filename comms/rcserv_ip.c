@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv_ip.c,v 1.8 2006/02/08 15:13:51 mihajlov Exp $
+ * $Id: rcserv_ip.c,v 1.9 2006/02/08 20:50:57 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -219,9 +219,10 @@ int rcs_accept(int *clthdl)
 int rcs_getrequest(int clthdl, void *reqdata, size_t *reqdatalen)
 {
   struct pollfd pf;
-  int    readlen = 0;
-  size_t recvlen = 0;
-  int    maxlen  = 0;
+  ssize_t   readlen = 0;
+  size_t    recvlen = 0;
+  size_t    maxlen  = 0;
+  RC_SIZE_T wirelen;
 
   M_TRACE(MTRACE_FLOW,MTRACE_COMM,
 	  ("rcs_getrequest(%d,%p,%u) called",clthdl,reqdata,reqdatalen));
@@ -250,11 +251,12 @@ int rcs_getrequest(int clthdl, void *reqdata, size_t *reqdatalen)
       if (*reqdatalen > 0) { maxlen=*reqdatalen; }
       do {
 	/* get length */
-	readlen=read(clthdl,(char*)reqdatalen+recvlen,sizeof(size_t)-recvlen);
+	readlen=read(clthdl,(char*)&wirelen+recvlen,sizeof(RC_SIZE_T)-recvlen);
 
 	if (readlen <= 0) { break; }
 	recvlen += readlen;
-      } while (recvlen != sizeof(size_t));
+      } while (recvlen != sizeof(RC_SIZE_T));
+      *reqdatalen = ntohl(wirelen);
 
       if (maxlen > 0 && *reqdatalen > maxlen) {
 	m_seterrno(MC_ERR_IOFAIL);

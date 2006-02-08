@@ -10,6 +10,7 @@ Changes in Version 2.0.3
 
 Bugs fixed:
 - 1422395 Fixed MetricInstance unidirectional misbehavior.
+- 1426051 Fixed interoperability issues between 32 and 64 bit systems.
 
 Changes in Version 2.0.2
 ========================

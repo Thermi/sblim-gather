@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.3 2006/02/08 20:26:45 mihajlov Exp $
+# $Id: Makefile.am,v 1.4 2006/02/08 20:50:57 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -50,7 +50,7 @@ AM_CFLAGS = -Wall
 # Include files
 noinst_HEADERS = cimplug.h gatherc.h marshal.h mlist.h mplugmgr.h \
 	mrepos.h repos.h rplugin.h rreg.h sforward.h \
-	config.h gather.h metric.h mplugin.h mreg.h mretr.h \
+	gather.h metric.h mplugin.h mreg.h mretr.h \
 	rgather.h rplugmgr.h rrepos.h slisten.h \
 	util/commheap.h util/gathercfg.h util/merrdefs.h \
 	util/mlog.h util/mtrace.h util/commutil.h util/mcfg.h \
