@@ -1,3 +1,9 @@
+2006-02-08    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* comms/rcclt_ip.c, comms/rcserv_ip.c, comms/mcclt_unix.c,
+	comms/mcserv_unix.c: 
+	Minor modifications for valgrind-friendliness.
+
 2006-02-02    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* provider/OSBase_MetricInstanceProvider.c: 
