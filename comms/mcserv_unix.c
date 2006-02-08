@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv_unix.c,v 1.6 2004/11/30 13:16:50 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.7 2006/02/08 15:13:51 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -100,6 +100,7 @@ int mcs_init(const char *commid)
       return -1;
     }
     if (!_sigpipe_h_installed) {
+      memset(&sigact,0,sizeof(sigact));
       sigact.sa_handler = _sigpipe_h;
       sigact.sa_flags = 0;
       sigaction(SIGPIPE,&sigact,NULL);

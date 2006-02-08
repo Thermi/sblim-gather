@@ -1,5 +1,5 @@
 /*
- * $Id: rcclt_ip.c,v 1.6 2004/11/30 13:16:50 mihajlov Exp $
+ * $Id: rcclt_ip.c,v 1.7 2006/02/08 15:13:51 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -84,6 +84,7 @@ int rcc_init(const char *srvid, const int *portid)
 
     /* install signal handler */
     if (!_sigpipe_h_installed) {
+      memset(&sigact,0,sizeof(sigact));
       sigact.sa_handler = _sigpipe_h;            
       sigact.sa_flags = 0;
       sigaction(SIGPIPE,&sigact,NULL);
@@ -185,6 +186,8 @@ int _rcc_connect()
 	    ("_rcc_connect could not connect socket for %s,"
 	     " system error string: %s",
 	     inet_ntoa(srvaddr.sin_addr),strerror(errno)));
+    close(srvhdl);
+    srvhdl=-1;
   }
   M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("_rcc_connect opened socket %d",srvhdl));
   connects++;

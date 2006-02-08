@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv_ip.c,v 1.7 2004/11/30 13:16:50 mihajlov Exp $
+ * $Id: rcserv_ip.c,v 1.8 2006/02/08 15:13:51 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -111,6 +111,7 @@ int rcs_init(const int *portid)
 
   /* install signal handler */
   if (!_sigpipe_h_installed) {
+    memset(&sigact,0,sizeof(sigact));    
     sigact.sa_handler = _sigpipe_h;            
     sigact.sa_flags = 0;
     sigaction(SIGPIPE,&sigact,NULL);
