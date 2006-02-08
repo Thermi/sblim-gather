@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([sblim-gather],[2.0.2],[sblim-devel@lists.sourceforge.net])
+AC_INIT([sblim-gather],[2.0.99],[sblim-devel@lists.sourceforge.net])
 AC_CONFIG_SRCDIR([cimplug.h])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -13,6 +13,10 @@ case $host_cpu in
      s390*) ARCHDEF="-D S390";;
      **)    ARCHDEF="-D GENERIC";;
 esac
+
+
+# By default build no static libs
+AC_DISABLE_STATIC
 
 # Checks for programs.
 AC_PROG_CC

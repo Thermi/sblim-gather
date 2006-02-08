@@ -1,5 +1,5 @@
 /*
- * $Id: mplugmgr.c,v 1.2 2004/11/30 13:16:50 mihajlov Exp $
+ * $Id: mplugmgr.c,v 1.3 2006/02/08 20:26:46 mihajlov Exp $
  * (C) Copyright IBM Corp. 2003
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
@@ -18,34 +18,64 @@
 
 #include "mplugmgr.h"
 #include "mplugin.h"
+#include <mlog.h>
 #include <dlfcn.h>
-#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static char * metricPluginPath = NULL;
+
+char* MP_GetPluginPath()
+{
+  return metricPluginPath;
+}
+
+int MP_SetPluginPath(const char * pluginpath)
+{
+  if (metricPluginPath) {
+    free(metricPluginPath);
+  }
+  metricPluginPath = strdup(pluginpath);
+  return 0;
+}
 
 int MP_Load (MetricPlugin *plugin)
 {
   MetricsDefined  *mdef;
   MetricStartStop *mss;
+  char * pluginName = NULL;
 
   if (plugin==NULL || plugin->mpName==NULL || plugin->mpName[0]==0) {
-    fprintf(stderr,"Null plugin name\n");
+    m_log(M_ERROR,M_SHOW,"Null plugin name specified in load request\n");
     return -1;
   }
-  plugin->mpHandle = dlopen(plugin->mpName,RTLD_LAZY);
+  pluginName = malloc( (metricPluginPath ? strlen(metricPluginPath) : 0) +
+		       strlen(plugin->mpName) + 2);
+  if (metricPluginPath) {
+    strcpy(pluginName,metricPluginPath);
+    strcat(pluginName,"/");
+  } else {
+    strcpy(pluginName,"");
+  }
+  strcat(pluginName,plugin->mpName);
+  plugin->mpHandle = dlopen(pluginName,RTLD_LAZY);
   if (!plugin->mpHandle) {
-    fprintf(stderr,"Error loading plugin library %s: %s\n", plugin->mpName, 
-	    dlerror());
+    m_log(M_ERROR,M_SHOW,"Error loading plugin library %s: %s\n", pluginName, 
+	  dlerror());
+    free(pluginName);
     return -1;
   }
+  free(pluginName);
   mdef = (MetricsDefined*)dlsym(plugin->mpHandle,METRIC_DEFINITIONPROC_S);
   if (!mdef) {
-    fprintf(stderr,"Error locating " METRIC_DEFINITIONPROC_S " in %s: %s\n", 
+    m_log(M_ERROR,M_SHOW,"Error locating " METRIC_DEFINITIONPROC_S " in %s: %s\n", 
 	    plugin->mpName,dlerror());
     dlclose(plugin->mpHandle);
     return -1;
   }
   mss = (MetricStartStop*)dlsym(plugin->mpHandle,METRIC_STARTSTOPPROC_S);
   if(!mss) {
-    fprintf(stderr,"Error locating " METRIC_STARTSTOPPROC_S " in %s: %s\n", 
+    m_log(M_ERROR,M_SHOW,"Error locating " METRIC_STARTSTOPPROC_S " in %s: %s\n", 
 	    plugin->mpName, dlerror());
     dlclose(plugin->mpHandle);
     return -1;
@@ -57,13 +87,13 @@ int MP_Load (MetricPlugin *plugin)
 	   plugin->mpName,
 	   &plugin->mpNumMetricDefs,
 	   &plugin->mpMetricDefs)) {
-    fprintf(stderr,"Couldn't get metrics for plugin %s\n",plugin->mpName); 
+    m_log(M_ERROR,M_SHOW,"Couldn't get metrics for plugin %s\n",plugin->mpName); 
     dlclose(plugin->mpHandle);
     return -1;
   }
   /* Start plugin */
   if (mss(1)) {
-    fprintf(stderr,"Couldn't start plugin %s\n",plugin->mpName); 
+    m_log(M_ERROR,M_SHOW,"Couldn't start plugin %s\n",plugin->mpName); 
     dlclose(plugin->mpHandle);
     return -1;
   }
@@ -75,21 +105,21 @@ int MP_Unload(MetricPlugin *plugin)
   MetricStartStop *mss;
   
   if (plugin==NULL || plugin->mpName==NULL || plugin->mpHandle==NULL) {
-    fprintf(stderr,"Null plugin specified\n");
+    m_log(M_ERROR,M_SHOW,"Null plugin specified\n");
     return -1;
   }
   mss = (MetricStartStop*)dlsym(plugin->mpHandle,METRIC_STARTSTOPPROC_S);
   if(!mss) {
-    fprintf(stderr,"Error locating " METRIC_STARTSTOPPROC_S " in %s: %s\n", 
+    m_log(M_ERROR,M_SHOW,"Error locating " METRIC_STARTSTOPPROC_S " in %s: %s\n", 
 	    plugin->mpName,dlerror());
     return -1;
   }
   /* Stop plugin */
   if (mss(0)) {
-    fprintf(stderr,"Couldn't stop plugin - forcing unload\n"); 
+    m_log(M_ERROR,M_SHOW,"Couldn't stop plugin - forcing unload\n"); 
   }
   if (dlclose(plugin->mpHandle)) {
-    fprintf(stderr,"Couldn't unload plugin\n");
+    m_log(M_ERROR,M_SHOW,"Couldn't unload plugin\n");
     return -1;
   }
   plugin->mpHandle=NULL; /* disallow accidental reuse */

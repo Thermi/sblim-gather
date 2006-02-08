@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.17 2004/12/22 16:45:52 mihajlov Exp $
+ * $Id: repos.c,v 1.18 2006/02/08 20:26:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -25,10 +25,16 @@
 #include "rplugmgr.h"
 #include "mrepos.h"
 #include "mtrace.h"
+#include <reposcfg.h>
+#include <dirutil.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <netinet/in.h>
+
+#ifndef REPOS_PLUGINDIR
+#define REPOS_PLUGINDIR "/usr/lib/gather/rplug"
+#endif
 
 /* Plugin Control -- copied over from gather.c */
 typedef struct _PluginList {
@@ -64,10 +70,33 @@ int repos_init()
      - plugin registry
      - retrievers 
   */
+  char cfgbuf[500];
+  char *cfgidx1;
+  char *cfgidx2;
   if (initialized==0) {
     initialized=1;
     pluginhead = NULL;
     RPR_InitRegistry();
+    if (reposcfg_getitem("PluginDirectory",cfgbuf,sizeof(cfgbuf))==0) {
+      RP_SetPluginPath(cfgbuf);
+    } else {
+      RP_SetPluginPath(REPOS_PLUGINDIR);
+    }
+    if (reposcfg_getitem("AutoLoad",cfgbuf,sizeof(cfgbuf))==0) {
+      if (strcmp(cfgbuf,"*")==0) {
+	/* load all plugins */
+	reposplugin_loadall();
+      } else {
+	/* load all specified plugins */
+	for (cfgidx1=cfgbuf;cfgidx1;cfgidx1=cfgidx2) {
+	  cfgidx2 = strchr(cfgidx1,':');
+	  if (cfgidx2) {
+	    *cfgidx2++=0;
+	  }
+	  reposplugin_add(cfgidx1);
+	}      	
+      }
+    }
     return 0;
   }
   return -1;
@@ -112,12 +141,25 @@ void repos_status(RepositoryStatus *rs)
   }
 }
 
+int reposplugin_loadall()
+{
+  char ** plugins;
+  int i, rc=0;
+  if (getfilelist(RP_GetPluginPath(),"*.so",&plugins) == 0) {
+    for (i=0; plugins[i] && rc==0; i++) {
+      rc=reposplugin_add(plugins[i]);
+    }
+    releasefilelist(plugins);
+  }
+  return rc;
+}
+
 int reposplugin_add(const char *pluginname)
 {
   RepositoryPlugin *rp;
   int status = -1;
   int i;
-  if (pluginname && pl_find(pluginname)==NULL) {
+  if (initialized && pluginname && pl_find(pluginname)==NULL) {
     rp = malloc(sizeof(RepositoryPlugin));
     /* load plugin */
     rp->rpName = strdup(pluginname);

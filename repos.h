@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.12 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: repos.h,v 1.13 2006/02/08 20:26:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -43,6 +43,7 @@ int repos_terminate();
 
 int repos_sessiontoken(RepositoryToken *rt);
 
+int reposplugin_loadall();
 int reposplugin_add(const char *pluginname);
 int reposplugin_remove(const char *pluginname);
 

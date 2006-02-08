@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.10 2005/06/24 12:09:36 mihajlov Exp $
+ * $Id: gatherd.c,v 1.11 2006/02/08 20:26:45 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -42,8 +42,8 @@ int main(int argc, char * argv[])
   COMMHEAP     *ch;
   char          buffer[GATHERVALBUFLEN];
   size_t        bufferlen=sizeof(buffer);
-#ifndef NOTRACE
   char          cfgbuf[1000];
+#ifndef NOTRACE
   char         *cfgidx1, *cfgidx2;
 #endif
   int           i;
@@ -91,6 +91,25 @@ int main(int argc, char * argv[])
   if (mcs_init(GATHER_COMMID)) {
     m_log(M_ERROR,M_SHOW,"Could not open gatherd socket.\n");
     return -1;
+  }
+
+  /* check whether autoloading is requested */
+  if (gathercfg_getitem("AutoLoad",cfgbuf,sizeof(cfgbuf))==0) {
+    int          rc;
+    GatherStatus gs;
+    M_TRACE(MTRACE_DETAILED,MTRACE_GATHER,("Automatic initialization starting..."));
+    rc = gather_init();
+    if (rc) {
+      m_log(M_ERROR,M_SHOW,"Could not auto-initialize.\n");
+      return -1;
+    }
+    gather_status(&gs);
+    if (gs.gsInitialized) {
+      if (gather_start()) {
+	m_log(M_ERROR,M_SHOW,"Could not auto-start.\n");
+	return -1;
+      }
+    }
   }
 
   memset(buffer, 0, sizeof(buffer));

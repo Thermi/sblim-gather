@@ -1,5 +1,5 @@
 /*
- * $Id: rplugmgr.h,v 1.1 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: rplugmgr.h,v 1.2 2006/02/08 20:26:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -33,6 +33,8 @@ typedef struct _RepositoryPlugin {
   MetricCalculationDefinition *rpMetricCalcDefs;
 } RepositoryPlugin;
 
+int RP_SetPluginPath(const char *pluginpath);
+char* RP_GetPluginPath();
 int RP_Load(RepositoryPlugin *plugin);
 int RP_Unload(RepositoryPlugin *plugin);
 

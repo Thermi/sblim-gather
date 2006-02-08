@@ -1,5 +1,15 @@
 2006-02-08    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
+	* gather.c, gather.h, gatherd.c, gatherd.conf, mplugmgr.c,
+	mplugmgr.h, repos.c, repos.h, reposd.c, reposd.conf,
+	rplugmgr.c, rplugmgr.h, util/gathercfg.c, util/reposcfg.c:
+	Bug 1427714: Added two new config options for gatherd.conf 
+	and reposd.conf.
+	PluginDirectory can be used to specify the directory, where
+	the plugins must reside in order to be loaded.
+	AutoLoad allows the automatic initialization of gatherd and
+	reposd.
+
 	* comms/rcclt_ip.c, comms/rcserv_ip.c, comms/mcclt_unix.c,
 	comms/mcserv_unix.c: 
 	Minor modifications for valgrind-friendliness.

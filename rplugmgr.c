@@ -1,5 +1,5 @@
 /*
- * $Id: rplugmgr.c,v 1.2 2004/11/22 09:22:59 mihajlov Exp $
+ * $Id: rplugmgr.c,v 1.3 2006/02/08 20:26:46 mihajlov Exp $
  * (C) Copyright IBM Corp. 2004
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
@@ -18,26 +18,56 @@
 
 #include "rplugmgr.h"
 #include "rplugin.h"
+#include <mlog.h>
 #include <dlfcn.h>
-#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static char * repositoryPluginPath = NULL;
+
+char* RP_GetPluginPath()
+{
+  return repositoryPluginPath;
+}
+
+int RP_SetPluginPath(const char * pluginpath)
+{
+  if (repositoryPluginPath) {
+    free(repositoryPluginPath);
+  }
+  repositoryPluginPath = strdup(pluginpath);
+  return 0;
+}
 
 int RP_Load (RepositoryPlugin *plugin)
 {
   RepositoryMetricsDefined  *mdef;
+  char * pluginName = NULL;
 
   if (plugin==NULL || plugin->rpName==NULL || plugin->rpName[0]==0) {
-    fprintf(stderr,"Null plugin name\n");
+    m_log(M_ERROR,M_SHOW,"Null plugin name specified in load request\n");
     return -1;
   }
-  plugin->rpHandle = dlopen(plugin->rpName,RTLD_LAZY);
+  pluginName = malloc( (repositoryPluginPath ? strlen(repositoryPluginPath) : 0) +
+		       strlen(plugin->rpName) + 2);
+  if (repositoryPluginPath) {
+    strcpy(pluginName,repositoryPluginPath);
+    strcat(pluginName,"/");
+  } else {
+    strcpy(pluginName,"");
+  }
+  strcat(pluginName,plugin->rpName);
+  plugin->rpHandle = dlopen(pluginName,RTLD_LAZY);
   if (!plugin->rpHandle) {
-    fprintf(stderr,"Error loading plugin library %s: %s\n", plugin->rpName, 
+    m_log(M_ERROR,M_SHOW,"Error loading plugin library %s: %s\n", pluginName, 
 	    dlerror());
+    free(pluginName);
     return -1;
   }
+  free(pluginName);
   mdef = (RepositoryMetricsDefined*)dlsym(plugin->rpHandle,REPOSITORYMETRIC_DEFINITIONPROC_S);
   if (!mdef) {
-    fprintf(stderr,
+    m_log(M_ERROR,M_SHOW,
 	    "Error locating " REPOSITORYMETRIC_DEFINITIONPROC_S " in %s: %s\n", 
 	    plugin->rpName,dlerror());
     dlclose(plugin->rpHandle);
@@ -50,7 +80,7 @@ int RP_Load (RepositoryPlugin *plugin)
 	   plugin->rpName,
 	   &plugin->rpNumMetricCalcDefs,
 	   &plugin->rpMetricCalcDefs)) {
-    fprintf(stderr,"Couldn't get metrics for repository plugin %s\n",
+    m_log(M_ERROR,M_SHOW,"Couldn't get metrics for repository plugin %s\n",
 	    plugin->rpName); 
     dlclose(plugin->rpHandle);
     return -1;
@@ -61,11 +91,11 @@ int RP_Load (RepositoryPlugin *plugin)
 int RP_Unload(RepositoryPlugin *plugin)
 {  
   if (plugin==NULL || plugin->rpName==NULL || plugin->rpHandle==NULL) {
-    fprintf(stderr,"Null plugin specified\n");
+    m_log(M_ERROR,M_SHOW,"Null plugin specified\n");
     return -1;
   }
   if (dlclose(plugin->rpHandle)) {
-    fprintf(stderr,"Couldn't unload plugin\n");
+    m_log(M_ERROR,M_SHOW,"Couldn't unload plugin\n");
     return -1;
   }
   plugin->rpHandle=NULL; /* disallow accidental reuse */

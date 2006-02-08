@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.8 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: gather.c,v 1.9 2006/02/08 20:26:45 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -26,9 +26,15 @@
 #include "mlist.h"
 #include "mretr.h"
 #include "mrepos.h"
+#include <gathercfg.h>
+#include <dirutil.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifndef GATHER_PLUGINDIR
+#define GATHER_PLUGINDIR "/usr/lib/gather/mplug"
+#endif
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
@@ -61,10 +67,35 @@ int gather_init()
      - plugin registry
      - retrievers 
   */
+  char cfgbuf[500];
+  char *pluginpath;
+  char *cfgidx1;
+  char *cfgidx2;
   if (metriclist) return -1;
   pluginhead = NULL;
   MPR_InitRegistry();
   metriclist = ML_Init();
+  if (gathercfg_getitem("PluginDirectory",cfgbuf,sizeof(cfgbuf))==0) {
+    pluginpath=cfgbuf;
+  } else {
+    pluginpath=GATHER_PLUGINDIR;
+  }
+  MP_SetPluginPath(pluginpath);
+  if (gathercfg_getitem("AutoLoad",cfgbuf,sizeof(cfgbuf))==0) {
+    if (strcmp(cfgbuf,"*")==0) {
+      /* load all plugins */
+      metricplugin_loadall();
+    } else {
+      /* load all specified plugins */
+      for (cfgidx1=cfgbuf;cfgidx1;cfgidx1=cfgidx2) {
+	cfgidx2 = strchr(cfgidx1,':');
+	if (cfgidx2) {
+	  *cfgidx2++=0;
+	}
+	metricplugin_add(cfgidx1);
+      }      
+    }
+  }
   return 0;
 }
 
@@ -119,6 +150,19 @@ void gather_status(GatherStatus *gs)
     gs->gsInitialized=metriclist!=NULL;
     gs->gsSampling=retriever!=NULL;
   }
+}
+
+int metricplugin_loadall()
+{
+  char ** plugins;
+  int i, rc=0;
+  if (getfilelist(MP_GetPluginPath(),"*.so",&plugins) == 0) {
+    for (i=0; plugins[i] && rc==0; i++) {
+      rc=metricplugin_add(plugins[i]);
+    }
+    releasefilelist(plugins);
+  }
+  return rc;
 }
 
 int metricplugin_add(const char *pluginname)

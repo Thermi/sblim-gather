@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.2 2005/06/24 16:02:35 mihajlov Exp $
+# $Id: Makefile.am,v 1.3 2006/02/08 20:26:45 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -23,8 +23,8 @@ EXTRA_DIST=
 docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
 
 # plugin directories
-metricplugindir=$(libdir)
-reposplugindir=$(libdir)
+metricplugindir=$(libdir)/gather/mplug
+reposplugindir=$(libdir)/gather/rplug
 
 #
 # Automake instructions for documentation
@@ -54,9 +54,9 @@ noinst_HEADERS = cimplug.h gatherc.h marshal.h mlist.h mplugmgr.h \
 	rgather.h rplugmgr.h rrepos.h slisten.h \
 	util/commheap.h util/gathercfg.h util/merrdefs.h \
 	util/mlog.h util/mtrace.h util/commutil.h util/mcfg.h \
-	util/merrno.h util/mrwlock.h util/reposcfg.h \
+	util/merrno.h util/mrwlock.h util/reposcfg.h util/dirutil.h \
 	comms/mcclt.h comms/mcdefs.h comms/mcserv.h comms/rcclt.h \
-	comms/rcserv.h
+	comms/rcserv.h 
 
 # Gather support utility libraries
 lib_LTLIBRARIES = libgatherutil.la libmcserv.la librcserv.la \
@@ -64,44 +64,56 @@ lib_LTLIBRARIES = libgatherutil.la libmcserv.la librcserv.la \
 
 libgatherutil_la_SOURCES = util/mrwlock.c util/commheap.c util/commutil.c \
 	util/gatherutil.c util/mcfg.c util/gathercfg.c util/reposcfg.c \
-	util/mlog.c util/mtrace.c util/merrno.c 
+	util/mlog.c util/mtrace.c util/merrno.c util/dirutil.c
 libgatherutil_la_CPPFLAGS = $(AM_CPPFLAGS) -DGATHER_CONFDIR=\"$(sysconfdir)\"
 
 libmcserv_la_SOURCES = comms/mcclt_unix.c comms/mcserv_unix.c
 libmcserv_la_LIBADD = -lgatherutil
+libmcserv_la_DEPENDENCIES = libgatherutil.la
 
 librcserv_la_SOURCES = comms/rcclt_ip.c comms/rcserv_ip.c
 librcserv_la_LIBADD = -lgatherutil
+librcserv_la_DEPENDENCIES = libgatherutil.la
 
 librrepos_la_SOURCES = rrepos.c mreposl.c marshal.c slisten.c
 librrepos_la_LIBADD = -lgatherutil -lmcserv -lrcserv
+librrepos_la_DEPENDENCIES = libgatherutil.la libmcserv.la librcserv.la
 
 librepos_la_SOURCES = repos.c mreposl.c rplugmgr.c rreg.c marshal.c
+librepos_la_CPPFLAGS = $(AM_CPPFLAGS) -DREPOS_PLUGINDIR=\"$(reposplugindir)\"
 librepos_la_LIBADD = -lgatherutil
+librepos_la_DEPENDENCIES = libgatherutil.la
 
 librgather_la_SOURCES = rgather.c
 librgather_la_LIBADD = -lgatherutil -lmcserv
+librgather_la_DEPENDENCIES = libgatherutil.la libmcserv.la
 
 libgather_la_SOURCES = mlist.c mretr.c mplugmgr.c mreg.c mreposp.c gather.c
+libgather_la_CPPFLAGS = $(AM_CPPFLAGS) -DGATHER_PLUGINDIR=\"$(metricplugindir)\"
 libgather_la_LIBADD = -lrrepos -lgatherutil
+libgather_la_DEPENDENCIES = librrepos.la libgatherutil.la
 
 # Gather daemons
 sbin_PROGRAMS = gatherd reposd
 
 gatherd_SOURCES = gatherd.c
 gatherd_LDADD = -lgather -lmcserv
+gatherd_DEPENDENCIES = libgather.la libmcserv.la
 
 reposd_SOURCES = reposd.c sforward.c
 reposd_LDADD = -lrepos -lmcserv -lrcserv
+reposd_DEPENDENCIES = librepos.la libmcserv.la librcserv.la
 
 # Gather CLIs
 bin_PROGRAMS = gatherctl reposctl
 
 gatherctl_SOURCES = gatherctl.c
 gatherctl_LDADD = -lrgather
+gatherctl_DEPENDENCIES = librgather.la
 
 reposctl_SOURCES = reposctl.c
 reposctl_LDADD = -lrrepos
+reposctl_DEPENDENCIES = librrepos.la
 
 
 # Gatherer Plugins
@@ -114,14 +126,17 @@ metricplugin_LTLIBRARIES = libmetricOperatingSystem.la \
 
 libmetricOperatingSystem_la_SOURCES=plugin/metricOperatingSystem.c
 libmetricOperatingSystem_la_LIBADD=-lgatherutil
+libmetricOperatingSystem_la_DEPENDENCIES=libgatherutil.la
 
 libmetricLocalFileSystem_la_SOURCES=plugin/metricLocalFileSystem.c
 libmetricLocalFileSystem_la_LIBADD=-lgatherutil
+libmetricLocalFileSystem_la_DEPENDENCIES=libgatherutil.la
 
 libmetricUnixProcess_la_SOURCES=plugin/metricUnixProcess.c
 
 libmetricProcessor_la_SOURCES=plugin/metricProcessor.c
 libmetricProcessor_la_LIBADD=-lgatherutil
+libmetricProcessor_la_DEPENDENCIES=libgatherutil.la
 
 libmetricNetworkPort_la_SOURCES=plugin/metricNetworkPort.c
 
@@ -136,14 +151,17 @@ reposplugin_LTLIBRARIES = librepositoryOperatingSystem.la \
 
 librepositoryOperatingSystem_la_SOURCES=plugin/repositoryOperatingSystem.c
 librepositoryOperatingSystem_la_LIBADD=-lgatherutil
+librepositoryOperatingSystem_la_DEPENDENCIES=libgatherutil.la
 
 librepositoryLocalFileSystem_la_SOURCES=plugin/repositoryLocalFileSystem.c
 librepositoryLocalFileSystem_la_LIBADD=-lgatherutil
+librepositoryLocalFileSystem_la_DEPENDENCIES=libgatherutil.la
 
 librepositoryUnixProcess_la_SOURCES=plugin/repositoryUnixProcess.c
 
 librepositoryProcessor_la_SOURCES=plugin/repositoryProcessor.c
 librepositoryProcessor_la_LIBADD=-lgatherutil
+librepositoryProcessor_la_DEPENDENCIES=libgatherutil.la
 
 librepositoryNetworkPort_la_SOURCES=plugin/repositoryNetworkPort.c
 
@@ -155,24 +173,31 @@ noinst_PROGRAMS = mcfgtest mtracetest merrnotest mcstest mcctest \
 
 mcfgtest_SOURCES = util/mcfgtest.c
 mcfgtest_LDADD = -lgatherutil
+mcfgtest_DEPENDENCIES = libgatherutil.la
 
 mtracetest_SOURCES = util/mtracetest.c
 mtracetest_LDADD = -lgatherutil
+mtracetest_DEPENDENCIES = libgatherutil.la
 
 merrnotest_SOURCES = util/merrnotest.c
 merrnotest_LDADD = -lgatherutil
+merrnotest_DEPENDENCIES = libgatherutil.la
 
 mcstest_SOURCES = comms/mcstest.c
 mcstest_LDADD = -lmcserv
+mcstest_DEPENDENCIES = libmcserv.la
 
 mcctest_SOURCES = comms/mcctest.c
 mcctest_LDADD = -lmcserv
+mcctest_DEPENDENCIES = libmcserv.la
 
 rcstest_SOURCES = comms/rcstest.c
 rcstest_LDADD = -lrcserv
+rcstest_DEPENDENCIES = librcserv.la
 
 rcctest_SOURCES = comms/rcctest.c
 rcctest_LDADD = -lrcserv
+rcctest_DEPENDENCIES = librcserv.la
 
 EXTRA_DIST += util/test.cfg
 

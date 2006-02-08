@@ -1,5 +1,5 @@
 /*
- * $Id: gather.h,v 1.5 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: gather.h,v 1.6 2006/02/08 20:26:45 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -31,6 +31,7 @@ int gather_start();
 int gather_stop(); 
 int gather_terminate(); 
 
+int metricplugin_loadall();
 int metricplugin_add(const char *pluginname);
 int metricplugin_remove(const char *pluginname);
 

@@ -1,5 +1,5 @@
 /*
- * $Id: mplugmgr.h,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mplugmgr.h,v 1.2 2006/02/08 20:26:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -33,6 +33,8 @@ typedef struct _MetricPlugin {
   MetricDefinition *mpMetricDefs;
 } MetricPlugin;
 
+int MP_SetPluginPath(const char *pluginpath);
+char* MP_GetPluginPath();
 int MP_Load(MetricPlugin *plugin);
 int MP_Unload(MetricPlugin *plugin);
 

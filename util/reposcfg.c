@@ -1,5 +1,5 @@
 /*
- * $Id: reposcfg.c,v 1.3 2005/06/24 12:09:37 mihajlov Exp $
+ * $Id: reposcfg.c,v 1.4 2006/02/08 20:26:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -34,6 +34,8 @@ int reposcfg_init()
     "TraceLevel",
     "TraceFile",
     "TraceComponents",
+    "PluginDirectory",
+    "AutoLoad",
     NULL
   };
   reposcfg_handle=set_configfile(GATHER_CONFDIR "/reposd.conf",allowed);

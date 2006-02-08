@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.23 2005/06/24 12:09:36 mihajlov Exp $
+ * $Id: reposd.c,v 1.24 2006/02/08 20:26:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -96,8 +96,8 @@ int main(int argc, char * argv[])
   MetricResourceId *rid;
   MetricValue  *mv;
   pthread_t     rcomm;
-#ifndef NOTRACE
   char          cfgbuf[1000];
+#ifndef NOTRACE
   char         *cfgidx1, *cfgidx2;
 #endif
 
@@ -150,6 +150,17 @@ int main(int argc, char * argv[])
   if (pthread_create(&rcomm,NULL,repos_remote,NULL) != 0) {
     m_log(M_ERROR,M_SHOW,"Could not create remote reposd thread: %s.\n",
 	  strerror(errno));
+  }
+
+  /* check whether autoloading is requested */
+  if (reposcfg_getitem("AutoLoad",cfgbuf,sizeof(cfgbuf))==0) {
+    int              rc;
+    M_TRACE(MTRACE_DETAILED,MTRACE_REPOS,("Automatic initialization starting..."));
+    rc = repos_init();
+    if (rc) {
+      m_log(M_ERROR,M_SHOW,"Could not auto-initialize.\n");
+      return -1;
+    }
   }
 
   memset(buffer, 0, sizeof(buffer));
