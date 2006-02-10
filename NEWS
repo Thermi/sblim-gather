@@ -1,9 +1,12 @@
 Changes in Version 2.1.0
 ========================
 
+Features added:
+- 1427714 Added new config properties for automatic plugin loading.
+- 1429155 Added new config option for sample interval override.
+
 Bugs fixed:
 - 1395363 Removed provider postinstall location dependencies.
-- 1427714 Added new config properties for automatic plugin loading.
 
 Changes in Version 2.0.3
 ========================

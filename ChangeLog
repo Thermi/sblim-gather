@@ -1,3 +1,9 @@
+2006-02-10    <mihajlov@localhost.localdomain>
+
+	* gather.c, gatherd.conf, util/gathercfg.c:
+	Bug 1429155: Added new config option SampleInterval allowing
+	to override the individual metric's intervals.
+
 2006-02-08    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* gather.c, gather.h, gatherd.c, gatherd.conf, mplugmgr.c,

@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.9 2006/02/08 20:26:45 mihajlov Exp $
+ * $Id: gather.c,v 1.10 2006/02/10 15:35:13 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -26,6 +26,7 @@
 #include "mlist.h"
 #include "mretr.h"
 #include "mrepos.h"
+#include <mlog.h>
 #include <gathercfg.h>
 #include <dirutil.h>
 #include <stdlib.h>
@@ -54,6 +55,7 @@ static MetricPlugin* pl_first();
 static MetricPlugin* pl_next(const MetricPlugin*);
 
 /* Retriever Control */
+static int globalInterval=-1;
 static ML_Head   *metriclist=NULL;
 static MR_Handle *retriever=NULL;
 
@@ -75,6 +77,12 @@ int gather_init()
   pluginhead = NULL;
   MPR_InitRegistry();
   metriclist = ML_Init();
+  if (gathercfg_getitem("SampleInterval",cfgbuf,sizeof(cfgbuf))==0) {
+    if (sscanf(cfgbuf,"%d",&globalInterval) != 1) {
+      m_log(M_ERROR,M_SHOW,
+	    "Invalid sample interval specified: %s. Ignoring it.\n", cfgbuf);
+    }
+  }
   if (gathercfg_getitem("PluginDirectory",cfgbuf,sizeof(cfgbuf))==0) {
     pluginpath=cfgbuf;
   } else {
@@ -190,7 +198,9 @@ int metricplugin_add(const char *pluginname)
 	    mp->mpMetricDefs[i].mproc) {	  
 	  MetricBlock *mb=MakeMB(mp->mpMetricDefs[i].mdId,
 				 gather_sample,
-				 mp->mpMetricDefs[i].mdSampleInterval);
+				 ( (globalInterval > 0) ?
+				   globalInterval :
+				   mp->mpMetricDefs[i].mdSampleInterval));
 	  if (mb==NULL || ML_Relocate(metriclist,mb)) {
 	    status = -1;
 	    break;
