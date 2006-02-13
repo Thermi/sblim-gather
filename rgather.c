@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.10 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: rgather.c,v 1.11 2006/02/13 09:04:17 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -126,6 +126,7 @@ int rgather_terminate()
   if (mcc_request(rgatherhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
       mcc_response(&hdr,comm,&commlen)==0 &&
       mcc_term(rgatherhandle)==0) {
+    rgatherhandle=-1;
     pthread_mutex_unlock(&rgather_mutex);
     return comm->gc_result;
   } else {

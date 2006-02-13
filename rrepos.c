@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.22 2006/02/08 20:50:57 mihajlov Exp $
+ * $Id: rrepos.c,v 1.23 2006/02/13 09:04:17 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -301,8 +301,10 @@ int rrepos_terminate()
   comm->gc_result=0;
   pthread_mutex_lock(&rrepos_mutex);
   if (mcc_request(rreposhandle,&hdr,comm,sizeof(GATHERCOMM))==0 &&
-      mcc_response(&hdr,comm,&commlen)==0) {
+      mcc_response(&hdr,comm,&commlen)==0 &&
+      mcc_term(rreposhandle)==0) {
     pthread_mutex_unlock(&rrepos_mutex);
+    rreposhandle=-1;
     return comm->gc_result;
   } else {
     pthread_mutex_unlock(&rrepos_mutex);

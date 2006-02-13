@@ -1,5 +1,5 @@
 /*
- * $Id: gatherctl.c,v 1.4 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: gatherctl.c,v 1.5 2006/02/13 09:04:17 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -20,6 +20,7 @@
 
 #include "metric.h"
 #include "rgather.h"
+#include <mtrace.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -37,6 +38,7 @@ static const char* commands[] = {
   "\tq\t\tquit\n",
   "\tk\t\tkill daemon\n",
   "\td\t\tstart daemon\n",
+  "\tc\t\tlocal trace\n",
   NULL
 };
 
@@ -61,6 +63,12 @@ int main()
     switch(cmd) {
     case 'h':
       printhelp();
+      break;
+    case 'c':
+#ifndef NOTRACE
+      m_trace_setlevel(MTRACE_ALL);
+      m_trace_enable(MTRACE_MASKALL);
+#endif
       break;
     case 's':
       if (rgather_status(&gs) == 0) {

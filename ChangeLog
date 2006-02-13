@@ -1,3 +1,9 @@
+2006-02-13    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* rgather.c, rrepos.c, reposctl.c:
+	Bug 1430516: Invalidate server handle after disconnect to allow
+	later reconnection.
+
 2006-02-10    <mihajlov@localhost.localdomain>
 
 	* gather.c, gatherd.conf, util/gathercfg.c:
