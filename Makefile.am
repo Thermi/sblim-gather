@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.4 2006/02/08 20:50:57 mihajlov Exp $
+# $Id: Makefile.am,v 1.5 2006/02/22 11:48:45 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -75,7 +75,7 @@ librcserv_la_SOURCES = comms/rcclt_ip.c comms/rcserv_ip.c
 librcserv_la_LIBADD = -lgatherutil
 librcserv_la_DEPENDENCIES = libgatherutil.la
 
-librrepos_la_SOURCES = rrepos.c mreposl.c marshal.c slisten.c
+librrepos_la_SOURCES = rrepos.c marshal.c slisten.c
 librrepos_la_LIBADD = -lgatherutil -lmcserv -lrcserv
 librrepos_la_DEPENDENCIES = libgatherutil.la libmcserv.la librcserv.la
 

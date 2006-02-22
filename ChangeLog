@@ -1,5 +1,9 @@
 2006-02-22    <mihajlov@localhost.localdomain>
 
+	* mreposl.c, util/reposcfg.c, reposd.conf: 
+	Bug 1436591: Added new config option "ExpirationInterval" allowing
+	to modify the local repository history length.
+
 	* gatherc.h, repos.h, repos.c, rrepos.h, rrepos.c, 
 	reposd.c, reposctl.c: 
 	Bug 1436488: Added a new filtered get operation allowing

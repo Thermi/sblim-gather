@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.9 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: mreposl.c,v 1.10 2006/02/22 11:48:46 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -20,8 +20,10 @@
 
 #include "mrepos.h"
 #include "mrwlock.h"
-#include "mtrace.h" 
 #include "mreg.h" 
+#include <mtrace.h> 
+#include <mlog.h> 
+#include <reposcfg.h> 
 
 #include <stdlib.h>
 #include <limits.h>
@@ -358,8 +360,13 @@ static int resourceTest(MetricValue * actual, MetricResourceId * required)
   return teststate;
 }
 
-#define PRUNE_INTERVAL      600
-#define EXPIRATION_INTERVAL 900
+
+#define MIN_EXPIRATION_INTERVAL 60
+#define MAX_EXPIRATION_INTERVAL 3600*24
+#define DEFAULT_EXPIRATION_INTERVAL 1200
+
+static int PRUNE_INTERVAL=0; /* 600 */
+static int EXPIRATION_INTERVAL=0; /* 2 * PRUNE_INTERVAL */
 
 static int pruneRepository()
 {
@@ -367,7 +374,31 @@ static int pruneRepository()
   size_t           numPruned=0;
   int              i;
   MReposValue      *v, *bv;
+  char             cfgbuf[200];
   time_t           now=time(NULL);
+
+  if (EXPIRATION_INTERVAL == 0) {
+    if (reposcfg_getitem("ExpirationInterval",cfgbuf,sizeof(cfgbuf))==0) {
+      EXPIRATION_INTERVAL=atoi(cfgbuf);
+    }
+    if (EXPIRATION_INTERVAL == 0) {
+      EXPIRATION_INTERVAL = DEFAULT_EXPIRATION_INTERVAL;
+    }
+    if (EXPIRATION_INTERVAL < MIN_EXPIRATION_INTERVAL) {
+      m_log(M_ERROR,M_SHOW,"Expiration interval %d too small, adjusting to %d.\n",
+	    EXPIRATION_INTERVAL, MIN_EXPIRATION_INTERVAL);
+      EXPIRATION_INTERVAL = MIN_EXPIRATION_INTERVAL;
+    }
+    if (EXPIRATION_INTERVAL > MAX_EXPIRATION_INTERVAL) {
+      m_log(M_ERROR,M_SHOW,"Expiration interval %d too large, adjusting to %d.\n",
+	    EXPIRATION_INTERVAL, MAX_EXPIRATION_INTERVAL);
+      EXPIRATION_INTERVAL = MAX_EXPIRATION_INTERVAL;
+    }
+    PRUNE_INTERVAL=EXPIRATION_INTERVAL/2;
+    M_TRACE(MTRACE_DETAILED,MTRACE_REPOS,
+	    ("Setting local repository intervals, expire: %d, prune:%d.",
+	     EXPIRATION_INTERVAL, PRUNE_INTERVAL));
+  }
 
   if (nextPrune<now) {
     nextPrune = now + PRUNE_INTERVAL;
