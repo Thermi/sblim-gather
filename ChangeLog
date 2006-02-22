@@ -1,3 +1,19 @@
+2006-02-22    obenke
+
+	* plugin/cimplugXen.c, plugin/metricXen.c, plugin/metricXen.readme,
+	plugin/repositoryXen.c, provider/mof/Linux_XenMetric.mof,
+	provider/mof/Linux_XenMetric.registration:
+	Bug 1436671: New plugin for Xen (virtualization project) metrics.
+	The following metrics are implemented:
+	- TotalCPUTime
+	- ActiveVirtualProcessors
+	- ExternalViewTotalCPUPercentage
+	- PartitionClaimedMemory
+	- PartitionClaimedMaximumMemory
+	- HostFreePhysicalMemory
+	- ClaimedMemoryPercentage
+	- HostMemoryPercentage
+
 2006-02-22    <mihajlov@localhost.localdomain>
 
 	* mreposl.c, util/reposcfg.c, reposd.conf: 

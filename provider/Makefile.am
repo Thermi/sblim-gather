@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.5 2006/02/07 12:56:09 mihajlov Exp $
+# $Id: Makefile.am,v 1.6 2006/02/22 14:11:59 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -11,6 +11,7 @@
 #
 # Author:       Viktor Mihajlovski <mihajlov@de.ibm.com>
 # Contributors: Dr. Gareth S. Bestor <bestorga@us.ibm.com>
+#		Oliver Benke <benke@de.ibm.com>
 # Description:  Automake input file for Gatherer Provider
 # ==================================================================
 
@@ -50,6 +51,7 @@ cimplugin_LTLIBRARIES = libcimplugOperatingSystem.la \
 	libcimplugLocalFileSystem.la \
 	libcimplugUnixProcess.la \
 	libcimplugProcessor.la \
+	libcimplugXen.la \
 	libcimplugNetworkPort.la \
 	libcimplugIPProtocolEndpoint.la
 
@@ -57,6 +59,7 @@ libcimplugOperatingSystem_la_SOURCES=$(srcdir)/../plugin/cimplugOperatingSystem.
 libcimplugLocalFileSystem_la_SOURCES=$(srcdir)/../plugin/cimplugLocalFileSystem.c
 libcimplugUnixProcess_la_SOURCES=$(srcdir)/../plugin/cimplugUnixProcess.c
 libcimplugProcessor_la_SOURCES=$(srcdir)/../plugin/cimplugProcessor.c
+libcimplugXen_la_SOURCES=$(srcdir)/../plugin/cimplugXen.c
 libcimplugNetworkPort_la_SOURCES=$(srcdir)/../plugin/cimplugNetworkPort.c
 libcimplugIPProtocolEndpoint_la_SOURCES=$(srcdir)/../plugin/cimplugIPProtocolEndpoint.c
 
@@ -109,6 +112,7 @@ MOFS=	$(srcdir)/mof/Linux_Metric.mof \
 	$(srcdir)/mof/Linux_NetworkPortMetric.mof \
 	$(srcdir)/mof/Linux_OperatingSystemMetric.mof \
 	$(srcdir)/mof/Linux_ProcessorMetric.mof \
+	$(srcdir)/mof/Linux_XenMetric.mof \
 	$(srcdir)/mof/Linux_UnixProcessMetric.mof 
 REGS=	$(srcdir)/mof/Linux_IPProtocolEndpointMetric.registration \
 	$(srcdir)/mof/Linux_LocalFileSystemMetric.registration \
@@ -116,6 +120,7 @@ REGS=	$(srcdir)/mof/Linux_IPProtocolEndpointMetric.registration \
 	$(srcdir)/mof/Linux_NetworkPortMetric.registration \
 	$(srcdir)/mof/Linux_OperatingSystemMetric.registration \
 	$(srcdir)/mof/Linux_ProcessorMetric.registration \
+	$(srcdir)/mof/Linux_XenMetric.registration \
 	$(srcdir)/mof/Linux_UnixProcessMetric.registration
 
 # Register the provider(s) and class definition(s) to the current CIM server/CIMOM

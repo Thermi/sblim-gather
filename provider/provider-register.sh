@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: provider-register.sh,v 1.2 2005/11/10 12:53:57 mihajlov Exp $
+# $Id: provider-register.sh,v 1.3 2006/02/22 14:11:59 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -18,8 +18,8 @@
 
 pegasus_repository()
 {
-    for p in /var/lib/Pegasus /var/lib/pegasus /usr/local/var/lib/pegasus \
-	/var/local/lib/pegasus /var/opt/tog-pegasus $PEGASUS_HOME
+    for p in $PEGASUS_HOME /var/lib/Pegasus /var/lib/pegasus \
+	/usr/local/var/lib/pegasus /var/local/lib/pegasus /var/opt/tog-pegasus 
     do
       if test -d $p/repository
       then
@@ -32,8 +32,8 @@ pegasus_repository()
 
 pegasus_path()
 {
-    for p in /usr/bin /usr/sbin /usr/local/bin /usr/local/sbin \
-	/opt/tog-pegasus/bin /opt/tog-pegasus/sbin $PEGASUS_HOME/bin
+    for p in $PEGASUS_HOME/bin /usr/bin /usr/sbin /usr/local/bin \
+	/usr/local/sbin /opt/tog-pegasus/bin /opt/tog-pegasus/sbin 
     do
       if test -x $p/$1
       then
@@ -353,7 +353,7 @@ sfcb_rebuild()
 	  fi
 	done
 	chatter "Rebuilding repository."
-	sfcbrepos -f
+	sfcbrepos -f $endian
 	if test $? != 0
 	then
 	    echo "Repository rebuild failed." >&2
@@ -371,7 +371,7 @@ sfcb_rebuild()
     else
 	# Not running - rebuild repository
 	chatter "Rebuilding repository."
-	sfcbrepos -f
+	sfcbrepos -f $endian
     fi
 }
 
@@ -626,7 +626,7 @@ gb_getopt()
 }
 
 prepargs=`gb_getopt $*`
-args=`getopt dvht:r: $prepargs`
+args=`getopt dvhX:t:r: $prepargs`
 rc=$?
 
 if [ $rc = 127 ]
@@ -649,6 +649,8 @@ do
 	  break;;
       -v) verbose=1; 
 	  shift;;
+      -X) endian="-X $2"; 
+	  shift 2;;
       -d) deregister=1; 
 	  shift;;
       -t) cimserver=$2;
@@ -672,6 +674,7 @@ then
     echo -e "\t-t specify cimserver type (pegasus|sfcb|openwbem|sniacimom)"
     echo -e "\t-r specify registration files"
     echo -e "\t-m specify schema mof files"
+    echo -e "\t-X create repository for alternate platform (sfcb only at the moment)."
     echo
     echo Use this command to install schema mofs and register providers.
     echo CIM Server Type is required as well as at least one registration file and one mof.

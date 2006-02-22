@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.5 2006/02/22 11:48:45 mihajlov Exp $
+# $Id: Makefile.am,v 1.6 2006/02/22 14:11:59 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -11,6 +11,7 @@
 #
 # Author:       Viktor Mihajlovski <mihajlov@de.ibm.com>
 # Contributors: Dr. Gareth S. Bestor <bestorga@us.ibm.com>
+#               Oliver Benke <benke@de.ibm.com>
 # Description:  Automake input file for Files and Directories sample provider
 # ==================================================================
 
@@ -37,7 +38,8 @@ doc_DATA+=plugin/metricIPProtocolEndpoint.readme \
 	plugin/metricProcessor.readme \
 	plugin/metricLocalFileSystem.readme \
 	plugin/metricOperatingSystem.readme \
-	plugin/metricUnixProcess.readme 
+	plugin/metricUnixProcess.readme \
+	plugin/metricXen.readme
 EXTRA_DIST+=$(doc_DATA)
 
 #doc_DATA+=doc/rpmbuild.txt
@@ -122,7 +124,8 @@ metricplugin_LTLIBRARIES = libmetricOperatingSystem.la \
 	libmetricUnixProcess.la \
 	libmetricProcessor.la \
 	libmetricNetworkPort.la \
-	libmetricIPProtocolEndpoint.la 
+	libmetricIPProtocolEndpoint.la \
+	libmetricXen.la
 
 libmetricOperatingSystem_la_SOURCES=plugin/metricOperatingSystem.c
 libmetricOperatingSystem_la_LIBADD=-lgatherutil
@@ -138,6 +141,10 @@ libmetricProcessor_la_SOURCES=plugin/metricProcessor.c
 libmetricProcessor_la_LIBADD=-lgatherutil
 libmetricProcessor_la_DEPENDENCIES=libgatherutil.la
 
+libmetricXen_la_SOURCES=plugin/metricXen.c
+libmetricXen_la_LIBADD=-lgatherutil
+libmetricXen_la_DEPENDENCIES=libgatherutil.la
+
 libmetricNetworkPort_la_SOURCES=plugin/metricNetworkPort.c
 
 libmetricIPProtocolEndpoint_la_SOURCES=plugin/metricIPProtocolEndpoint.c
@@ -147,7 +154,8 @@ reposplugin_LTLIBRARIES = librepositoryOperatingSystem.la \
 	librepositoryUnixProcess.la \
 	librepositoryProcessor.la \
 	librepositoryNetworkPort.la \
-	librepositoryIPProtocolEndpoint.la 
+	librepositoryIPProtocolEndpoint.la \
+	librepositoryXen.la
 
 librepositoryOperatingSystem_la_SOURCES=plugin/repositoryOperatingSystem.c
 librepositoryOperatingSystem_la_LIBADD=-lgatherutil
@@ -162,6 +170,10 @@ librepositoryUnixProcess_la_SOURCES=plugin/repositoryUnixProcess.c
 librepositoryProcessor_la_SOURCES=plugin/repositoryProcessor.c
 librepositoryProcessor_la_LIBADD=-lgatherutil
 librepositoryProcessor_la_DEPENDENCIES=libgatherutil.la
+
+librepositoryXen_la_SOURCES=plugin/repositoryXen.c
+librepositoryXen_la_LIBADD=-lgatherutil
+librepositoryXen_la_DEPENDENCIES=libgatherutil.la
 
 librepositoryNetworkPort_la_SOURCES=plugin/repositoryNetworkPort.c
 
