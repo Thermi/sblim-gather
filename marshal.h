@@ -1,5 +1,5 @@
 /*
- * $Id: marshal.h,v 1.2 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: marshal.h,v 1.3 2006/02/22 09:39:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -34,6 +34,9 @@ int marshal_data(const void *data, size_t datalen, char *mbuf,
 		 off_t *offset, size_t mbuflen);
 int unmarshal_data(void **data, size_t datalen, const char *mbuf, 
 		   off_t *offset, size_t mbuflen);
+
+int unmarshal_fixed(void *data, size_t datalen, const char *mbuf, 
+		    off_t *offset, size_t mbuflen);
 
 int marshal_valuerequest(const ValueRequest *vr, char *mbuf, 
 			 off_t * offset, size_t mbuflen);

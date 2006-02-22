@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.25 2006/02/08 20:50:57 mihajlov Exp $
+ * $Id: reposd.c,v 1.26 2006/02/22 09:39:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -51,6 +51,9 @@ static int  connects         = 0;
 static pthread_mutex_t connect_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t  connect_cond  = PTHREAD_COND_INITIALIZER;
 
+static size_t globalNum = 0;
+static int    globalAsc = 0;
+
 static void * repos_remote();
 static void * rrepos_getrequest(void * hdl);
 
@@ -97,6 +100,8 @@ int main(int argc, char * argv[])
   MetricValue  *mv;
   pthread_t     rcomm;
   char          cfgbuf[1000];
+  size_t        filterNum;
+  int           filterAsc;
 #ifndef NOTRACE
   char         *cfgidx1, *cfgidx2;
 #endif
@@ -364,6 +369,30 @@ int main(int argc, char * argv[])
 	}
 	comm->gc_datalen=0;
 	break;
+      case GCMD_SETFILTER:
+	offset = sizeof(GATHERCOMM);
+	if (unmarshal_fixed(&globalNum,sizeof(size_t),
+			    buffer,&offset,sizeof(buffer)) == 0 &&
+	    unmarshal_fixed(&globalAsc,sizeof(int),
+			    buffer,&offset,sizeof(buffer)) == 0) {
+	  comm->gc_result=0;
+	} else {
+	  comm->gc_result=-1;
+	}
+	comm->gc_datalen=0;
+	break;      
+      case GCMD_GETFILTER:
+	offset = sizeof(GATHERCOMM);
+	if (marshal_data(&globalNum,sizeof(size_t),
+			 buffer,&offset,sizeof(buffer)) == 0 &&
+	    marshal_data(&globalAsc,sizeof(int),
+			 buffer,&offset,sizeof(buffer)) == 0) {
+	  comm->gc_result=0;
+	} else {
+	  comm->gc_result=-1;
+	}
+	comm->gc_datalen=offset-sizeof(GATHERCOMM);
+	break;      
       case GCMD_SETVALUE:
 	/* the transmitted parameters are
 	 * 1: pluginname
@@ -387,7 +416,7 @@ int main(int argc, char * argv[])
       case GCMD_GETVALUE:
 	/* the transmitted ValueRequest contains
 	 * 1: Header
-	 * 2: ResourceNresourceame
+	 * 2: ResourceName
 	 * 3: System Id
 	 * 4: ValueItems
 	 */
@@ -412,7 +441,92 @@ int main(int argc, char * argv[])
 	vr->vsValues=NULL;
 	ch=ch_init();
 	
-	comm->gc_result=reposvalue_get(vr,ch);
+	/* check if global filter is requested */
+	if (globalNum == 0) {
+	  comm->gc_result=reposvalue_get(vr,ch);
+	} else {
+	  comm->gc_result=reposvalue_getfiltered(vr,ch,globalNum, globalAsc);
+	} 
+	/* copy value data into transfer buffer and compute total length */
+	if (comm->gc_result != -1) {
+	  if ((char*)vi+sizeof(ValueItem)*vr->vsNumValues < vpmax) {
+	    memcpy(vi,vr->vsValues,sizeof(ValueItem)*vr->vsNumValues);
+	    vp = (char*)vi + sizeof(ValueItem) * vr->vsNumValues;
+	    for (i=0;i<vr->vsNumValues;i++) {
+	      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+		      ("Returning value for mid=%d, resource %s: %d",
+		       vr->vsId,
+		       vr->vsValues[i].viResource,
+		       *(int*)vr->vsValues[i].viValue));
+	      if ((char*)vp + vr->vsValues[i].viValueLen < vpmax) {
+		memcpy(vp,vr->vsValues[i].viValue,vr->vsValues[i].viValueLen);
+		vi[i].viValue = vp;
+		vp = (char*)vp + vi[i].viValueLen;
+		if (vr->vsValues[i].viResource) {
+		  if ((char*)vp + strlen(vr->vsValues[i].viResource) + 1 < vpmax) {
+		    strcpy(vp,vr->vsValues[i].viResource);
+		    vi[i].viResource = vp;
+		    vp = (char*)vp + strlen(vp)+1;
+		  }
+		} else {
+		  comm->gc_result=-1;
+		  break;
+		}
+		if (vr->vsValues[i].viSystemId) {
+		  if ((char*)vp + strlen(vr->vsValues[i].viSystemId) + 1 < vpmax) {
+		    strcpy(vp,vr->vsValues[i].viSystemId);
+		    vi[i].viSystemId = vp;
+		    vp = (char*)vp + strlen(vp)+1;
+		  }
+		} else {
+		  comm->gc_result=-1;
+		  break;
+		}
+	      } else {
+		comm->gc_result=-1;
+		break;
+	      }
+	    }
+	  } else {
+	    comm->gc_result=-1;
+	  }
+	  comm->gc_datalen= (char*)vp - (char*)vr;
+	}
+	ch_release(ch);
+	break;
+      case GCMD_GETFILTERED:
+	/* the transmitted ValueRequest contains
+	 * 1: Header
+	 * 2: ResourceName
+	 * 3: System Id
+	 * 4: Number of Requested Items
+	 * 5: Ascending (1=yes)
+	 * 6: ValueItems
+	 */
+	vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+	vp=vr;
+	vpmax=(char*)buffer+sizeof(buffer);
+	if (vr->vsResource) {
+	  /* adjust pointer to resource name */
+	  vr->vsResource = (char*)vr + sizeof(ValueRequest);
+	  valreslen= strlen(vr->vsResource) + 1;
+	} else {
+	  valreslen = 0;
+	}
+	if (vr->vsSystemId) {
+	  /* adjust pointer to system id */
+	  vr->vsSystemId = (char*)vr + sizeof(ValueRequest) + valreslen;
+	  valsyslen = strlen(vr->vsSystemId) + 1;
+	} else {
+	  valsyslen = 0;
+	}
+	filterNum=*(size_t*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen);
+	filterAsc=*(int*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen+sizeof(size_t));
+	vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen+sizeof(size_t)+sizeof(int));
+	vr->vsValues=NULL;
+	ch=ch_init();
+	
+	comm->gc_result=reposvalue_getfiltered(vr,ch,filterNum,filterAsc);
 	/* copy value data into transfer buffer and compute total length */
 	if (comm->gc_result != -1) {
 	  if ((char*)vi+sizeof(ValueItem)*vr->vsNumValues < vpmax) {

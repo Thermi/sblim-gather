@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.h,v 1.7 2004/11/26 15:25:34 mihajlov Exp $
+ * $Id: rrepos.h,v 1.8 2006/02/22 09:39:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -52,11 +52,32 @@ int rrepos_register(const PluginDefinition *pdef);
 int rrepos_put(const char *reposplugin, const char *metric,MetricValue *mv);
 
 /*
+ * Retrieve top num value from remote repository
+ * 0  OK
+ * -1 Failure
+ */
+int rrepos_getfiltered(ValueRequest *vs, COMMHEAP ch, size_t num, int ascending);
+
+/*
  * Retrieve value from remote repository
  * 0  OK
  * -1 Failure
  */
 int rrepos_get(ValueRequest *vs, COMMHEAP ch);
+
+/*
+ * Set global filter condition for get requests
+ * 0  OK
+ * -1 Failure
+ */
+int rrepos_setglobalfilter(size_t num, int asc);
+
+/*
+ * Set global filter condition for get requests
+ * 0  OK
+ * -1 Failure
+ */
+int rrepos_getglobalfilter(size_t *num, int *asc);
 
 /*
  * Control interface, spawn repository daemon

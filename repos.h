@@ -1,5 +1,5 @@
 /*
- * $Id: repos.h,v 1.13 2006/02/08 20:26:46 mihajlov Exp $
+ * $Id: repos.h,v 1.14 2006/02/22 09:39:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -99,6 +99,7 @@ typedef void * MVENUM;
 int reposvalue_put(const char *reposplugin, const char *metric, 
 		   MetricValue *mv);
 int reposvalue_get(ValueRequest *vs, COMMHEAP ch);
+int reposvalue_getfiltered(ValueRequest *vs, COMMHEAP ch, size_t num, int ascending);
 
 /* subscriptions --- */
 

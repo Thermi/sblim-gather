@@ -1,3 +1,22 @@
+2006-02-22    <mihajlov@localhost.localdomain>
+
+	* gatherc.h, repos.h, repos.c, rrepos.h, rrepos.c, 
+	reposd.c, reposctl.c: 
+	Bug 1436488: Added a new filtered get operation allowing
+	to limit the number of returned metric values.
+	Further, added support for a global filter applying to
+	regular get operations if set.
+
+	* marshal.h, marshal.c:
+	Bug 1436488: Added new functions marshal_fix, unmarshal_fix
+	in support of the get/set global filter calls.
+
+	* provider/OSBase_MetricRepositoryServiceProvider.c,
+	provider/mof/Linux_Metricmof:
+	Bug 1436488: Extended class definition of MetricRepositoryService
+	to include enumeration limit properties and a method to set
+	the enumeration limits.
+	
 2006-02-13    <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* rgather.c, rrepos.c, reposctl.c:

@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.13 2005/06/24 12:09:36 mihajlov Exp $
+ * $Id: reposctl.c,v 1.14 2006/02/22 09:39:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -37,6 +37,9 @@ static const char* commands[] = {
   "\tn\t\tunsubscribe\n",
   "\tq\t\tquit\n",
   "\tg id [system [resource [from [to]]]]\tget metric value\n",
+  "\tf id num asc [system [resource [from [to]]]]\tget filtered (top-n, sorted) metric value\n",
+  "\tG\t\tget global filter\n",
+  "\tF num asc\tset global filter\n",
   "\tk\t\tkill daemon\n",
   "\td\t\tstart daemon\n",
   "\tc\t\tlocal trace\n",
@@ -61,6 +64,8 @@ int main()
   int               pnum;
   COMMHEAP          commh;
   int               offFrom, offTo;
+  size_t            num;
+  int               ascending;
   ValueRequest      vr;
   SubscriptionRequest sr;
   RepositoryPluginDefinition *rdef;
@@ -151,6 +156,53 @@ int main()
 	printvalue(&vr);
       }
       ch_release(commh);
+      break;
+    case 'f':
+      vr.vsId = 0;
+      offFrom = 0;
+      offTo  = 0;
+      vr.vsSystemId = argbuf;
+      vr.vsSystemId[0]=0;
+      vr.vsResource = argbuf2;
+      vr.vsResource[0]=0;
+      vr.vsNumValues = 0;
+      sscanf(arg,"%d %d %d %s %s %d %d ",&vr.vsId,
+	     &num, &ascending,
+	     vr.vsSystemId,vr.vsResource,&offFrom,&offTo );
+      if (strlen(vr.vsSystemId)==0 || vr.vsSystemId[0]=='*') {
+	vr.vsSystemId=NULL;
+      }
+      if (strlen(vr.vsResource)==0 || vr.vsResource[0]=='*') 
+	vr.vsResource=NULL;
+      if (offTo) 
+	vr.vsTo = time(NULL) + offTo;
+      else
+	vr.vsTo = 0;
+      if (offFrom) 
+	vr.vsFrom = time(NULL) + offFrom;
+      else
+	vr.vsFrom = 0;
+      commh=ch_init();
+      if (rrepos_getfiltered(&vr,commh,num,ascending)) {
+	printf("Failed\n");
+      } else {
+	printvalue(&vr);
+      }
+      ch_release(commh);
+      break;
+    case 'G':
+      if(rrepos_getglobalfilter(&num,&ascending)==0) {
+	printf("Limit=%d, order=%s.\n",num,ascending?"ascending":"descending");
+      } else {
+	printf("Failed\n");
+      }
+      break;
+    case 'F':
+      num=ascending=0;
+      sscanf(arg,"%d %d",&num,&ascending);
+      if(rrepos_setglobalfilter(num,ascending)) {
+	printf("Failed\n");
+      }
       break;
     case 'b':
       sscanf(arg,"%s",argbuf);

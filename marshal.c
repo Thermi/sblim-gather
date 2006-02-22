@@ -1,5 +1,5 @@
 /*
- * $Id: marshal.c,v 1.3 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: marshal.c,v 1.4 2006/02/22 09:39:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -92,6 +92,17 @@ int unmarshal_data(void **data, size_t datalen, const char *mbuf,
   }
   /* parameter error */
   return -1;
+}
+
+int unmarshal_fixed(void *data, size_t datalen, const char *mbuf, 
+		    off_t *offset, size_t mbuflen)
+{
+  void * datap;
+  int rc = unmarshal_data(&datap,datalen,mbuf,offset,mbuflen);
+  if (rc==0) {
+    memcpy(data,datap,datalen);
+  }
+  return rc;
 }
 
 

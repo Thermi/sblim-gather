@@ -1,5 +1,5 @@
 //
-// $Id: Linux_Metric.mof,v 1.9 2004/12/13 14:00:53 mihajlov Exp $
+// $Id: Linux_Metric.mof,v 1.10 2006/02/22 09:39:09 mihajlov Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004
 //
@@ -55,6 +55,17 @@ class Linux_MetricRepositoryService : CIM_Service
   uint16 NumberOfPlugins;
   [Description("Number of registered metrics")]
   uint16 NumberOfMetrics;
+  [Description("If this property is greater than zero (0), this number specifies "
+	       "how many instances of metric values are visible. Also referred to "
+	       "as top-N filter.")]
+  uint32 EnumerationLimit;
+  [Description("This property is relevant only if EnumerationLimit is greater "
+	       "than zero. If set to true then the elements with the lowest "
+	       "values are visible, otherwise the elements with the highest "
+	       "values are visible.")]
+  boolean Ascending;
+  [Description("Method to set the enumeration limit and sort order for metric values.")]
+  boolean SetEnumerationLimits(uint32 Limit, boolean Ascending);
 };
 
 [ 

@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.23 2006/02/13 09:04:17 mihajlov Exp $
+ * $Id: rrepos.c,v 1.24 2006/02/22 09:39:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -262,6 +262,81 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
   return -1;  
 }
 
+int rrepos_getfiltered(ValueRequest *vr, COMMHEAP ch, size_t num, int ascending)
+{
+  MC_REQHDR     hdr;
+  char          xbuf[GATHERVALBUFLEN];
+  GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
+  size_t        commlen=sizeof(xbuf);
+  size_t        resourcelen;
+  size_t        systemlen;
+  void         *vp;
+  int           i;
+
+  if (vr) {
+    INITCHECK();
+    resourcelen = vr->vsResource ? strlen(vr->vsResource) + 1 : 0;
+    systemlen = vr->vsSystemId ? strlen(vr->vsSystemId) + 1 : 0;
+    hdr.mc_type=GATHERMC_REQ;
+    hdr.mc_handle=-1;
+    comm->gc_cmd=GCMD_GETFILTERED;
+    comm->gc_datalen=sizeof(ValueRequest) + resourcelen + systemlen + sizeof(size_t) + sizeof(int);
+    comm->gc_result=0;
+    /* copy parameters into xmit buffer and perform fixup for string */
+    memcpy(xbuf+sizeof(GATHERCOMM),vr,sizeof(ValueRequest));
+    if (resourcelen) {
+      /* empty resource is allowed */
+      strcpy(xbuf+sizeof(GATHERCOMM) + sizeof(ValueRequest),vr->vsResource);
+    }
+    if (systemlen) {
+      /* empty system id is allowed */
+      strcpy(xbuf+sizeof(GATHERCOMM) + sizeof(ValueRequest) + resourcelen,
+	     vr->vsSystemId);
+    }
+    /* copy num and ascending flag */
+    memcpy(xbuf+sizeof(GATHERCOMM) + sizeof(ValueRequest) + resourcelen + systemlen,
+	   &num, sizeof(size_t));
+    memcpy(xbuf+sizeof(GATHERCOMM) + sizeof(ValueRequest) + resourcelen + systemlen + sizeof(size_t),
+	   &ascending, sizeof(int));
+    pthread_mutex_lock(&rrepos_mutex);
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	mcc_response(&hdr,comm,&commlen)==0 &&
+	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+      if (comm->gc_result==0) {
+	/* copy received ValueRequest into callers buffer 
+	 * allocate array elements and adjust pointers */
+	memcpy(vr,xbuf+sizeof(GATHERCOMM),sizeof(ValueRequest));
+	vr->vsValues=ch_alloc(ch,vr->vsNumValues*sizeof(ValueItem));
+	/* must consider resource name and system id length */
+	vp = xbuf + sizeof(GATHERCOMM) + sizeof(ValueRequest) + 
+	  resourcelen + systemlen + sizeof(size_t) + sizeof(int);
+	memcpy(vr->vsValues,vp,sizeof(ValueItem)*vr->vsNumValues);
+	vp = (char*)vp + vr->vsNumValues*sizeof(ValueItem);
+	for (i=0; i<vr->vsNumValues; i++) {
+	  vr->vsValues[i].viValue=ch_alloc(ch,vr->vsValues[i].viValueLen);
+	  memcpy(vr->vsValues[i].viValue,vp,vr->vsValues[i].viValueLen);
+	  vp = (char*)vp + vr->vsValues[i].viValueLen;  
+	  if (vr->vsValues[i].viResource) {
+	    vr->vsValues[i].viResource = ch_alloc(ch,strlen(vp)+1);
+	    strcpy(vr->vsValues[i].viResource,vp);
+	    vp = (char*)vp + strlen(vp) + 1;
+	  }
+	  if (vr->vsValues[i].viSystemId) {
+	    vr->vsValues[i].viSystemId = ch_alloc(ch,strlen(vp)+1);
+	    strcpy(vr->vsValues[i].viSystemId,vp);
+	    vp = (char*)vp + strlen(vp) + 1;
+	  }
+	}
+	pthread_mutex_unlock(&rrepos_mutex);
+	return comm->gc_result;
+      }
+    }
+    pthread_mutex_unlock(&rrepos_mutex);    
+  }        
+  return -1;  
+}
+
 int rrepos_init()
 {
   MC_REQHDR   hdr;
@@ -339,6 +414,79 @@ int rrepos_status(RepositoryStatus *rs)
   }    
   return -1;
 }
+
+int rrepos_setglobalfilter(size_t num, int asc)
+{
+  MC_REQHDR     hdr;
+  char          xbuf[GATHERBUFLEN];
+  GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
+  size_t        commlen=sizeof(xbuf);
+  off_t         offset=sizeof(GATHERCOMM);
+  
+  INITCHECK();
+  hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
+  if (marshal_data(&num,sizeof(size_t),xbuf,&offset,sizeof(xbuf)) == 0 &&
+      marshal_data(&asc,sizeof(int),xbuf,&offset,sizeof(xbuf)) == 0) {
+    comm->gc_cmd=GCMD_SETFILTER;
+    comm->gc_datalen=offset;
+    comm->gc_result=0;
+    pthread_mutex_lock(&rrepos_mutex);
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	mcc_response(&hdr,comm,&commlen)==0) {
+      pthread_mutex_unlock(&rrepos_mutex);
+      return comm->gc_result;
+    } 
+    pthread_mutex_unlock(&rrepos_mutex);
+  } else {
+    M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	    ("rrepos_setglobalfilter marshalling error, %d/%d",
+	     offset,sizeof(xbuf)));    
+  }
+  return -1;
+}   
+
+int rrepos_getglobalfilter(size_t *num, int *asc)
+{
+  MC_REQHDR     hdr;
+  char          xbuf[GATHERBUFLEN];
+  GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
+  size_t        commlen=sizeof(xbuf);
+  off_t         offset=sizeof(GATHERCOMM);
+  
+  INITCHECK();
+  hdr.mc_type=GATHERMC_REQ;
+  hdr.mc_handle=-1;
+  if (num && asc) {
+    comm->gc_cmd=GCMD_GETFILTER;
+    comm->gc_datalen=offset;
+    comm->gc_result=0;
+    pthread_mutex_lock(&rrepos_mutex);
+    if (mcc_request(rreposhandle,&hdr,comm,
+		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
+	mcc_response(&hdr,comm,&commlen)==0) {
+      pthread_mutex_unlock(&rrepos_mutex);
+      if (comm->gc_result == 0) {
+	if (unmarshal_fixed(num,sizeof(size_t),
+			    xbuf,&offset,sizeof(xbuf)) || 
+	    unmarshal_fixed(asc,sizeof(int),
+			   xbuf,&offset,sizeof(xbuf)) ) {
+	  M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+		  ("rrepos_getglobalfilter result unmarshalling error, %d/%d",
+		   offset,sizeof(xbuf)));    
+	  return -1;
+	}
+      }
+      return comm->gc_result;
+    } 
+    pthread_mutex_unlock(&rrepos_mutex);
+  } else {
+    M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
+	    ("rrepos_getglobalfilter null arguments"));    
+  }
+  return -1;
+}   
 
 int rreposplugin_add(const char *pluginname)
 {

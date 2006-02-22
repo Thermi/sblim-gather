@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.18 2006/02/08 20:26:46 mihajlov Exp $
+ * $Id: repos.c,v 1.19 2006/02/22 09:39:09 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -63,6 +63,7 @@ static int sub_add(SubscriptionRequest *, SubscriptionCallback*);
 static int sub_remove(SubscriptionRequest *, SubscriptionCallback*);
 static int  matchCommonCriteria(SubscriptionRequest *, MetricValue*);
 static int  matchValue(SubscriptionRequest *, ValueRequest *);
+static void mqsort(ValueRequest *vr, int left, int right, int asc);
 
 int repos_init()
 {
@@ -434,6 +435,29 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
   return -1;
 }
 
+int reposvalue_getfiltered(ValueRequest *vs, COMMHEAP ch, size_t num, int ascending)
+{
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+	  ("repos_getfiltered %p %d %s", vs, num, ascending ? "ascending" : "descending"));
+  if (vs && num > 0) {
+    if (reposvalue_get(vs,ch) == 0) {
+      if (vs->vsNumValues > num) {
+	M_TRACE(MTRACE_DETAILED,MTRACE_REPOS,("activating filter as %d > %d", vs, num));
+	/* sort and strip */
+	mqsort(vs,0,vs->vsNumValues-1,ascending);
+	vs->vsNumValues = num;
+      } else {
+	M_TRACE(MTRACE_DETAILED,MTRACE_REPOS,("not activating filter as %d <= %d", vs, num));      
+      }
+      return 0;
+    } else {
+      M_TRACE(MTRACE_ERROR,MTRACE_REPOS, ("repos_getfiltered failed retrieving the values"));
+    } 
+    M_TRACE(MTRACE_ERROR,MTRACE_REPOS, ("repos_getfiltered invalid parameter %p",vs));
+  }
+  return -1;
+}
+
 int repos_unsubscribe(SubscriptionRequest *sr, SubscriptionCallback *scb)
 {
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
@@ -749,3 +773,107 @@ static RepositoryPlugin* pl_find(const char *name)
   }
   return p?p->plugin:NULL;
 }
+inline int valueCompare(int type, ValueItem *v, ValueItem *w, int dir)
+{
+  long long          llv, llw;
+  unsigned long long ulv, ulw;
+  double             dv, dw;
+  if (type == MD_BOOL) {
+    ulv = v->viValue[0] ? 0 : 1;
+    ulw = w->viValue[0] ? 0 : 1;
+    return dir ? ulv - ulw : ulw - ulv;
+  } else if (type & (MD_UINT)) {
+    if (type & MD_64BIT) {
+      ulv = *(unsigned long long*)v->viValue;
+      ulw = *(unsigned long long*)w->viValue;
+    } else if (type & MD_32BIT) {
+      ulv = *(unsigned *)v->viValue;
+      ulw = *(unsigned *)w->viValue;
+    } else if (type & MD_16BIT) {
+      ulv = *(unsigned short*)v->viValue;
+      ulw = *(unsigned short*)w->viValue;
+    } else /* 8BIT */ {
+      ulv = *(unsigned char*)v->viValue;
+      ulw = *(unsigned char*)w->viValue;
+    }
+    return dir ? ulv - ulw : ulw - ulv;
+  } else if (type & (MD_SINT)) {
+    if (type & MD_64BIT) {
+      llv = *(long long*)v->viValue;
+      llw = *(long long*)w->viValue;
+    } else if (type & MD_32BIT) {
+      llv = *(int *)v->viValue;
+      llw = *(int *)w->viValue;
+    } else if (type & MD_16BIT) {
+      llv = *(short*)v->viValue;
+      llw = *(short*)w->viValue;
+    } else /* 8BIT */ {
+      llv = *(signed char*)v->viValue;
+      llw = *(signed char*)w->viValue;
+    }
+    return dir ? llv - llw : llw - llv;
+  } else if (type & (MD_FLOAT)) {
+    if (type & MD_64BIT) {
+      dv = *(double*)v->viValue;
+      dw = *(double*)w->viValue;
+    } else /* 32BIT */ {
+      dv = *(float*)v->viValue;
+      dw = *(float*)w->viValue;
+    }
+    return dir ? dv - dw : dw - dv;
+  } else if (type == MD_CHAR16) {
+    ulv = *(unsigned short*)v->viValue;
+    ulw = *(unsigned short*)w->viValue;
+    return dir ? ulv - ulw : ulw - ulv;
+  } else if (type & (MD_DATETIME|MD_STRING)) {
+    ulv = *(unsigned short*)v->viValue;
+    ulw = *(unsigned short*)w->viValue;
+    return dir ? 
+      strcmp(v->viValue,w->viValue)
+      : strcmp(w->viValue,v->viValue);
+  } else {
+    /* cannot compare user data type */
+    return 0; 
+  }
+}
+
+inline void mswap(ValueRequest *vr, int low, int high)
+{
+  ValueItem temp;
+  temp = vr->vsValues[low];
+  vr->vsValues[low] = vr->vsValues[high];
+  vr->vsValues[high] = temp;
+}
+
+void mqsort(ValueRequest *vr, int left, int right, int asc)
+{
+  int pivot=right;
+  int low=left;
+  int high=pivot-1;
+  if (left == right) {
+    return;
+  }
+  do {
+    while (valueCompare(vr->vsDataType,&vr->vsValues[low],&vr->vsValues[pivot],asc) < 0) {
+      low += 1;
+    }
+    while (left <= high && 
+	   valueCompare(vr->vsDataType,&vr->vsValues[pivot],&vr->vsValues[high],asc) <= 0) {
+      high -= 1;
+    }
+    if ( low < high ) {
+      mswap(vr,low,high);
+    } 
+  } while (low < high);
+  /* position pivot in the middle */
+  mswap(vr,low,pivot);
+  /* less than 3 elements are already sorted by loop above 
+     consider insertion sort for < 10 elements */
+  if (left < low - 1) {
+    mqsort(vr,left,low-1,asc);
+  }
+  if (high < right - 1) {
+    mqsort(vr,low+1,right,asc);
+  }
+}
+

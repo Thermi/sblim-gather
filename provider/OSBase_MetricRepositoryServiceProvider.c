@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.4 2005/06/24 12:04:56 mihajlov Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.5 2006/02/22 09:39:09 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2004
+ * (C) Copyright IBM Corp. 2004, 2006
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 
@@ -107,6 +107,8 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstances( CMPIInstanceMI *
   short          nump;
   short          numm;
   char           boolval;
+  unsigned       limit;
+  int            ascending;
     
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI EnumInstances()\n", _FILENAME, _ClassName );
@@ -138,6 +140,11 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstances( CMPIInstanceMI *
       numm = rs.rsNumMetrics;
       CMSetProperty(ci,"NumberOfMetrics",&numm,CMPI_uint16);
     }
+    if (rrepos_getglobalfilter(&limit,&ascending)==0) {
+      CMSetProperty(ci,"EnumerationLimit",&limit,CMPI_uint32);
+      boolval=ascending?1:0;
+      CMSetProperty(ci,"Ascending",&boolval,CMPI_boolean);
+    }
     CMReturnInstance(rslt,ci);
   } else {
     CMSetStatusWithChars( _broker, &rc, 
@@ -160,6 +167,8 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderGetInstance( CMPIInstanceMI * m
   short          nump;
   short          numm;
   char           boolval;
+  unsigned       limit;
+  int            ascending;
 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI GetInstance()\n", _FILENAME, _ClassName );
@@ -189,6 +198,11 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderGetInstance( CMPIInstanceMI * m
       CMSetProperty(ci,"NumberOfPlugins",&numm,CMPI_uint16);
       numm = rs.rsNumMetrics;
       CMSetProperty(ci,"NumberOfMetrics",&numm,CMPI_uint16);
+      if (rrepos_getglobalfilter(&limit,&ascending)==0) {
+	CMSetProperty(ci,"EnumerationLimit",&limit,CMPI_uint32);
+	boolval=ascending?1:0;
+	CMSetProperty(ci,"Ascending",&boolval,CMPI_boolean);
+      }
     }
     CMReturnInstance(rslt,ci);
   } else {
@@ -286,6 +300,8 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderInvokeMethod( CMPIMethodMI * mi
   CMPIEnumeration * en;
   CMPIObjectPath  * copPlugin;
   int          stat;
+  char         boolval, ascending;
+  unsigned     limit;
 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI InvokeMethod()\n", _FILENAME, _ClassName );
@@ -342,6 +358,24 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderInvokeMethod( CMPIMethodMI * mi
       stat=0;
     }
     CMReturnData(rslt,&stat,CMPI_uint32);   
+  } else if (strcasecmp(method,"setenumerationlimits") ==0) {
+    if( _debug )
+      fprintf( stderr, "--- invoking setenumerationlimits()\n");
+    boolval = 0;
+    data = CMGetArg(in,"limit",&st);
+    if (st.rc == CMPI_RC_OK) {
+      limit = data.value.uint32;
+      data = CMGetArg(in,"ascending",&st);
+      if (st.rc == CMPI_RC_OK) {
+	ascending = data.value.boolean;
+	if( _debug )
+	  fprintf( stderr, "--- setting filter %d %d\n", limit, ascending);
+	if (rrepos_setglobalfilter(limit,ascending)==0) {
+	  boolval = 1;
+	}
+      }
+    }
+    CMReturnData(rslt,&boolval,CMPI_boolean);   
   } else {
     CMSetStatusWithChars( _broker, &st, 
 			  CMPI_RC_ERR_NOT_SUPPORTED, "CIM_ERR_NOT_SUPPORTED" ); 
