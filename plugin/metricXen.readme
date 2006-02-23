@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.readme,v 1.1 2006/02/22 14:11:59 mihajlov Exp $
+ * $Id: metricXen.readme,v 1.2 2006/02/23 13:20:39 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -23,8 +23,10 @@
 The Plugin offers the following metrics :
 
 - TotalCPUTime
+- TenMinuteTotalCPUTime
 - ActiveVirtualProcessors
 - ExternalViewTotalCPUPercentage
+- TenMinuteExternalViewTotalCPUPercentage
 - PartitionClaimedMemory
 - PartitionClaimedMaximumMemory
 - HostFreePhysicalMemory
@@ -47,18 +49,107 @@ Sample Interval : 30 sec
 CIM Data Type   : uint64
 Units           : MilliSeconds
 
-Value Source    : xm list --info
+Value Source    : "xm list --long"
 
-/* ---------------------------------------------------------------------------*/
+
+TenMinuteTotalCPUTime
+---------------------
+
+Metric Type     : Interval
+Sample Interval : 10 min
+CIM Data Type   : uint64
+Units           : MilliSeconds
+
+Value Source    : like TotalCPUTime
+
 
 ActiveVirtualProcessors
 -----------------------
 
 Metric Type     : Interval
 Sample Interval : 30 sec
-CIM Data Type   : uint64
+CIM Data Type   : real32
 Units           : MilliSeconds
 
-Value Source    : xm list --info
+Value Source    : "xm list --long"
+
+
+ExternalViewTotalCPUPercentage
+------------------------------
+
+Metric Type     : Interval
+Sample Interval : 30 sec
+CIM Data Type   : real32
+Units           : Percent
+
+Value Source    : "xm list --long"
+
+
+TenMinuteExternalViewTotalCPUPercentage
+---------------------------------------
+
+Metric Type     : Interval
+Sample Interval : 10 min
+CIM Data Type   : real32
+Units           : Percent
+
+Value Source    : like ExternalViewTotalCPUPercentage
+
 
 /* ---------------------------------------------------------------------------*/
+
+PartitionClaimedMemory                 
+----------------------                  
+
+Metric Type     : Point   
+Sample Interval : 30 sec
+CIM Data Type   : uint64
+Units           : KiloBytes
+
+Value Source    : "xm list --long"                         
+
+
+PartitionClaimedMaximumMemory                 
+-----------------------------                  
+
+Metric Type     : Point   
+Sample Interval : 30 sec
+CIM Data Type   : uint64
+Units           : KiloBytes
+
+Value Source    : "xm list --long"                         
+
+
+HostFreePhysicalMemory
+----------------------                  
+
+Metric Type     : Point   
+Sample Interval : 30 sec
+CIM Data Type   : uint64
+Units           : KiloBytes
+
+Value Source    : "xm info"
+
+
+ClaimedMemoryPercentage
+----------------------                  
+
+Metric Type     : Point   
+Sample Interval : 30 sec
+CIM Data Type   : uint64
+Units           : KiloBytes
+
+Value Source    : "xm list --long"
+
+
+HostMemoryPercentage
+--------------------                  
+
+Metric Type     : Point   
+Sample Interval : 30 sec
+CIM Data Type   : real32
+Units           : Percent 
+
+Value Source    : "xm list --long" and "xm info"
+
+

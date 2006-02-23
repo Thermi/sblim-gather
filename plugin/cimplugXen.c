@@ -1,6 +1,6 @@
 
 /*
- * $Id: cimplugXen.c,v 1.1 2006/02/22 14:11:59 mihajlov Exp $
+ * $Id: cimplugXen.c,v 1.2 2006/02/23 13:20:39 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -26,66 +26,66 @@
 #include <stdlib.h>
 
 
-CMPIObjectPath* COP4VALID (CMPIBroker *broker, const char *id, 
-			const char *systemid)
+CMPIObjectPath *COP4VALID(CMPIBroker * broker, const char *id,
+			  const char *systemid)
 {
-  /* we construct the operating system id according to the OSBase
-     rules */
-  CMPIObjectPath *cop = CMNewObjectPath(broker,NULL,"Xen_ComputerSystem",
-					NULL);
-  if (cop) {
-    CMAddKey(cop,"Name",systemid,CMPI_chars);
-    CMAddKey(cop,"CreationClassName","Xen_ComputerSystem",CMPI_chars);
-    CMAddKey(cop,"CSName",systemid,CMPI_chars);
-    CMAddKey(cop,"CSCreationClassName","Linux_ComputerSystem",
-	     CMPI_chars);
-  }
-  return cop;
+    /* we construct the operating system id according to the OSBase
+       rules */
+    CMPIObjectPath *cop =
+	CMNewObjectPath(broker, NULL, "Xen_ComputerSystem",
+			NULL);
+    if (cop) {
+	CMAddKey(cop, "Name", systemid, CMPI_chars);
+	CMAddKey(cop, "CreationClassName", "Xen_ComputerSystem",
+		 CMPI_chars);
+	CMAddKey(cop, "CSName", systemid, CMPI_chars);
+	CMAddKey(cop, "CSCreationClassName", "Linux_ComputerSystem",
+		 CMPI_chars);
+    }
+    return cop;
 }
 
-int VALID4COP (CMPIObjectPath *cop, char *id, size_t idlen,
-	    char *systemid, size_t systemidlen)
+int VALID4COP(CMPIObjectPath * cop, char *id, size_t idlen,
+	      char *systemid, size_t systemidlen)
 {
-  CMPIData data;
-  char    *str;
-  
-  if (cop && id && systemid) {
-    if (strlen("OperatingSystem")+1 >idlen) {
-      return -1;
-    } else {
-      strcpy(id,"OperatingSystem");
+    CMPIData data;
+    char *str;
+
+    if (cop && id && systemid) {
+	if (strlen("OperatingSystem") + 1 > idlen) {
+	    return -1;
+	} else {
+	    strcpy(id, "OperatingSystem");
+	}
+	data = CMGetKey(cop, "CSName", NULL);
+	if (data.type == CMPI_string && data.value.string) {
+	    str = CMGetCharPtr(data.value.string);
+	    if (strlen(str) < systemidlen) {
+		strcpy(systemid, str);
+		return 0;
+	    }
+	}
     }
-    data=CMGetKey(cop,"CSName",NULL);
-    if (data.type==CMPI_string && data.value.string) {
-      str=CMGetCharPtr(data.value.string);
-      if (strlen(str)<systemidlen) {
-	strcpy(systemid,str);
+    return -1;
+}
+
+int GETRES(char ***resclasses)
+{
+    if (resclasses) {
+	*resclasses = calloc(2, sizeof(char *));
+	(*resclasses)[0] = strdup("Xen_ComputerSystem");
 	return 0;
-      }
     }
-  }
-  return -1;
+    return -1;
 }
 
-int GETRES (char *** resclasses)
+void FREERES(char **resclasses)
 {
-  if (resclasses) {
-    *resclasses = calloc(2,sizeof(char*));
-    (*resclasses)[0] = strdup("Xen_ComputerSystem");
-    return 0;
-  }
-  return -1;
-}
-
-void FREERES (char **resclasses)
-{
-  int i=0;
-  if (resclasses) {
-    while (resclasses[i]) {
-      free(resclasses[i++]);
+    int i = 0;
+    if (resclasses) {
+	while (resclasses[i]) {
+	    free(resclasses[i++]);
+	}
+	free(resclasses);
     }
-    free(resclasses);
-  }
 }
-
-
