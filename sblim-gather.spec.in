@@ -1,5 +1,5 @@
 #
-# $Id: sblim-gather.spec.in,v 1.1 2005/06/24 16:02:35 mihajlov Exp $
+# $Id: sblim-gather.spec.in,v 1.2 2006/03/02 15:48:43 mihajlov Exp $
 #
 # Package spec for @PACKAGE@
 #
@@ -66,6 +66,9 @@ make DESTDIR=$RPM_BUILD_ROOT install
 # remove unused libtool files
 rm -f $RPM_BUILD_ROOT/%{_libdir}/*a
 rm -f $RPM_BUILD_ROOT/%{_libdir}/cmpi/*a
+rm -f $RPM_BUILD_ROOT/%{_libdir}/gather/cplug/*a
+rm -f $RPM_BUILD_ROOT/%{_libdir}/gather/mplug/*a
+rm -f $RPM_BUILD_ROOT/%{_libdir}/gather/rplug/*a
 
 %post
 # Register Schema and Provider - this is higly provider specific
@@ -108,10 +111,12 @@ rm -f $RPM_BUILD_ROOT/%{_libdir}/cmpi/*a
 %{_datadir}/doc/%{name}-%{version}
 %{_libdir}/*.so*
 %{_libdir}/cmpi/*.so*
+%{_libdir}/gather/cplug/*.so*
+%{_libdir}/gather/mplug/*.so*
+%{_libdir}/gather/rplug/*.so*
 
 %files test
 
 %defattr(-,root,root)
 %{_datadir}/sblim-testsuite
-
 
