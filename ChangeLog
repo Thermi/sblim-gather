@@ -1,3 +1,15 @@
+2006-03-02  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* reposctl.c: 
+	Made formatting of timestamps user-friendlier.
+
+	* gatherd.conf, gather.c, mlist.h, mlist.c, util/gathercfg.c: 
+	Bug 1441802: Added support for wall-clock synchronized sampling.
+	By default sampling is synchronized.
+
+	* sblim-gather.spec.in: 
+	Bug 1441804: Fixed specfile to work with new plugin directory structure.
+
 2006-02-22    obenke
 
 	* plugin/cimplugXen.c, plugin/metricXen.c, plugin/metricXen.readme,

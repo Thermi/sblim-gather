@@ -7,6 +7,8 @@ Features added:
 - 1436488 Added top-N support for metric values.
 - 1436591 Added new config option to specify the repository expiration.
 - 1436671 New plugin for Xen.
+- 1441802 Added new config option for synchronized sampling.
+- 1441804 Fixed spec file 
 
 Bugs fixed:
 - 1395363 Removed provider postinstall location dependencies.
