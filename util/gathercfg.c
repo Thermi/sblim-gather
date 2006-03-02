@@ -1,5 +1,5 @@
 /*
- * $Id: gathercfg.c,v 1.5 2006/02/10 15:35:13 mihajlov Exp $
+ * $Id: gathercfg.c,v 1.6 2006/03/02 15:51:11 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -37,6 +37,7 @@ int gathercfg_init()
     "PluginDirectory",
     "AutoLoad",
     "SampleInterval",
+    "Synchronization",
     NULL
   };
   gathercfg_handle=set_configfile(GATHER_CONFDIR "/gatherd.conf",allowed);

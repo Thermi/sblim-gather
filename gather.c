@@ -1,5 +1,5 @@
 /*
- * $Id: gather.c,v 1.10 2006/02/10 15:35:13 mihajlov Exp $
+ * $Id: gather.c,v 1.11 2006/03/02 15:51:10 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -37,6 +37,10 @@
 #define GATHER_PLUGINDIR "/usr/lib/gather/mplug"
 #endif
 
+#define SYNCLEVEL_MIN     0
+#define SYNCLEVEL_MAX     1
+#define SYNCLEVEL_DEFAULT 1
+
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
 /* Plugin Control */
@@ -73,10 +77,20 @@ int gather_init()
   char *pluginpath;
   char *cfgidx1;
   char *cfgidx2;
+  int  synclevel = SYNCLEVEL_DEFAULT;
+
   if (metriclist) return -1;
   pluginhead = NULL;
   MPR_InitRegistry();
-  metriclist = ML_Init();
+  if (gathercfg_getitem("Synchronization",cfgbuf,sizeof(cfgbuf))==0) {
+    if (sscanf(cfgbuf,"%d",&synclevel) != 1 || 
+	synclevel < SYNCLEVEL_MIN || synclevel > SYNCLEVEL_MAX) {
+      synclevel = SYNCLEVEL_DEFAULT;
+      m_log(M_ERROR,M_SHOW,
+	    "Invalid synchronization value specified: %s. Ignoring it.\n", cfgbuf);
+    }
+  }
+  metriclist = ML_Init(synclevel);
   if (gathercfg_getitem("SampleInterval",cfgbuf,sizeof(cfgbuf))==0) {
     if (sscanf(cfgbuf,"%d",&globalInterval) != 1) {
       m_log(M_ERROR,M_SHOW,

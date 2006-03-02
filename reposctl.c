@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.14 2006/02/22 09:39:09 mihajlov Exp $
+ * $Id: reposctl.c,v 1.15 2006/03/02 15:51:10 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -307,8 +307,8 @@ static void printvalue(ValueRequest *vr)
       printf("datatype %0x not supported",vr->vsDataType);
       break;
     }
-    printf(", sample time %ld duration %ld",
-	   vr->vsValues[i].viCaptureTime,
+    printf(", sample time %s duration %ld",
+	   ctime(&vr->vsValues[i].viCaptureTime),
 	   vr->vsValues[i].viDuration);
     printf ("\n");
   }

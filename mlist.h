@@ -1,5 +1,5 @@
 /*
- * $Id: mlist.h,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mlist.h,v 1.2 2006/03/02 15:51:10 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -44,7 +44,7 @@ typedef void* ML_Head;
 #define MSTATE_RESERVED    3
 #define MSTATE_DELETED     4
 
-ML_Head ML_Init();
+ML_Head ML_Init(int synclevel);
 int ML_Finish(ML_Head mlhead);
 int ML_Reset(ML_Head mlhead);
 MetricBlock* ML_SelectNextDue(ML_Head mlhead, time_t acttime, 

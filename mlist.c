@@ -1,5 +1,5 @@
 /*
- * $Id: mlist.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mlist.c,v 1.2 2006/03/02 15:51:10 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -29,19 +29,21 @@
 #include <string.h>
 
 typedef struct _MutexML_Head {
-  MetricBlock *first;
+  MetricBlock    *first;
   pthread_mutex_t mutex;
+  int             mlsynclevel;
 } MutexML_Head;
 
 /*
  * Create a list header.
  */
-ML_Head ML_Init()
+ML_Head ML_Init(int synclevel)
 {
   MutexML_Head *mh = malloc(sizeof(MutexML_Head));
   
   mh->first = NULL;
   pthread_mutex_init(&(mh->mutex),NULL); /* never fails */
+  mh->mlsynclevel=synclevel;
   return (ML_Head)mh;
 }
 
@@ -75,11 +77,19 @@ int ML_Reset(ML_Head mlhead)
 {
   MetricBlock *mcursor;
   MutexML_Head *mh = (MutexML_Head*) mlhead; 
+  time_t         t = time(NULL);
   
   if (pthread_mutex_lock(&(mh->mutex)))
     return -1; /* the mutex seems to be invalid - don't continue */
   for(mcursor=mh->first;mcursor;mcursor=mcursor->nextMetric) {
     mcursor->processingState=MSTATE_READY;
+    if (mh->mlsynclevel == 1) {
+      /* synchronize with wallclock */
+      mcursor->nextSampleDue = t - t%mcursor->sampleInterval + mcursor->sampleInterval;
+    } else {
+      /* schedule asap */
+      mcursor->nextSampleDue = 0;
+    }
   }
   pthread_mutex_unlock(&(mh->mutex));
   return 0;
@@ -116,11 +126,21 @@ MetricBlock * ML_SelectNextDue(ML_Head mlhead, time_t acttime,
   if (mcursor) {
     /* prepare for scheduling and relocation */
     mcursor->processingState = MSTATE_IN_PROGRESS;
-    mcursor->nextSampleDue = acttime + mcursor->sampleInterval;
+    mcursor->nextSampleDue = acttime + mcursor->sampleInterval - 
+      (mh->mlsynclevel == 1 ? acttime%mcursor->sampleInterval : 0); 
   }
   pthread_mutex_unlock(&(mh->mutex));  
   return mcursor;
 }
+
+/*
+ * ML_Relocate is used to move the metric block into a new list 
+ * position according to it's next sample due time.
+ * As metric blocks are always moved "to the right" next due date
+ * is always in the future, we are searching only the list part
+ * following the original position.
+ * In case of insertions we assume the list head as initial position
+ */
 
 int ML_Relocate(ML_Head mlhead, MetricBlock *mblock)
 {
@@ -131,39 +151,50 @@ int ML_Relocate(ML_Head mlhead, MetricBlock *mblock)
     return 1;
   if (pthread_mutex_lock(&(mh->mutex)))
     return -1; /* invalid mutex */
-  if (mblock->processingState == MSTATE_CREATED) {
-    /* special case 1: first insertion after creation */
-    mblock->nextSampleDue = 0;
-    mblock->nextMetric = mh->first;
-    mh->first = mblock;
-    mblock->processingState = MSTATE_READY;
-  } else if (mblock->processingState==MSTATE_DELETED) { 
+
+  if (mblock->processingState==MSTATE_DELETED) { 
     /* deallocate storage for deleted block */
     free(mblock);    
   } else {
-    /* locate the block in the list and unchain it */
-    mcursor=mh->first;
-    if (mcursor == mblock) {
-      /* special case 2: found at list head */
-      mh->first = mblock->nextMetric;
+    if (mblock->processingState == MSTATE_CREATED) {
+      /* special case 1: first insertion after creation */
+      if (mh->mlsynclevel == 1) {
+	/* synchronize with wallclock */
+	time_t t = time(NULL);
+	mblock->nextSampleDue = t - t%mblock->sampleInterval + mblock->sampleInterval;
+      } else {
+	/* schedule asap */
+	mblock->nextSampleDue = 0;
+      }
+      /* equivalent to list head position but no need to unchain */
       mcursor = mh->first;
       mpredecessor = NULL;
-    } else {  
-      while (mcursor && mcursor->nextMetric != mblock) {
-	mcursor=mcursor->nextMetric;
-      }
-      if (!mcursor) {
-	return -1; /* error - could not locate metric block in list */
-      } else {
-	mpredecessor = mcursor;
-	mpredecessor->nextMetric = mblock->nextMetric;
-	mcursor=mcursor->nextMetric;
+    } else {
+      /* locate the block in the list and unchain it */
+      mcursor=mh->first;
+      if (mcursor == mblock) {
+	/* special case 2: found at list head */
+	mh->first = mblock->nextMetric;
+	mcursor = mh->first;
+	mpredecessor = NULL;
+      } else {  
+	while (mcursor && mcursor->nextMetric != mblock) {
+	  mcursor=mcursor->nextMetric;
+	}
+	if (!mcursor) {
+	  return -1; /* error - could not locate metric block in list */
+	} else {
+	  mpredecessor = mcursor;
+	  mpredecessor->nextMetric = mblock->nextMetric;
+	  mcursor=mcursor->nextMetric;
+	}
       }
     }
     /* now find new location for block */
     while (1) {
       if (mcursor==NULL || mblock-> nextSampleDue < mcursor->nextSampleDue) {
 	if (mpredecessor == NULL) {
+	  /* at list head */
 	  mblock->nextMetric = mh->first;
 	  mh->first = mblock;
 	} else {
