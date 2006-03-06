@@ -1,3 +1,9 @@
+2006-03-06  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* rrepos.c, provider/OSBaseMetricUtil.c, provider/OSBaseMetricUtil.h: 
+	Bug 1443997: Fixed handling of classes for which the plugin hasn't 
+	be loaded.
+
 2006-03-02  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* reposctl.c: 

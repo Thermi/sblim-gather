@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.24 2006/02/22 09:39:09 mihajlov Exp $
+ * $Id: rrepos.c,v 1.25 2006/03/06 11:45:04 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -575,7 +575,7 @@ int rreposplugin_list(const char *pluginname,
       comm->gc_cmd=GCMD_LISTPLUGIN;
       comm->gc_datalen=offset;
       comm->gc_result=0;
-      memcpy(xbuf+sizeof(GATHERCOMM),pluginname,comm->gc_datalen);
+      memcpy(xbuf+sizeof(GATHERCOMM),pluginname,offset-sizeof(GATHERCOMM));
       pthread_mutex_lock(&rrepos_mutex);
       if (mcc_request(rreposhandle,&hdr,comm,
 		      sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&

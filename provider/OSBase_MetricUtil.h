@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.h,v 1.8 2004/12/22 16:45:53 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.h,v 1.9 2006/03/06 11:45:05 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -27,7 +27,7 @@ int checkRepositoryConnection();
 
 /* maintain cache of CIM class to id mappings */
 int refreshMetricDefClasses(CMPIBroker *broker, CMPIContext *ctx, 
-			    const char *namesp);
+			    const char *namesp, int force);
 void releaseMetricDefClasses();
 
 /* retrieve CIM class name for given ids */
