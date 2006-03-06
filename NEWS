@@ -19,6 +19,7 @@ Changes in Version 2.0.4
 Bugs fixed:
 - 1430516 Fixed unrecoverable disconnect.
 - 1443997 Fixed handling of partially loaded repository plugin sets
+- 1444272 Fixed coredump for NULL unit fields
 
 Changes in Version 2.0.3
 ========================

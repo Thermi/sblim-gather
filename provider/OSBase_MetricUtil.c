@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.12 2006/03/06 11:45:05 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.13 2006/03/06 18:04:08 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -220,7 +220,7 @@ int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx,
 	  metricDefinitionList[totalnum+i].mdef_changetype = rdef[i].rdChangeType;
 	  metricDefinitionList[totalnum+i].mdef_iscontinuous = rdef[i].rdIsContinuous;
 	  metricDefinitionList[totalnum+i].mdef_calculable = rdef[i].rdCalculable;
-	  metricDefinitionList[totalnum+i].mdef_units = strdup(rdef[i].rdUnits);
+	  metricDefinitionList[totalnum+i].mdef_units = strdup(rdef[i].rdUnits?rdef[i].rdUnits:"n/a");
 	}
 	/* identify last element with null name */
 	totalnum += rdefnum;

@@ -1,5 +1,8 @@
 2006-03-06  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
+	* provider/OSBase_MetricUtil.c: 
+	Bug 1444272: check rdUnits field before strdup'ing it.
+
 	* rrepos.c, provider/OSBaseMetricUtil.c, provider/OSBaseMetricUtil.h: 
 	Bug 1443997: Fixed handling of classes for which the plugin hasn't 
 	be loaded.
