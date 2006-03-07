@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.readme,v 1.7 2004/09/23 13:00:37 heidineu Exp $
+ * $Id: metricOperatingSystem.readme,v 1.8 2006/03/07 09:49:52 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -114,7 +114,7 @@ KernelModeTime
 Metric Type     : Interval
 Based on Metric : CPUTime
 CIM Data Type   : uint64
-Units           : micro-seconds
+Units           : milli-seconds
 
 Value Source    : third entry of CPUTime * 10
 
@@ -125,7 +125,7 @@ UserModeTime
 Metric Type     : Interval
 Based on Metric : CPUTime
 CIM Data Type   : uint64
-Units           : micro-seconds
+Units           : milli-seconds
 
 Value Source    : first entry of CPUTime * 10
 
@@ -136,7 +136,7 @@ TotalCPUTime
 Metric Type     : Interval
 Based on Metric : CPUTime
 CIM Data Type   : uint64
-Units           : micro-seconds
+Units           : milli-seconds
 
 Value Source    : sum of user and kernel CPUTime
 

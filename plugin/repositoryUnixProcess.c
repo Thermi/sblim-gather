@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryUnixProcess.c,v 1.9 2004/12/23 14:40:33 mihajlov Exp $
+ * $Id: repositoryUnixProcess.c,v 1.10 2006/03/07 09:49:52 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -93,7 +93,7 @@ static MetricCalculator  metricCalcVirtualSize;
 static MetricCalculator  metricCalcSharedSize;
 
 /* unit definitions */
-static char * muMicroSeconds = "Microseconds";
+static char * muMilliSeconds = "Milliseconds";
 static char * muPagesPerSecond = "Pages per second";
 static char * muBytes = "Bytes";
 static char * muPercent = "Percent";
@@ -162,7 +162,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcDataType=MD_UINT64;
   metricCalcDef[1].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[1].mcCalc=metricCalcKernelTime;
-  metricCalcDef[1].mcUnits=muMicroSeconds;
+  metricCalcDef[1].mcUnits=muMilliSeconds;
 
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="UserModeTime";
@@ -174,7 +174,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[2].mcCalculable=MD_SUMMABLE;
   metricCalcDef[2].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[2].mcCalc=metricCalcUserTime;
-  metricCalcDef[2].mcUnits=muMicroSeconds;
+  metricCalcDef[2].mcUnits=muMilliSeconds;
 
   metricCalcDef[3].mcVersion=MD_VERSION;
   metricCalcDef[3].mcName="TotalCPUTime";
@@ -186,7 +186,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcDataType=MD_UINT64;
   metricCalcDef[3].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[3].mcCalc=metricCalcTotalCPUTime;
-  metricCalcDef[3].mcUnits=muMicroSeconds;
+  metricCalcDef[3].mcUnits=muMilliSeconds;
 
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="ResidentSetSize";
@@ -304,7 +304,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[13].mcDataType=MD_UINT64;
   metricCalcDef[13].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[13].mcCalc=metricCalcAccKernelTime;
-  metricCalcDef[13].mcUnits=muMicroSeconds;
+  metricCalcDef[13].mcUnits=muMilliSeconds;
 
   metricCalcDef[14].mcVersion=MD_VERSION;
   metricCalcDef[14].mcName="AccumulatedUserModeTime";
@@ -316,7 +316,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[14].mcDataType=MD_UINT64;
   metricCalcDef[14].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[14].mcCalc=metricCalcAccUserTime;
-  metricCalcDef[14].mcUnits=muMicroSeconds;
+  metricCalcDef[14].mcUnits=muMilliSeconds;
 
   metricCalcDef[15].mcVersion=MD_VERSION;
   metricCalcDef[15].mcName="AccumulatedTotalCPUTime";
@@ -328,7 +328,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[15].mcDataType=MD_UINT64;
   metricCalcDef[15].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[15].mcCalc=metricCalcAccTotalCPUTime;
-  metricCalcDef[15].mcUnits=muMicroSeconds;
+  metricCalcDef[15].mcUnits=muMilliSeconds;
 
   metricCalcDef[16].mcVersion=MD_VERSION;
   metricCalcDef[16].mcName="VirtualSize";

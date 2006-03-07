@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.14 2004/12/23 14:40:33 mihajlov Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.15 2006/03/07 09:49:52 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -131,7 +131,7 @@ static MetricCalculator metricCalcHardwareInterruptRate;
 
 
 /* unit definitions */
-static char * muMicroSeconds = "Microseconds";
+static char * muMilliSeconds = "Milliseconds";
 static char * muPagesPerSecond = "Pages per second";
 static char * muKiloBytes = "Kilobytes";
 static char * muPercent = "Percent";
@@ -214,7 +214,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcDataType=MD_UINT64;
   metricCalcDef[3].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[3].mcCalc=metricCalcKernelTime;
-  metricCalcDef[3].mcUnits=muMicroSeconds;
+  metricCalcDef[3].mcUnits=muMilliSeconds;
 
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="UserModeTime";
@@ -226,7 +226,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[4].mcDataType=MD_UINT64;
   metricCalcDef[4].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[4].mcCalc=metricCalcUserTime;
-  metricCalcDef[4].mcUnits=muMicroSeconds;
+  metricCalcDef[4].mcUnits=muMilliSeconds;
 
   metricCalcDef[5].mcVersion=MD_VERSION;
   metricCalcDef[5].mcName="TotalCPUTime";
@@ -238,7 +238,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcDataType=MD_UINT64;
   metricCalcDef[5].mcAliasId=metricCalcDef[2].mcId;
   metricCalcDef[5].mcCalc=metricCalcTotalCPUTime;
-  metricCalcDef[5].mcUnits=muMicroSeconds;
+  metricCalcDef[5].mcUnits=muMilliSeconds;
 
   metricCalcDef[6].mcVersion=MD_VERSION;
   metricCalcDef[6].mcName="MemorySize";
