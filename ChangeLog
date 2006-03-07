@@ -1,3 +1,8 @@
+2006-03-07  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* plugin/repositoryUnixProcess.c, plugin/repositoryUnixProcess.c:
+	Bug 1444711: fixed unit string for CPU times.
+
 2006-03-06  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* provider/OSBase_MetricUtil.c: 
