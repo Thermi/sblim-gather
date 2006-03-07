@@ -1,5 +1,12 @@
 2006-03-07  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
+	* marshal.c, reposctl.c, reposd.c, slisten.c, 
+	provider/OSBaseMetricRepositoryServiceProvider.c:
+	Bug 1444826: fix some 32 vs 64 bit warnings.
+
+	* configure.ac, util/commutil.c: 
+	Bug 1444826: use AC_C_BIGENDIAN macro to determine endianness.
+
 	* plugin/repositoryUnixProcess.c, plugin/repositoryUnixProcess.c:
 	Bug 1444711: fixed unit string for CPU times.
 

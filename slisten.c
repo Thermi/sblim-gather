@@ -1,5 +1,5 @@
 /*
- * $Id: slisten.c,v 1.5 2006/02/01 10:19:37 mihajlov Exp $
+ * $Id: slisten.c,v 1.6 2006/03/07 12:55:20 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -61,9 +61,9 @@ static void subs_listener_exit(void)
 
 static void subs_listener_cleanup(void *fdsocket)
 {
-  return;
   /* reset to initial state */
-  close((int)fdsocket);
+  long fds = (long)fdsocket;
+  close(fds);
   unlink(listener);
   strcpy(listener,SOCKFILE_TEMPLATE);
   fdsockfile=-1;
@@ -71,7 +71,7 @@ static void subs_listener_cleanup(void *fdsocket)
 
 static void * subs_listener(void *unused)
 {
-  int                fdsocket;
+  long               fdsocket;
   struct sockaddr_un sockname;
   void              *v_corrid;
   ValueRequest      *vr;

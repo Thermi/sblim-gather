@@ -1,5 +1,5 @@
 /*
- * $Id: commutil.c,v 1.3 2004/12/03 13:06:14 mihajlov Exp $
+ * $Id: commutil.c,v 1.4 2006/03/07 12:55:21 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -18,16 +18,15 @@
 
 
 #include <commutil.h>
+#include "config.h"
 
 #ifndef AIX
 uint64_t htonll(uint64_t v)
 {
-#if BYTE_ORDER == BIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
   return v;
-#elif BYTE_ORDER == LITTLE_ENDIAN
-  return __bswap_64 (v);
 #else
-# error "What kind of system is this?"
+  return __bswap_64 (v);
 #endif
 }
 #endif
@@ -45,19 +44,17 @@ uint64_t ntohll(uint64_t v)
  */
 float htonf(float v) 
 {
+#ifdef WORDS_BIGENDIAN
+  return v;
+#else
   unsigned char *bp = (unsigned char *)&v;
   unsigned char array[sizeof(float)];
   int           i;
 
-#if BYTE_ORDER == BIG_ENDIAN
-  return v;
-#elif BYTE_ORDER == LITTLE_ENDIAN
   for (i=0; i<sizeof(float);i++) {
     array[i] = bp[sizeof(float)-1-i];
   }
   return (*(float *)array);
-#else
-# error "What kind of system is this?"
 #endif 
 }
 

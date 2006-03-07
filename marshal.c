@@ -1,5 +1,5 @@
 /*
- * $Id: marshal.c,v 1.4 2006/02/22 09:39:09 mihajlov Exp $
+ * $Id: marshal.c,v 1.5 2006/03/07 12:55:20 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -147,6 +147,7 @@ int marshal_valuerequest(const ValueRequest *vr, char *mbuf, off_t *offset,
 int unmarshal_valuerequest(ValueRequest **vr, const char *mbuf, off_t *offset, size_t mbuflen)
 {
   int i;
+  void *vtemp;
   if (vr && mbuf) {
     /* process ValueRequest main structure */
     if (unmarshal_data((void**)vr, sizeof(ValueRequest), mbuf, offset, mbuflen) == -1 ||
@@ -155,17 +156,19 @@ int unmarshal_valuerequest(ValueRequest **vr, const char *mbuf, off_t *offset, s
       return -1;
     }
     /* process ValueItems */
-    if (unmarshal_data((void**)&(*vr)->vsValues,sizeof(ValueItem)*(*vr)->vsNumValues,mbuf,
+    if (unmarshal_data(&vtemp,sizeof(ValueItem)*(*vr)->vsNumValues,mbuf,
 		       offset,mbuflen) == -1 ) { 
       return -1;
     }
+    (*vr)->vsValues=vtemp;
     for (i=0;i<(*vr)->vsNumValues;i++) {
-      if (unmarshal_data((void**)&(*vr)->vsValues[i].viValue,(*vr)->vsValues[i].viValueLen,
+      if (unmarshal_data(&vtemp,(*vr)->vsValues[i].viValueLen,
 			 mbuf,offset,mbuflen) == -1 ||
 	  unmarshal_string(&(*vr)->vsValues[i].viResource,mbuf,offset,mbuflen,0) == -1 || 
 	  unmarshal_string(&(*vr)->vsValues[i].viSystemId,mbuf,offset,mbuflen,0) == -1 ) {
 	return -1;
       }
+      (*vr)->vsValues[i].viValue=vtemp;
     }
     return 0;
   }

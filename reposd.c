@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.26 2006/02/22 09:39:09 mihajlov Exp $
+ * $Id: reposd.c,v 1.27 2006/03/07 12:55:20 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -621,7 +621,7 @@ static void * repos_remote()
     M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
 	    ("Increased number of current remote client connections %i",connects));
     pthread_mutex_unlock(&connect_mutex);
-    if (pthread_create(&thread,NULL,rrepos_getrequest,(void*)hdl) != 0) {
+    if (pthread_create(&thread,NULL,rrepos_getrequest,(void*)(long)hdl) != 0) {
       m_log(M_ERROR,M_SHOW,"Remote reposd could not create thread for socket %i: %s.\n",
 	    hdl,strerror(errno));
       return 0;
@@ -668,7 +668,7 @@ static void * rrepos_getrequest(void * hdl)
 
     pthread_mutex_lock(&connect_mutex);
 
-    if (rcs_getrequest((int)hdl,buffer,&bufferlen) == -1) {
+    if (rcs_getrequest((long)hdl,buffer,&bufferlen) == -1) {
       connects--;
       M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
 	    ("Decreased number of current remote client connections %i",connects));
@@ -707,7 +707,7 @@ static void * rrepos_getrequest(void * hdl)
  
 #if SIZEOF_LONG == 8
     if (!is64) {
-      MetricValue32 *mv32=mv;
+      MetricValue32 *mv32=(MetricValue32*)mv;
       /* bitness fixups for 32 bit source to 64 bit target */
       /* must move data block "upwards" to create room for 32-bit structure */
       if (bufferlen + sizeof(MetricValue) - sizeof(MetricValue32) > GATHERVALBUFLEN) {

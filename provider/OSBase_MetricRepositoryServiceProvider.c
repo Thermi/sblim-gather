@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.5 2006/02/22 09:39:09 mihajlov Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.6 2006/03/07 12:55:21 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2006
  *
@@ -167,7 +167,7 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderGetInstance( CMPIInstanceMI * m
   short          nump;
   short          numm;
   char           boolval;
-  unsigned       limit;
+  size_t         limit;
   int            ascending;
 
   if( _debug )

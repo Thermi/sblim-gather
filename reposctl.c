@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.15 2006/03/02 15:51:10 mihajlov Exp $
+ * $Id: reposctl.c,v 1.16 2006/03/07 12:55:20 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -166,7 +166,7 @@ int main()
       vr.vsResource = argbuf2;
       vr.vsResource[0]=0;
       vr.vsNumValues = 0;
-      sscanf(arg,"%d %d %d %s %s %d %d ",&vr.vsId,
+      sscanf(arg,"%d %zd %d %s %s %d %d ",&vr.vsId,
 	     &num, &ascending,
 	     vr.vsSystemId,vr.vsResource,&offFrom,&offTo );
       if (strlen(vr.vsSystemId)==0 || vr.vsSystemId[0]=='*') {
@@ -192,14 +192,14 @@ int main()
       break;
     case 'G':
       if(rrepos_getglobalfilter(&num,&ascending)==0) {
-	printf("Limit=%d, order=%s.\n",num,ascending?"ascending":"descending");
+	printf("Limit=%zd, order=%s.\n",num,ascending?"ascending":"descending");
       } else {
 	printf("Failed\n");
       }
       break;
     case 'F':
       num=ascending=0;
-      sscanf(arg,"%d %d",&num,&ascending);
+      sscanf(arg,"%zd %d",&num,&ascending);
       if(rrepos_setglobalfilter(num,ascending)) {
 	printf("Failed\n");
       }
@@ -283,10 +283,10 @@ static void printvalue(ValueRequest *vr)
       printf("%hd",*(short*)vr->vsValues[i].viValue);
       break;
     case MD_UINT32:
-      printf("%lu",*(unsigned long*)vr->vsValues[i].viValue);
+      printf("%u",*(unsigned*)vr->vsValues[i].viValue);
       break;
     case MD_SINT32:
-      printf("%ld",*(long*)vr->vsValues[i].viValue);
+      printf("%d",*(int*)vr->vsValues[i].viValue);
       break;
     case MD_UINT64:
       printf("%llu",*(unsigned long long*)vr->vsValues[i].viValue);
