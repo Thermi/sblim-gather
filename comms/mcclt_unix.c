@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.10 2006/02/08 15:13:51 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.11 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -305,6 +305,8 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
       iov[0].iov_len-=readlen; 
     }
   } while (recvlen != (sizeof(MC_REQHDR)+sizeof(size_t)));
+  /* restore mc_handle to avoid accidental use of server's handle */
+  hdr->mc_handle = cltsock;
   M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
 	  ("mcc_response done reading header, data length=%d",*respdatalen));
   if (maxlen > 0 && *respdatalen > maxlen) {
@@ -316,6 +318,8 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
 	    ("mcc_response buffer to small, needed %d available %d",
 	     *respdatalen,
 	     maxlen)); 
+    /* we close the socket to discard superfluous data */
+    close(cltsock);
     return -1;
   }  
   readlen=0;

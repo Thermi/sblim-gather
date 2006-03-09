@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.25 2006/03/06 11:45:04 mihajlov Exp $
+ * $Id: rrepos.c,v 1.26 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -195,9 +195,9 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
 int rrepos_get(ValueRequest *vr, COMMHEAP ch)
 {
   MC_REQHDR     hdr;
-  char          xbuf[GATHERVALBUFLEN];
+  char         *xbuf=ch_alloc(ch,GATHERVALBUFLEN);
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
-  size_t        commlen=sizeof(xbuf);
+  size_t        commlen=GATHERVALBUFLEN;
   size_t        resourcelen;
   size_t        systemlen;
   void         *vp;
@@ -228,6 +228,19 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+      if (hdr.mc_type == GATHERMC_RESPMORE) {
+	/* allocate buffer */
+	commlen = *(size_t*)(comm+1);
+	if (commlen > GATHERVALBUFLEN) {
+	  xbuf = ch_alloc(ch,commlen);
+	  comm = (GATHERCOMM*)xbuf;
+	}
+	if (mcc_response(&hdr,comm,&commlen) != 0 ||
+	    commlen != (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+	  pthread_mutex_unlock(&rrepos_mutex);
+	  return -1;
+	}
+      }
       if (comm->gc_result==0) {
 	/* copy received ValueRequest into callers buffer 
 	 * allocate array elements and adjust pointers */
@@ -265,9 +278,9 @@ int rrepos_get(ValueRequest *vr, COMMHEAP ch)
 int rrepos_getfiltered(ValueRequest *vr, COMMHEAP ch, size_t num, int ascending)
 {
   MC_REQHDR     hdr;
-  char          xbuf[GATHERVALBUFLEN];
+  char         *xbuf=ch_alloc(ch,GATHERVALBUFLEN);
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
-  size_t        commlen=sizeof(xbuf);
+  size_t        commlen=GATHERVALBUFLEN;
   size_t        resourcelen;
   size_t        systemlen;
   void         *vp;
@@ -303,6 +316,19 @@ int rrepos_getfiltered(ValueRequest *vr, COMMHEAP ch, size_t num, int ascending)
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+      if (hdr.mc_type == GATHERMC_RESPMORE) {
+	/* allocate buffer */
+	commlen = *(size_t*)(comm+1);
+	if (commlen > GATHERVALBUFLEN) {
+	  xbuf = ch_alloc(ch,commlen);
+	  comm = (GATHERCOMM*)xbuf;
+	}
+	if (mcc_response(&hdr,comm,&commlen) != 0 ||
+	    commlen != (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+	  pthread_mutex_unlock(&rrepos_mutex);
+	  return -1;
+	}
+      }
       if (comm->gc_result==0) {
 	/* copy received ValueRequest into callers buffer 
 	 * allocate array elements and adjust pointers */

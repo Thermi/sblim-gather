@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.27 2006/03/07 12:55:20 mihajlov Exp $
+ * $Id: reposd.c,v 1.28 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -39,7 +39,7 @@
 #include <memory.h>
 #include <pthread.h>
 
-#define CHECKBUFFER(comm,buffer,sz) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=sizeof(buffer))
+#define CHECKBUFFER(comm,buffer,sz,len) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=len)
 
 /* ---------------------------------------------------------------------------*/
 
@@ -83,16 +83,19 @@ int main(int argc, char * argv[])
   MC_REQHDR     hdr;
   GATHERCOMM   *comm;
   COMMHEAP     *ch;
-  char          buffer[GATHERVALBUFLEN];
-  size_t        bufferlen=sizeof(buffer);
+  size_t        buffersize=GATHERVALBUFLEN;
+  char         *buffer;
+  size_t        bufferlen;
   SubscriptionRequest *sr;
   ValueRequest *vr;
   ValueItem    *vi;
   void         *vp;
   char         *vpmax;
+  off_t         vpoffs;
   int           i;
   size_t        valreslen;
   size_t        valsyslen;
+  int           numval;
   off_t         offset;
   RepositoryPluginDefinition *rdef;
   char         *pluginname, *metricname, *listener;
@@ -168,7 +171,9 @@ int main(int argc, char * argv[])
     }
   }
 
-  memset(buffer, 0, sizeof(buffer));
+  buffer = malloc(buffersize);
+  bufferlen = buffersize;
+  memset(buffer, 0, buffersize);
  
   while (!quit && mcs_accept(&hdr)==0) {
     while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
@@ -207,15 +212,15 @@ int main(int argc, char * argv[])
 	break;
       case GCMD_ADDPLUGIN:
 	offset = sizeof(GATHERCOMM);
-	if (unmarshal_string(&pluginname,buffer,&offset,sizeof(buffer),1) == 0) {
+	if (unmarshal_string(&pluginname,buffer,&offset,buffersize,1) == 0) {
 	  comm->gc_result=reposplugin_add(pluginname);
 	} else {
 	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		  ("Unmarshalling add plugin request failed %d/%d.",
-		   offset,sizeof(buffer)));
+		   offset,buffersize));
 	  m_log(M_ERROR,M_QUIET,
 		"Unmarshalling add plugin request failed %d/%d.",
-		offset,sizeof(buffer));
+		offset,buffersize);
 	  comm->gc_result=-1;
 	}
 	if (comm->gc_result != 0) {
@@ -230,15 +235,15 @@ int main(int argc, char * argv[])
 	break;
       case GCMD_REMPLUGIN:
 	offset = sizeof(GATHERCOMM);
-	if (unmarshal_string(&pluginname,buffer,&offset,sizeof(buffer),1) == 0) {
+	if (unmarshal_string(&pluginname,buffer,&offset,buffersize,1) == 0) {
 	  comm->gc_result=reposplugin_remove(pluginname);
 	} else {
 	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		  ("Unmarshalling remove plugin request failed %d/%d.",
-		   offset,sizeof(buffer)));
+		   offset,buffersize));
 	  m_log(M_ERROR,M_QUIET,
 		"Unmarshalling remove plugin request failed %d/%d.",
-		offset,sizeof(buffer));
+		offset,buffersize);
 	  comm->gc_result=-1;
 	}
 	if (comm->gc_result != 0) {
@@ -254,29 +259,29 @@ int main(int argc, char * argv[])
       case GCMD_LISTPLUGIN:
 	offset = sizeof(GATHERCOMM);
 	ch=ch_init();
-	if (unmarshal_string(&pluginname,buffer,&offset,sizeof(buffer),1) == 0) {
+	if (unmarshal_string(&pluginname,buffer,&offset,buffersize,1) == 0) {
 	  comm->gc_result=reposplugin_list(pluginname,
 					   &rdef,
 					   ch);
 	  if (comm->gc_result > 0) {
 	    if (marshal_reposplugindefinition(rdef,comm->gc_result,buffer,
-					      &offset,sizeof(buffer))) {
+					      &offset,buffersize)) {
 	      M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		      ("Marshalling list plugin response failed %d/%d.",
-		       offset,sizeof(buffer)));
+		       offset,buffersize));
 	      m_log(M_ERROR,M_QUIET,
 		    "Marshalling list plugin response failed %d/%d.",
-		    offset,sizeof(buffer));
+		    offset,buffersize);
 	      comm->gc_result=-1;
 	    }
 	  }
 	} else {
 	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		  ("Unmarshalling list plugin request failed %d/%d.",
-		   offset,sizeof(buffer)));
+		   offset,buffersize));
 	  m_log(M_ERROR,M_QUIET,
 		"Unmarshalling list plugin request failed %d/%d.",
-		 offset,sizeof(buffer));
+		 offset,buffersize);
 	  comm->gc_result=-1;
 	}
 	if (comm->gc_result == -1) {
@@ -297,14 +302,14 @@ int main(int argc, char * argv[])
 					   ch);
 	if (comm->gc_result > 0) {
 	  if (CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
-			  comm->gc_result*sizeof(MetricResourceId))) {
+			  comm->gc_result*sizeof(MetricResourceId),buffersize)) {
 	    comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
 	      comm->gc_result*sizeof(MetricResourceId);
 	    memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
 		   rid,
 		   comm->gc_result*sizeof(MetricResourceId));
 	    for (i=0; i < comm->gc_result; i++) {
-	      if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_resource) + 1)) {
+	      if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_resource) + 1,buffersize)) {
 		comm->gc_result=-1;
 		break;
 	      }
@@ -312,7 +317,7 @@ int main(int argc, char * argv[])
 		     rid[i].mrid_resource,
 		     strlen(rid[i].mrid_resource) + 1);
 	      comm->gc_datalen += strlen(rid[i].mrid_resource) + 1;
-	      if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_system) + 1)) {
+	      if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_system) + 1,buffersize)) {
 		comm->gc_result=-1;
 		break;
 	      }
@@ -331,8 +336,8 @@ int main(int argc, char * argv[])
 	break;
       case GCMD_SUBSCRIBE:
 	offset = sizeof(GATHERCOMM);
-	if (unmarshal_string(&listener,buffer,&offset,sizeof(buffer),1) == 0 &&
-	    unmarshal_subscriptionrequest(&sr,buffer,&offset,sizeof(buffer)) 
+	if (unmarshal_string(&listener,buffer,&offset,buffersize,1) == 0 &&
+	    unmarshal_subscriptionrequest(&sr,buffer,&offset,buffersize) 
 	    == 0) {
 	  if (subs_enable_forwarding(sr,listener)==0) {
 	    comm->gc_result=repos_subscribe(sr,subs_forward);
@@ -344,15 +349,15 @@ int main(int argc, char * argv[])
 	} else {
 	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		  ("Unmarshalling subscription request failed %d/%d.",
-		   offset,sizeof(buffer)));
+		   offset,buffersize));
 	  comm->gc_result=-1;
 	}
 	comm->gc_datalen=0;
 	break;
       case GCMD_UNSUBSCRIBE:
 	offset = sizeof(GATHERCOMM);
-	if (unmarshal_string(&listener,buffer,&offset,sizeof(buffer),1) == 0 &&
-	    unmarshal_subscriptionrequest(&sr,buffer,&offset,sizeof(buffer)) 
+	if (unmarshal_string(&listener,buffer,&offset,buffersize,1) == 0 &&
+	    unmarshal_subscriptionrequest(&sr,buffer,&offset,buffersize) 
 	    == 0) {
 	  if (subs_disable_forwarding(sr,listener)==0) {
 	    comm->gc_result=repos_unsubscribe(sr,subs_forward);
@@ -364,7 +369,7 @@ int main(int argc, char * argv[])
 	} else {
 	  M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		  ("Unmarshalling unsubscription request failed %d/%d.",
-		   offset,sizeof(buffer)));
+		   offset,buffersize));
 	  comm->gc_result=-1;
 	}
 	comm->gc_datalen=0;
@@ -372,9 +377,9 @@ int main(int argc, char * argv[])
       case GCMD_SETFILTER:
 	offset = sizeof(GATHERCOMM);
 	if (unmarshal_fixed(&globalNum,sizeof(size_t),
-			    buffer,&offset,sizeof(buffer)) == 0 &&
+			    buffer,&offset,buffersize) == 0 &&
 	    unmarshal_fixed(&globalAsc,sizeof(int),
-			    buffer,&offset,sizeof(buffer)) == 0) {
+			    buffer,&offset,buffersize) == 0) {
 	  comm->gc_result=0;
 	} else {
 	  comm->gc_result=-1;
@@ -384,9 +389,9 @@ int main(int argc, char * argv[])
       case GCMD_GETFILTER:
 	offset = sizeof(GATHERCOMM);
 	if (marshal_data(&globalNum,sizeof(size_t),
-			 buffer,&offset,sizeof(buffer)) == 0 &&
+			 buffer,&offset,buffersize) == 0 &&
 	    marshal_data(&globalAsc,sizeof(int),
-			 buffer,&offset,sizeof(buffer)) == 0) {
+			 buffer,&offset,buffersize) == 0) {
 	  comm->gc_result=0;
 	} else {
 	  comm->gc_result=-1;
@@ -421,8 +426,7 @@ int main(int argc, char * argv[])
 	 * 4: ValueItems
 	 */
 	vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
-	vp=vr;
-	vpmax=(char*)buffer+sizeof(buffer);
+	vpmax=(char*)buffer+buffersize;
 	if (vr->vsResource) {
 	  /* adjust pointer to resource name */
 	  vr->vsResource = (char*)vr + sizeof(ValueRequest);
@@ -448,47 +452,80 @@ int main(int argc, char * argv[])
 	  comm->gc_result=reposvalue_getfiltered(vr,ch,globalNum, globalAsc);
 	} 
 	/* copy value data into transfer buffer and compute total length */
+	numval = vr->vsNumValues;
 	if (comm->gc_result != -1) {
-	  if ((char*)vi+sizeof(ValueItem)*vr->vsNumValues < vpmax) {
-	    memcpy(vi,vr->vsValues,sizeof(ValueItem)*vr->vsNumValues);
-	    vp = (char*)vi + sizeof(ValueItem) * vr->vsNumValues;
-	    for (i=0;i<vr->vsNumValues;i++) {
-	      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
-		      ("Returning value for mid=%d, resource %s: %d",
-		       vr->vsId,
-		       vr->vsValues[i].viResource,
-		       *(int*)vr->vsValues[i].viValue));
-	      if ((char*)vp + vr->vsValues[i].viValueLen < vpmax) {
-		memcpy(vp,vr->vsValues[i].viValue,vr->vsValues[i].viValueLen);
-		vi[i].viValue = vp;
-		vp = (char*)vp + vi[i].viValueLen;
-		if (vr->vsValues[i].viResource) {
-		  if ((char*)vp + strlen(vr->vsValues[i].viResource) + 1 < vpmax) {
-		    strcpy(vp,vr->vsValues[i].viResource);
-		    vi[i].viResource = vp;
-		    vp = (char*)vp + strlen(vp)+1;
-		  }
-		} else {
-		  comm->gc_result=-1;
-		  break;
-		}
-		if (vr->vsValues[i].viSystemId) {
-		  if ((char*)vp + strlen(vr->vsValues[i].viSystemId) + 1 < vpmax) {
-		    strcpy(vp,vr->vsValues[i].viSystemId);
-		    vi[i].viSystemId = vp;
-		    vp = (char*)vp + strlen(vp)+1;
-		  }
-		} else {
-		  comm->gc_result=-1;
-		  break;
-		}
-	      } else {
-		comm->gc_result=-1;
-		break;
-	      }
+	  if ((char*)vi+sizeof(ValueItem)*numval > vpmax) {
+	    /* reallocate buffer to required size and adjust ptrs */
+	    buffersize+=sizeof(ValueItem)*numval;
+	    buffer = realloc(buffer,buffersize);
+	    comm = (GATHERCOMM*)buffer;
+	    vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+	    vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen);
+	    vpmax = buffer + buffersize;
+	  } 
+	  memcpy(vi,vr->vsValues,sizeof(ValueItem)*numval);
+	  vp = (char*)vi + sizeof(ValueItem) * numval;
+	  for (i=0;i<numval;i++) {
+	    M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+		    ("Returning value for mid=%d, resource %s: %d",
+		     vr->vsId,
+		     vr->vsValues[i].viResource,
+		     *(int*)vr->vsValues[i].viValue));
+	    if ((char*)vp + vr->vsValues[i].viValueLen > vpmax) {
+	      /* reallocate buffer to required size and adjust ptrs */
+	      /* somewhat heuristic - we assume all the value sizes are equal */
+	      vpoffs = vp - (void*)vi;
+	      buffersize += vr->vsValues[i].viValueLen*numval;
+	      buffer = realloc(buffer,buffersize);
+	      comm = (GATHERCOMM*)buffer;
+	      vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+	      vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen);
+	      vp = (void*)vi + vpoffs;
+	      vpmax = buffer + buffersize;
 	    }
-	  } else {
-	    comm->gc_result=-1;
+	    memcpy(vp,vr->vsValues[i].viValue,vr->vsValues[i].viValueLen);
+	    vi[i].viValue = vp;
+	    vp = (char*)vp + vi[i].viValueLen;
+	    if (vr->vsValues[i].viResource) {
+	      if ((char*)vp + strlen(vr->vsValues[i].viResource) + 1 > vpmax) {
+		/* reallocate buffer to required size and adjust ptrs */
+		/* probably allocating to much in the long run */
+		vpoffs = vp - (void*)vi;
+		buffersize += (strlen(vr->vsValues[i].viResource)+1)*numval;
+		buffer = realloc(buffer,buffersize);
+		comm = (GATHERCOMM*)buffer;			    
+		vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+		vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen);
+		vp = (void*)vi + vpoffs;
+		vpmax = buffer + buffersize;
+	      }
+	      strcpy(vp,vr->vsValues[i].viResource);
+	      vi[i].viResource = vp;
+	      vp = (char*)vp + strlen(vp)+1;
+	    } else {
+	      comm->gc_result=-1;
+	      break;
+	    }
+	    if (vr->vsValues[i].viSystemId) {
+	      if ((char*)vp + strlen(vr->vsValues[i].viSystemId) + 1 > vpmax) {
+		/* reallocate buffer to required size and adjust ptrs */
+		/* probably allocating to much in the long run */
+		vpoffs = vp - (void*)vi;
+		buffersize += (strlen(vr->vsValues[i].viSystemId)+1)*numval;
+		buffer = realloc(buffer,buffersize);
+		comm = (GATHERCOMM*)buffer;
+		vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+		vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen);
+		vp = (void*)vi + vpoffs;
+		vpmax = buffer + buffersize;
+	      }
+	      strcpy(vp,vr->vsValues[i].viSystemId);
+	      vi[i].viSystemId = vp;
+	      vp = (char*)vp + strlen(vp)+1;
+	    } else {
+	      comm->gc_result=-1;
+	      break;
+	    }
 	  }
 	  comm->gc_datalen= (char*)vp - (char*)vr;
 	}
@@ -504,8 +541,7 @@ int main(int argc, char * argv[])
 	 * 6: ValueItems
 	 */
 	vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
-	vp=vr;
-	vpmax=(char*)buffer+sizeof(buffer);
+	vpmax=(char*)buffer+buffersize;
 	if (vr->vsResource) {
 	  /* adjust pointer to resource name */
 	  vr->vsResource = (char*)vr + sizeof(ValueRequest);
@@ -528,47 +564,80 @@ int main(int argc, char * argv[])
 	
 	comm->gc_result=reposvalue_getfiltered(vr,ch,filterNum,filterAsc);
 	/* copy value data into transfer buffer and compute total length */
+	numval = vr->vsNumValues;
 	if (comm->gc_result != -1) {
-	  if ((char*)vi+sizeof(ValueItem)*vr->vsNumValues < vpmax) {
-	    memcpy(vi,vr->vsValues,sizeof(ValueItem)*vr->vsNumValues);
-	    vp = (char*)vi + sizeof(ValueItem) * vr->vsNumValues;
-	    for (i=0;i<vr->vsNumValues;i++) {
-	      M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
-		      ("Returning value for mid=%d, resource %s: %d",
-		       vr->vsId,
-		       vr->vsValues[i].viResource,
-		       *(int*)vr->vsValues[i].viValue));
-	      if ((char*)vp + vr->vsValues[i].viValueLen < vpmax) {
-		memcpy(vp,vr->vsValues[i].viValue,vr->vsValues[i].viValueLen);
-		vi[i].viValue = vp;
-		vp = (char*)vp + vi[i].viValueLen;
-		if (vr->vsValues[i].viResource) {
-		  if ((char*)vp + strlen(vr->vsValues[i].viResource) + 1 < vpmax) {
-		    strcpy(vp,vr->vsValues[i].viResource);
-		    vi[i].viResource = vp;
-		    vp = (char*)vp + strlen(vp)+1;
-		  }
-		} else {
-		  comm->gc_result=-1;
-		  break;
-		}
-		if (vr->vsValues[i].viSystemId) {
-		  if ((char*)vp + strlen(vr->vsValues[i].viSystemId) + 1 < vpmax) {
-		    strcpy(vp,vr->vsValues[i].viSystemId);
-		    vi[i].viSystemId = vp;
-		    vp = (char*)vp + strlen(vp)+1;
-		  }
-		} else {
-		  comm->gc_result=-1;
-		  break;
-		}
-	      } else {
-		comm->gc_result=-1;
-		break;
-	      }
+	  if ((char*)vi+sizeof(ValueItem)*numval > vpmax) {
+	    /* reallocate buffer to required size and adjust ptrs */
+	    buffersize+=sizeof(ValueItem)*numval;
+	    buffer = realloc(buffer,buffersize);
+	    comm = (GATHERCOMM*)buffer;
+	    vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+	    vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen+sizeof(size_t)+sizeof(int));
+	    vpmax = buffer + buffersize;
+	  } 
+	  memcpy(vi,vr->vsValues,sizeof(ValueItem)*numval);
+	  vp = (char*)vi + sizeof(ValueItem) * numval;
+	  for (i=0;i<numval;i++) {
+	    M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+		    ("Returning value for mid=%d, resource %s: %d",
+		     vr->vsId,
+		     vr->vsValues[i].viResource,
+		     *(int*)vr->vsValues[i].viValue));
+	    if ((char*)vp + vr->vsValues[i].viValueLen > vpmax) {
+	      /* reallocate buffer to required size and adjust ptrs */
+	      /* somewhat heuristic - we assume all the value sizes are equal */
+	      vpoffs = vp - (void*)vi;
+	      buffersize += vr->vsValues[i].viValueLen*numval;
+	      buffer = realloc(buffer,buffersize);
+	      comm = (GATHERCOMM*)buffer;
+	      vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+	      vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen+sizeof(size_t)+sizeof(int));
+	      vp = (void*)vi + vpoffs;
+	      vpmax = buffer + buffersize;
 	    }
-	  } else {
-	    comm->gc_result=-1;
+	    memcpy(vp,vr->vsValues[i].viValue,vr->vsValues[i].viValueLen);
+	    vi[i].viValue = vp;
+	    vp = (char*)vp + vi[i].viValueLen;
+	    if (vr->vsValues[i].viResource) {
+	      if ((char*)vp + strlen(vr->vsValues[i].viResource) + 1 > vpmax) {
+		/* reallocate buffer to required size and adjust ptrs */
+		/* probably allocating to much in the long run */
+		vpoffs = vp - (void*)vi;
+		buffersize += (strlen(vr->vsValues[i].viResource)+1)*numval;
+		buffer = realloc(buffer,buffersize);
+		comm = (GATHERCOMM*)buffer;			    
+		vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+		vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen+sizeof(size_t)+sizeof(int));
+		vp = (void*)vi + vpoffs;
+		vpmax = buffer + buffersize;
+	      }
+	      strcpy(vp,vr->vsValues[i].viResource);
+	      vi[i].viResource = vp;
+	      vp = (char*)vp + strlen(vp)+1;
+	    } else {
+	      comm->gc_result=-1;
+	      break;
+	    }
+	    if (vr->vsValues[i].viSystemId) {
+	      if ((char*)vp + strlen(vr->vsValues[i].viSystemId) + 1 > vpmax) {
+		/* reallocate buffer to required size and adjust ptrs */
+		/* probably allocating to much in the long run */
+		vpoffs = vp - (void*)vi;
+		buffersize += (strlen(vr->vsValues[i].viSystemId)+1)*numval;
+		buffer = realloc(buffer,buffersize);
+		comm = (GATHERCOMM*)buffer;
+		vr=(ValueRequest *)(buffer+sizeof(GATHERCOMM));
+		vi=(ValueItem*)((char*)vr+sizeof(ValueRequest)+valreslen+valsyslen+sizeof(size_t)+sizeof(int));
+		vp = (void*)vi + vpoffs;
+		vpmax = buffer + buffersize;
+	      }
+	      strcpy(vp,vr->vsValues[i].viSystemId);
+	      vi[i].viSystemId = vp;
+	      vp = (char*)vp + strlen(vp)+1;
+	    } else {
+	      comm->gc_result=-1;
+	      break;
+	    }
 	  }
 	  comm->gc_datalen= (char*)vp - (char*)vr;
 	}
@@ -584,18 +653,34 @@ int main(int argc, char * argv[])
 	comm->gc_datalen=0;
 	break;
       }
-      hdr.mc_type=GATHERMC_RESP;
-      if (sizeof(GATHERCOMM) + comm->gc_datalen > sizeof(buffer)) {
+      if (sizeof(GATHERCOMM) + comm->gc_datalen > buffersize) {
 	m_log(M_ERROR,M_QUIET,
 	      "Error: Available data size is exceeding buffer.\n");
       }
+      if (sizeof(GATHERCOMM) + comm->gc_datalen > GATHERVALBUFLEN) {
+	struct {
+	  GATHERCOMM comm;
+	  size_t     sz;
+	} moretocomm;
+	moretocomm.comm.gc_result = 0;
+	moretocomm.comm.gc_datalen = sizeof(size_t);
+	moretocomm.sz = sizeof(GATHERCOMM)+comm->gc_datalen;
+	hdr.mc_type=GATHERMC_RESPMORE;
+	M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Big buffer size: %z, responding with GATHERMC_RESPMORE.",
+					  moretocomm.sz));
+	mcs_sendresponse(&hdr,&moretocomm,sizeof(moretocomm));
+      }
+      hdr.mc_type=GATHERMC_RESP;
       mcs_sendresponse(&hdr,buffer,sizeof(GATHERCOMM)+comm->gc_datalen);
-      bufferlen=sizeof(buffer);
+      bufferlen=buffersize;
     }
   }
   mcs_term();
   m_log(M_INFO,M_QUIET,"Reposd is shutting down.\n");
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Reposd is shutting down."));
+  if (buffer) {
+    free(buffer);
+  }
   return 0;
 }
 

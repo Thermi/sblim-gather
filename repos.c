@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.19 2006/02/22 09:39:09 mihajlov Exp $
+ * $Id: repos.c,v 1.20 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -111,6 +111,7 @@ int repos_terminate()
     while (pluginhead) {
       reposplugin_remove(pluginhead->plugin->rpName);
     };
+    MetricRepository->mrep_shutdown();
     RPR_FinishRegistry();
     return 0;
   }

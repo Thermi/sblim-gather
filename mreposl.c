@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.10 2006/02/22 11:48:46 mihajlov Exp $
+ * $Id: mreposl.c,v 1.11 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -49,6 +49,8 @@ int LocalMetricRetrieve (int mid, MetricResourceId *resource,
 int LocalMetricRelease (MetricValue *mv);
 int LocalMetricRegisterCallback (MetricCallback *mcb, int mid, int state);
 
+int LocalMetricShutdown();
+
 static MetricRepositoryIF mrep = {
   "LocalRepository",
   LocalMetricAdd,
@@ -57,6 +59,7 @@ static MetricRepositoryIF mrep = {
   LocalMetricRegisterCallback,
   LocalMetricResources,
   LocalMetricFreeResources,
+  LocalMetricShutdown
 };
 
 MetricRepositoryIF *MetricRepository = &mrep;
@@ -367,6 +370,31 @@ static int resourceTest(MetricValue * actual, MetricResourceId * required)
 
 static int PRUNE_INTERVAL=0; /* 600 */
 static int EXPIRATION_INTERVAL=0; /* 2 * PRUNE_INTERVAL */
+
+int LocalMetricShutdown()
+{
+  int              i;
+  MReposValue      *v, *bv;
+  
+  if (MWriteLock(&LocalRepLock)==0) {
+    for (i=0; i<LocalReposNumIds; i++) {
+      bv = NULL;
+      v = LocalReposHeader[i].mrh_first;
+      /* now delete all metrics*/
+      while (v) {
+	free(v->mrv_value->mvResource); 
+	free(v->mrv_value->mvData);
+	free(v->mrv_value->mvSystemId);
+	free(v->mrv_value);
+	bv=v;
+	v=v->mrv_next;
+	free(bv);
+      }
+    }
+    MWriteUnlock(&LocalRepLock);
+  }
+  return 0;
+}
 
 static int pruneRepository()
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: mreposp.c,v 1.4 2004/11/04 09:47:03 mihajlov Exp $
+ * $Id: mreposp.c,v 1.5 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -31,12 +31,17 @@ int ProxyMetricRetrieve (int mid, MetricResourceId *resource,
 			 MetricValue **mv, int *num, 
 			 time_t from, time_t to, int maxnum);
 int ProxyMetricRelease (MetricValue *mv);
+int ProxyShutdown ();
 
 static MetricRepositoryIF mrep = {
   "ProxyRepository",
   ProxyMetricAdd,
   ProxyMetricRetrieve,
-  ProxyMetricRelease
+  ProxyMetricRelease,
+  NULL,
+  NULL,
+  NULL,
+  ProxyShutdown
 };
 
 MetricRepositoryIF *MetricRepository = &mrep;
@@ -109,3 +114,10 @@ int ProxyMetricRelease (MetricValue *mv)
 {
   return -1;
 }
+
+int ProxyShutdown ()
+{
+  return -1;
+}
+
+

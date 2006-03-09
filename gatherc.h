@@ -1,5 +1,5 @@
 /*
- * $Id: gatherc.h,v 1.8 2006/02/22 09:39:09 mihajlov Exp $
+ * $Id: gatherc.h,v 1.9 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -28,6 +28,8 @@ extern "C" {
 
 #define GATHERMC_REQ       1
 #define GATHERMC_RESP      2 
+#define GATHERMC_REQMORE   3
+#define GATHERMC_RESPMORE  4 
 
 #define GCMD_INIT          1
 #define GCMD_TERM          2
@@ -50,7 +52,7 @@ extern "C" {
 #define GCMD_QUIT          99
 
 #define GATHERBUFLEN       1000
-#define GATHERVALBUFLEN    1000000
+#define GATHERVALBUFLEN    10000
 
 #define GATHER_COMMID "gather"
 #define REPOS_COMMID  "repos"

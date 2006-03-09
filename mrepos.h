@@ -1,5 +1,5 @@
 /*
- * $Id: mrepos.h,v 1.6 2004/12/02 17:46:49 mihajlov Exp $
+ * $Id: mrepos.h,v 1.7 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -55,6 +55,7 @@ typedef int (MetricRegisterCallback) (MetricCallback* mcb, int mid, int state);
 typedef int (ResourcesRetrieve) (int mid, MetricResourceId **resources,
 				 const char * resource, const char * system);
 typedef int (ResourcesRelease) (int mid, MetricResourceId *resources);
+typedef int (RepositoryShutdown) (void);
   
 typedef struct _MetricRepositoryIF {
   char                   *mrep_name;
@@ -64,6 +65,7 @@ typedef struct _MetricRepositoryIF {
   MetricRegisterCallback *mrep_regcallback;
   ResourcesRetrieve      *mres_retrieve;
   ResourcesRelease       *mres_release;
+  RepositoryShutdown     *mrep_shutdown;
 } MetricRepositoryIF;
 
 extern MetricRepositoryIF *MetricRepository;

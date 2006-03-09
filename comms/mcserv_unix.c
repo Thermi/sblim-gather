@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv_unix.c,v 1.7 2006/02/08 15:13:51 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.8 2006/03/09 15:55:58 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -226,20 +226,38 @@ int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
 
 int mcs_sendresponse(MC_REQHDR *hdr, void *respdata, size_t respdatalen)
 {
-  int    sentlen;
+  int    sentlen=0;
+  int    writelen=0;
+  int    startblock=0;
   struct iovec iov[3] = {
     {hdr,sizeof(MC_REQHDR)},
     {&respdatalen,sizeof(size_t)},
     {respdata,respdatalen}
   };
   if (hdr && hdr->mc_handle != -1 && respdata) {
-    sentlen = writev(hdr->mc_handle,iov,3);
-    if (sentlen == (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR)))
+    do {
+      while (startblock < 3) {
+	if ((ssize_t)iov[startblock].iov_len - writelen < 0) {
+	  writelen -= iov[startblock].iov_len;
+	  startblock +=1;
+	} else {
+	  iov[startblock].iov_base += writelen;
+	  iov[startblock].iov_len -= writelen;
+	  break;
+	}
+      }
+      writelen = writev(hdr->mc_handle,iov+startblock,3-startblock);
+      sentlen += writelen;
+    } while (writelen > 0 && 
+	     sentlen < (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR)));
+    if (sentlen == (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR))) {
       return 0;
-    m_log(M_ERROR,M_QUIET,
-	  "mcs_sendresponse: send error, wanted %d got %d, error string %s\n",
-	  respdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
-	  sentlen, strerror(errno));
+    } else {
+      m_log(M_ERROR,M_QUIET,
+	    "mcs_sendresponse: send error, wanted %d got %d, error string %s\n",
+	    respdatalen+sizeof(size_t)+sizeof(MC_REQHDR),
+	    sentlen, strerror(errno));
+    }
   }
   return -1;
 }
