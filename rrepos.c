@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.26 2006/03/09 15:55:58 mihajlov Exp $
+ * $Id: rrepos.c,v 1.27 2006/03/10 12:21:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -587,17 +587,16 @@ int rreposplugin_list(const char *pluginname,
 		      COMMHEAP ch)
 {
   MC_REQHDR     hdr;
-  char          xbuf[GATHERVALBUFLEN];
+  char         *xbuf=ch_alloc(ch,GATHERVALBUFLEN);
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
-  size_t        commlen=sizeof(xbuf);
+  size_t        commlen=GATHERVALBUFLEN;
   off_t         offset=sizeof(GATHERCOMM);
-  char         *rbuf;
 
   if (pluginname && *pluginname) {
     INITCHECK();
     hdr.mc_type=GATHERMC_REQ;
     hdr.mc_handle=-1;
-    if (marshal_string(pluginname,xbuf,&offset,sizeof(xbuf),1) == 0) {
+    if (marshal_string(pluginname,xbuf,&offset,commlen,1) == 0) {
       comm->gc_cmd=GCMD_LISTPLUGIN;
       comm->gc_datalen=offset;
       comm->gc_result=0;
@@ -607,16 +606,26 @@ int rreposplugin_list(const char *pluginname,
 		      sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	  mcc_response(&hdr,comm,&commlen)==0 &&
 	  commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+	if (hdr.mc_type == GATHERMC_RESPMORE) {
+	  /* allocate buffer */
+	  commlen = *(size_t*)(comm+1);
+	  if (commlen > GATHERVALBUFLEN) {
+	    xbuf = ch_alloc(ch,commlen);
+	    comm = (GATHERCOMM*)xbuf;
+	  }
+	  if (mcc_response(&hdr,comm,&commlen) != 0 ||
+	      commlen != (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+	    pthread_mutex_unlock(&rrepos_mutex);
+	    return -1;
+	  }
+	}
 	pthread_mutex_unlock(&rrepos_mutex);
 	if (comm->gc_result > 0) {
-	  /* allocate COMMHEAP buffer for return data and unmarshall */
-	  rbuf = ch_alloc(ch,commlen);
-	  memcpy(rbuf,xbuf,commlen);
-	  if (unmarshal_reposplugindefinition(rdef,comm->gc_result,rbuf,
+	  if (unmarshal_reposplugindefinition(rdef,comm->gc_result,xbuf,
 					      &offset,commlen)) {
 	    M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
 		    ("rreposplugin_list result unmarshalling error, %d/%d",
-		     offset,sizeof(xbuf)));    
+		     offset,commlen));    
 	    return -1;
 	  }
 	} 
@@ -627,7 +636,7 @@ int rreposplugin_list(const char *pluginname,
     } else {
       M_TRACE(MTRACE_ERROR,MTRACE_RREPOS,
 	      ("rreposplugin_list marshalling error, %d/%d",
-	       offset,sizeof(xbuf)));    
+	       offset,commlen));    
     }
   }
   return -1;   
@@ -638,9 +647,9 @@ int rreposresource_list(const char * metricid,
 			COMMHEAP ch)
 {
   MC_REQHDR     hdr;
-  char          xbuf[GATHERVALBUFLEN];
+  char          *xbuf=ch_alloc(ch,GATHERVALBUFLEN);
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
-  size_t        commlen=sizeof(xbuf);
+  size_t        commlen=GATHERVALBUFLEN;
   int           i;
   char         *stringpool;
 
@@ -658,20 +667,26 @@ int rreposresource_list(const char * metricid,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+      if (hdr.mc_type == GATHERMC_RESPMORE) {
+	/* allocate buffer */
+	commlen = *(size_t*)(comm+1);
+	if (commlen > GATHERVALBUFLEN) {
+	  xbuf = ch_alloc(ch,commlen);
+	  comm = (GATHERCOMM*)xbuf;
+	}
+	if (mcc_response(&hdr,comm,&commlen) != 0 ||
+	    commlen != (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+	  pthread_mutex_unlock(&rrepos_mutex);
+	  return -1;
+	}
+      }
       /* copy data into result buffer and adjust string pointers */
       if (comm->gc_result>0) {
 	*rid = ch_alloc(ch,comm->gc_result*sizeof(MetricResourceId));
 	memcpy(*rid,xbuf+sizeof(GATHERCOMM)+strlen(metricid)+1,
 	       sizeof(MetricResourceId)*comm->gc_result);
-	stringpool=
-	  ch_alloc(ch,
-		   comm->gc_datalen - 
-		   sizeof(GATHERCOMM)+strlen(metricid)+1+
-		   comm->gc_result*sizeof(MetricResourceId));
-	memcpy(stringpool,xbuf+sizeof(GATHERCOMM)+strlen(metricid)+1+
-	       comm->gc_result*sizeof(MetricResourceId),
-	       comm->gc_datalen - sizeof(GATHERCOMM)+strlen(metricid)+1+
-	       comm->gc_result*sizeof(MetricResourceId));
+	stringpool=xbuf+sizeof(GATHERCOMM)+strlen(metricid)+1+
+	  comm->gc_result*sizeof(MetricResourceId);
 	for (i=0;i<comm->gc_result;i++) {
 	  (*rid)[i].mrid_resource = stringpool;
 	  stringpool += strlen(stringpool) + 1;

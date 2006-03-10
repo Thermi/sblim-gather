@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.11 2006/02/08 20:26:45 mihajlov Exp $
+ * $Id: gatherd.c,v 1.12 2006/03/10 12:21:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -32,7 +32,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#define CHECKBUFFER(comm,buffer,sz) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=sizeof(buffer))
+#define CHECKBUFFER(comm,buffer,sz,len) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=len)
 
 int main(int argc, char * argv[])
 {
@@ -40,8 +40,9 @@ int main(int argc, char * argv[])
   MC_REQHDR     hdr;
   GATHERCOMM   *comm;
   COMMHEAP     *ch;
-  char          buffer[GATHERVALBUFLEN];
-  size_t        bufferlen=sizeof(buffer);
+  size_t        buffersize=GATHERVALBUFLEN;
+  char         *buffer=malloc(buffersize);
+  size_t        bufferlen=buffersize;
   char          cfgbuf[1000];
 #ifndef NOTRACE
   char         *cfgidx1, *cfgidx2;
@@ -112,7 +113,7 @@ int main(int argc, char * argv[])
     }
   }
 
-  memset(buffer, 0, sizeof(buffer));
+  memset(buffer, 0, buffersize);
 
   while (!quit && mcs_accept(&hdr)==0) {
     while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
@@ -166,26 +167,30 @@ int main(int argc, char * argv[])
 					  &pdef,
 					  ch);
 	if (comm->gc_result > 0) {
-	  if (CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
-			  comm->gc_result*sizeof(PluginDefinition))) {
-	    comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
-	      comm->gc_result*sizeof(PluginDefinition);
-	    memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
-		   pdef,
-		   comm->gc_result*sizeof(PluginDefinition));
-	    for (i=0; i < comm->gc_result; i++) {
-	      if (!CHECKBUFFER(comm,buffer,strlen(pdef[i].pdName) + 1)) {
-		comm->gc_result=-1;
-		break;
-	      }
-	      memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		     pdef[i].pdName,
-		     strlen(pdef[i].pdName) + 1);
-	      comm->gc_datalen += strlen(pdef[i].pdName) + 1;
-	    }  
-	  } else {
-	    comm->gc_result=-1;
+	  while (!CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
+			      comm->gc_result*sizeof(PluginDefinition),buffersize)) {
+	    /* heuristic approach for resize */
+	    buffersize += comm->gc_result * (sizeof(PluginDefinition) + 20 );
+	    buffer = realloc(buffer, buffersize);
+	    comm = (GATHERCOMM*)buffer;	    
 	  }
+	  comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
+	    comm->gc_result*sizeof(PluginDefinition);
+	  memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
+		 pdef,
+		 comm->gc_result*sizeof(PluginDefinition));
+	  for (i=0; i < comm->gc_result; i++) {
+	    if (!CHECKBUFFER(comm,buffer,strlen(pdef[i].pdName) + 1,buffersize)) {
+	      /* heuristic approach for resize */
+	      buffersize += strlen(pdef[i].pdName) + 1;
+	      buffer = realloc(buffer, buffersize);
+	      comm = (GATHERCOMM*)buffer;	    
+	    }
+	    memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
+		   pdef[i].pdName,
+		   strlen(pdef[i].pdName) + 1);
+	    comm->gc_datalen += strlen(pdef[i].pdName) + 1;
+	  }  
 	} else {
 	  comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1;
 	}
@@ -201,13 +206,27 @@ int main(int argc, char * argv[])
 	comm->gc_datalen=0;
 	break;
       }
-      hdr.mc_type=GATHERMC_RESP;
-      if (sizeof(GATHERCOMM) + comm->gc_datalen > sizeof(buffer)) {
+      if (sizeof(GATHERCOMM) + comm->gc_datalen > buffersize) {
 	m_log(M_ERROR,M_QUIET,
 	      "Error: Available data size is exceeding buffer.\n");
       }
+      if (sizeof(GATHERCOMM) + comm->gc_datalen > GATHERVALBUFLEN) {
+	/* send out a RESPMORE response */
+	struct {
+	  GATHERCOMM comm;
+	  size_t     sz;
+	} moretocomm;
+	moretocomm.comm.gc_result = 0;
+	moretocomm.comm.gc_datalen = sizeof(size_t);
+	moretocomm.sz = sizeof(GATHERCOMM)+comm->gc_datalen;
+	hdr.mc_type=GATHERMC_RESPMORE;
+	M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Big buffer size: %z, responding with GATHERMC_RESPMORE.",
+					  moretocomm.sz));
+	mcs_sendresponse(&hdr,&moretocomm,sizeof(moretocomm));
+      }
+      hdr.mc_type=GATHERMC_RESP;
       mcs_sendresponse(&hdr,buffer,sizeof(GATHERCOMM)+comm->gc_datalen);
-      bufferlen=sizeof(buffer);
+      bufferlen=buffersize;
     }
   }
   mcs_term();

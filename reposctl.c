@@ -1,5 +1,5 @@
 /*
- * $Id: reposctl.c,v 1.16 2006/03/07 12:55:20 mihajlov Exp $
+ * $Id: reposctl.c,v 1.17 2006/03/10 12:21:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -38,6 +38,7 @@ static const char* commands[] = {
   "\tq\t\tquit\n",
   "\tg id [system [resource [from [to]]]]\tget metric value\n",
   "\tf id num asc [system [resource [from [to]]]]\tget filtered (top-n, sorted) metric value\n",
+  "\tr id\tlist resources for metric\n",
   "\tG\t\tget global filter\n",
   "\tF num asc\tset global filter\n",
   "\tk\t\tkill daemon\n",
@@ -69,6 +70,7 @@ int main()
   ValueRequest      vr;
   SubscriptionRequest sr;
   RepositoryPluginDefinition *rdef;
+  MetricResourceId  *resid;
   
   while(fgets(buf,sizeof(buf),stdin)) {
     cmd = buf[0];
@@ -187,6 +189,20 @@ int main()
 	printf("Failed\n");
       } else {
 	printvalue(&vr);
+      }
+      ch_release(commh);
+      break;
+    case 'r':
+      commh=ch_init();
+      sscanf(arg,"%s",argbuf);
+      pnum = rreposresource_list(argbuf,&resid,commh);
+      if (pnum >= 0) {
+	printf("Resources for metric %s:\n",argbuf);
+	for (i=0;i<pnum;i++) {
+	  printf("System=\"%s\", Resource=\"%s\"\n",resid[i].mrid_system, resid[i].mrid_resource);
+	}
+      } else {
+	printf("Failed\n");
       }
       ch_release(commh);
       break;

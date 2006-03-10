@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.28 2006/03/09 15:55:58 mihajlov Exp $
+ * $Id: reposd.c,v 1.29 2006/03/10 12:21:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -264,8 +264,24 @@ int main(int argc, char * argv[])
 					   &rdef,
 					   ch);
 	  if (comm->gc_result > 0) {
-	    if (marshal_reposplugindefinition(rdef,comm->gc_result,buffer,
-					      &offset,buffersize)) {
+	    /* heuristical size check */
+	    if (buffersize < comm->gc_result * (sizeof(RepositoryPluginDefinition) + 40 ) ) {
+	      buffersize += comm->gc_result * (sizeof(RepositoryPluginDefinition) + 40 );
+	      buffer = realloc(buffer, buffersize);
+	      comm = (GATHERCOMM*)buffer;
+	    }
+	    for (i=0;1;i++) {
+	      /* heuristical retry strategy - double the buffer size */
+	      if (marshal_reposplugindefinition(rdef,comm->gc_result,buffer,
+						&offset,buffersize) == 0) {
+		break;
+	      }
+	      if (i < 3) {
+		buffersize = buffersize * 2;
+		buffer = realloc(buffer, buffersize);
+		comm = (GATHERCOMM*)buffer;
+		continue;
+	      }
 	      M_TRACE(MTRACE_ERROR,MTRACE_REPOS,
 		      ("Marshalling list plugin response failed %d/%d.",
 		       offset,buffersize));
@@ -273,6 +289,7 @@ int main(int argc, char * argv[])
 		    "Marshalling list plugin response failed %d/%d.",
 		    offset,buffersize);
 	      comm->gc_result=-1;
+	      break;
 	    }
 	  }
 	} else {
@@ -301,33 +318,39 @@ int main(int argc, char * argv[])
 					   &rid,
 					   ch);
 	if (comm->gc_result > 0) {
-	  if (CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
+	  if (!CHECKBUFFER(comm,buffer,strlen(buffer+sizeof(GATHERCOMM))+ 1 +
 			  comm->gc_result*sizeof(MetricResourceId),buffersize)) {
-	    comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
-	      comm->gc_result*sizeof(MetricResourceId);
-	    memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
-		   rid,
-		   comm->gc_result*sizeof(MetricResourceId));
-	    for (i=0; i < comm->gc_result; i++) {
-	      if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_resource) + 1,buffersize)) {
-		comm->gc_result=-1;
-		break;
-	      }
-	      memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		     rid[i].mrid_resource,
-		     strlen(rid[i].mrid_resource) + 1);
-	      comm->gc_datalen += strlen(rid[i].mrid_resource) + 1;
-	      if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_system) + 1,buffersize)) {
-		comm->gc_result=-1;
-		break;
-	      }
-	      memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
-		     rid[i].mrid_system,
-		     strlen(rid[i].mrid_system) + 1);
-	      comm->gc_datalen += strlen(rid[i].mrid_system) + 1;
+	    /* heuristic approach for resizing of buffer */
+	    buffersize += comm->gc_result * (sizeof(MetricResourceId) + 40 );
+	    buffer = realloc(buffer, buffersize);
+	    comm = (GATHERCOMM*)buffer;
+	  }
+	  comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1 +
+	    comm->gc_result*sizeof(MetricResourceId);
+	  memcpy(buffer+sizeof(GATHERCOMM)+strlen(buffer+sizeof(GATHERCOMM))+1,
+		 rid,
+		 comm->gc_result*sizeof(MetricResourceId));
+	  for (i=0; i < comm->gc_result; i++) {
+	    if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_resource) + 1,buffersize)) {
+	      /* heuristic approach for resizing of buffer */
+	      buffersize = buffersize + (comm->gc_result)*strlen(rid[i].mrid_resource);
+	      buffer = realloc(buffer, buffersize);
+	      comm = (GATHERCOMM*)buffer;
 	    }
-	  } else {
-	    comm->gc_result=-1;
+	    memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
+		   rid[i].mrid_resource,
+		   strlen(rid[i].mrid_resource) + 1);
+	    comm->gc_datalen += strlen(rid[i].mrid_resource) + 1;
+	    if (!CHECKBUFFER(comm,buffer,strlen(rid[i].mrid_system) + 1,buffersize)) {
+	      /* heuristic approach for resizing of buffer */
+	      buffersize = buffersize + (comm->gc_result)*strlen(rid[i].mrid_system);
+	      buffer = realloc(buffer, buffersize);
+	      comm = (GATHERCOMM*)buffer;
+	    }
+	    memcpy(buffer+sizeof(GATHERCOMM)+comm->gc_datalen,
+		   rid[i].mrid_system,
+		   strlen(rid[i].mrid_system) + 1);
+	    comm->gc_datalen += strlen(rid[i].mrid_system) + 1;
 	  }
 	} else {
 	  comm->gc_datalen=strlen(buffer+sizeof(GATHERCOMM))+ 1;
@@ -658,6 +681,7 @@ int main(int argc, char * argv[])
 	      "Error: Available data size is exceeding buffer.\n");
       }
       if (sizeof(GATHERCOMM) + comm->gc_datalen > GATHERVALBUFLEN) {
+	/* send out a RESPMORE response */
 	struct {
 	  GATHERCOMM comm;
 	  size_t     sz;

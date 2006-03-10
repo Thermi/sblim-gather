@@ -1,5 +1,5 @@
 /*
- * $Id: rgather.c,v 1.11 2006/02/13 09:04:17 mihajlov Exp $
+ * $Id: rgather.c,v 1.12 2006/03/10 12:21:02 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -269,9 +269,9 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
 		       COMMHEAP ch)
 {
   MC_REQHDR     hdr;
-  char          xbuf[GATHERVALBUFLEN];
+  char         *xbuf=ch_alloc(ch,GATHERVALBUFLEN);
   GATHERCOMM   *comm=(GATHERCOMM*)xbuf;
-  size_t        commlen=sizeof(xbuf);
+  size_t        commlen=GATHERVALBUFLEN;
   int           i;
   char         *stringpool;
 
@@ -288,6 +288,19 @@ int rmetricplugin_list(const char *pluginname, PluginDefinition **pdef,
 		    sizeof(GATHERCOMM)+comm->gc_datalen)==0 &&
 	mcc_response(&hdr,comm,&commlen)==0 &&
 	commlen == (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+      if (hdr.mc_type == GATHERMC_RESPMORE) {
+	/* allocate buffer */
+	commlen = *(size_t*)(comm+1);
+	if (commlen > GATHERVALBUFLEN) {
+	  xbuf = ch_alloc(ch,commlen);
+	  comm = (GATHERCOMM*)xbuf;
+	}
+	if (mcc_response(&hdr,comm,&commlen) != 0 ||
+	    commlen != (sizeof(GATHERCOMM) + comm->gc_datalen)) {
+	  pthread_mutex_unlock(&rgather_mutex);
+	  return -1;
+	}
+      }
       /* copy data into result buffer and adjust string pointers */
       if (comm->gc_result>0) {
 	*pdef = ch_alloc(ch,comm->gc_result*sizeof(PluginDefinition));

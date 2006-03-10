@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.11 2006/03/09 15:55:58 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.12 2006/03/10 12:21:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -52,6 +52,8 @@ static struct {
   int  sn_requests;
 } sockname[MAXCONN] = {{{0},0}};
 
+/* writev helper for partial writes */
+static int mc_writev(int handle, struct iovec *iov, ssize_t numblock);
 
 int mcc_init(const char *commid)
 {
@@ -213,7 +215,7 @@ int mcc_request(int commhandle, MC_REQHDR *hdr,
     }
   }
   M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_request write"));
-  sentlen = writev(sockname[commhandle].sn_handle,iov,3);
+  sentlen = mc_writev(sockname[commhandle].sn_handle,iov,3);
   if (sentlen <= 0) {
     if (_mcc_connect(commhandle)<0 ) {
       m_seterrno(MC_ERR_NOCONNECT);
@@ -229,7 +231,7 @@ int mcc_request(int commhandle, MC_REQHDR *hdr,
       return -1;
     } else {
       M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_request retry write"));
-      sentlen = writev(sockname[commhandle].sn_handle,iov,3);
+      sentlen = mc_writev(sockname[commhandle].sn_handle,iov,3);
     }
   }
   if (sentlen == (reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR))) {
@@ -344,4 +346,27 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
 	   " system error string: %s",
 	   strerror(errno)));
   return -1;
+}
+
+static int mc_writev(int handle, struct iovec *iov, ssize_t numblock)
+{
+  int startblock = 0;
+  int writelen = 0;
+  int sentlen = 0;
+  do {
+    while (startblock < numblock) {
+      /* advance start block and offset */
+      if ((ssize_t)iov[startblock].iov_len - writelen < 0) {
+	writelen -= iov[startblock].iov_len;
+	startblock +=1;
+      } else {
+	iov[startblock].iov_base += writelen;
+	iov[startblock].iov_len -= writelen;
+	break;
+      }
+    }
+    writelen = writev(handle,iov+startblock,numblock-startblock);
+    sentlen += writelen;
+  } while (writelen > 0 && startblock < numblock );
+  return sentlen;
 }
