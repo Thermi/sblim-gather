@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.21 2006/03/14 09:27:26 mihajlov Exp $
+ * $Id: repos.c,v 1.22 2006/03/14 12:34:24 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -353,9 +353,12 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	vs->vsValues=ch_alloc(ch,vs->vsNumValues*sizeof(ValueItem));
 	vs->vsDataType=mc->mcDataType;
 	for (j=0;j < resnum; j++) {
+	  if (numv[j]==0) {
+	    continue;
+	  }
 	  syslen=strlen(mv[j][numv[j]-1].mvSystemId) + 1;
 	  reslen=strlen(mv[j][numv[j]-1].mvResource) + 1;
-	  if (useIntervals && numv[j] > 0) {
+	  if (useIntervals) {
 	    vs->vsValues[actnum].viCaptureTime=mv[j][numv[j]-1].mvTimeStamp;
 	    vs->vsValues[actnum].viDuration=
 	      mv[j][0].mvTimeStamp -

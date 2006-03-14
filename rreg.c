@@ -1,5 +1,5 @@
 /*
- * $Id: rreg.c,v 1.2 2006/03/14 09:27:26 mihajlov Exp $
+ * $Id: rreg.c,v 1.3 2006/03/14 12:34:24 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -89,7 +89,7 @@ int RPR_IdForString(const char *pluginname, const char * name)
   size_t len;
   char fullname[300];
   /* this is called quite often - make it efficient */
-  len = strlen(pluginname)+1;
+  len = strlen(pluginname);
   memcpy(fullname,pluginname,len);
   fullname[len]=':';
   strcpy(fullname+len+1,name);

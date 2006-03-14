@@ -1,6 +1,6 @@
 2006-03-14  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
-	* mrepos.h, mreposl.c, repos.c: 
+	* mrepos.h, mreposl.c, repos.c, mreposp.c: 
 	Bug 1449436: Changed repository metric retrieval interface to internally
 	process the resource information. This allows to retrieve the metric values
 	for a set of resources in one call to the repository.
