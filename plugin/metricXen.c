@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.2 2006/02/23 13:20:39 obenke Exp $
+ * $Id: metricXen.c,v 1.3 2006/03/14 15:08:35 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -456,7 +456,7 @@ int metricRetrInternalMemory(int mid, MetricReturner mret)
 	for (i = 0; i < num_domains; i++) {
 
 	    sprintf(buf,
-		    "c%lldm%lldt%llde\0",
+		    "c%lldm%lldt%llde",
 		    xen_statistics.claimed_memory[i],
 		    xen_statistics.max_memory[i], total_memory);
 	    size = strlen(buf);
@@ -574,7 +574,7 @@ int parseXm()
     buf_end = (char *) &buffer[BUFFER_MAX] - 1;
 
     while (buf_current < buf_end) {
-	if (EOF == (*buf_current++ = fgetc(fp)))
+      if (EOF == (signed char)(*buf_current++ = fgetc(fp)))
 	    break;
     }
 
@@ -702,7 +702,7 @@ int parseXmInfo()
     buf_end = (char *) &buffer[BUFFER_MAX] - 1;
 
     while (buf_current < buf_end) {
-	if (EOF == (*buf_current++ = fgetc(fp)))
+      if (EOF == (signed char)(*buf_current++ = fgetc(fp)))
 	    break;
     }
 

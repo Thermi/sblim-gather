@@ -15,6 +15,7 @@ Bugs fixed:
 - 1444826 Fix some portability issues
 - 1446497 Removed metric instance number limit
 - 1449436 Enhanced metric repository performance for large data volumes
+- 1449628 Fixed segfault in Xen plugin
 
 Changes in Version 2.0.4
 ========================
