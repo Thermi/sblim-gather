@@ -1,5 +1,5 @@
 /*
- * $Id: rrepos.c,v 1.27 2006/03/10 12:21:02 mihajlov Exp $
+ * $Id: rrepos.c,v 1.28 2006/03/14 09:27:26 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -143,12 +143,17 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
   char              xbuf[GATHERBUFLEN];
   GATHERCOMM       *comm=(GATHERCOMM*)xbuf;
   size_t            dataoffs=sizeof(GATHERCOMM);
+  size_t            repospluginlen;
+  size_t            metriclen;
+  size_t            resourcelen;
+  size_t            systemlen;
 
   if (mv) {
     /* determine system id */
     if (strlen(_systemId)==0) {
       gethostname(_systemId,sizeof(_systemId));
     }
+    systemlen=strlen(_systemId) + 1;
     RINITCHECK();
 #if SIZEOF_LONG == 8
     /* flag the padding areas */
@@ -156,32 +161,35 @@ int rrepos_put(const char *reposplugin, const char *metric, MetricValue *mv)
     mv-> mv64Pad2 = 0x00ffff00;
 #endif
     comm->gc_cmd     = htons(GCMD_SETVALUE);
-    comm->gc_datalen = htonl(strlen(reposplugin) + 1 +
-			     strlen(metric) + 1 +
+    repospluginlen   = strlen(reposplugin) + 1;
+    metriclen        = strlen(metric) + 1;
+    resourcelen      = (mv->mvResource?strlen(mv->mvResource) + 1:0);
+    comm->gc_datalen = htonl(repospluginlen +
+			     metriclen +
 			     sizeof(MetricValue) + 
-			     (mv->mvResource?strlen(mv->mvResource) + 1:0) +
+			     resourcelen +
 			     mv->mvDataLength +
-			     strlen(_systemId) + 1);
-    comm->gc_result  = htons(0);
+			     systemlen);
+    comm->gc_result  = 0;
     /* prepare data */
     mv->mvId         = htonl(mv->mvId);
     mv->mvTimeStamp  = htonl(mv->mvTimeStamp);
     mv->mvDataType   = htonl(mv->mvDataType);
     mv->mvDataLength = htonl(mv->mvDataLength);
     /* copy data into xbuf */ 
-    strcpy(xbuf+dataoffs,reposplugin);
-    dataoffs+=strlen(reposplugin)+1;
-    strcpy(xbuf+dataoffs,metric);
-    dataoffs+=strlen(metric)+1;
+    memcpy(xbuf+dataoffs,reposplugin,repospluginlen);
+    dataoffs+=repospluginlen;
+    memcpy(xbuf+dataoffs,metric,metriclen);
+    dataoffs+=metriclen;
     memcpy(xbuf+dataoffs,mv,sizeof(MetricValue));
     dataoffs+=sizeof(MetricValue);
-    if (mv->mvResource) {
-      strcpy(xbuf+dataoffs,mv->mvResource);
-      dataoffs+=strlen(mv->mvResource)+1;
+    if (resourcelen) {
+      memcpy(xbuf+dataoffs,mv->mvResource,resourcelen);
+      dataoffs+=resourcelen;
     }
     memcpy(xbuf+dataoffs,mv->mvData,ntohl(mv->mvDataLength));
     dataoffs+=ntohl(mv->mvDataLength);
-    strcpy(xbuf+dataoffs,_systemId);
+    memcpy(xbuf+dataoffs,_systemId,systemlen);
     pthread_mutex_lock(&rrepos_mutex);
     if (rcc_request(comm,sizeof(GATHERCOMM)+ntohl(comm->gc_datalen)) == 0) {
       pthread_mutex_unlock(&rrepos_mutex);

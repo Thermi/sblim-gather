@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.29 2006/03/10 12:21:02 mihajlov Exp $
+ * $Id: reposd.c,v 1.30 2006/03/14 09:27:26 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -173,7 +173,6 @@ int main(int argc, char * argv[])
 
   buffer = malloc(buffersize);
   bufferlen = buffersize;
-  memset(buffer, 0, buffersize);
  
   while (!quit && mcs_accept(&hdr)==0) {
     while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
@@ -772,7 +771,6 @@ static void * rrepos_getrequest(void * hdl)
   M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Detached thread on socket %i",(int)hdl));
 
   while (1) {
-    memset(buffer, 0, GATHERVALBUFLEN);
     bufferlen=GATHERVALBUFLEN;
 
     pthread_mutex_lock(&connect_mutex);

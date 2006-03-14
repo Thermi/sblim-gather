@@ -8,11 +8,13 @@ Features added:
 - 1436591 Added new config option to specify the repository expiration.
 - 1436671 New plugin for Xen.
 - 1441802 Added new config option for synchronized sampling.
-- 1441804 Fixed spec file 
-- 1444826 Fix some portability issues
 
 Bugs fixed:
 - 1395363 Removed provider postinstall location dependencies.
+- 1441804 Fixed spec file 
+- 1444826 Fix some portability issues
+- 1446497 Removed metric instance number limit
+- 1449436 Enhanced metric repository performance for large data volumes
 
 Changes in Version 2.0.4
 ========================

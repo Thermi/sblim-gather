@@ -1,5 +1,5 @@
 /*
- * $Id: rcserv_ip.c,v 1.9 2006/02/08 20:50:57 mihajlov Exp $
+ * $Id: rcserv_ip.c,v 1.10 2006/03/14 09:27:26 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -243,7 +243,6 @@ int rcs_getrequest(int clthdl, void *reqdata, size_t *reqdatalen)
   }
 
   if ((clthdl > 0) && reqdatalen) {
-    memset(reqdata,0,*reqdatalen);
     pf.fd = clthdl;
     pf.events=POLLIN;
     if (poll(&pf,1,1000) == 1 && 

@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.20 2006/03/09 15:55:58 mihajlov Exp $
+ * $Id: repos.c,v 1.21 2006/03/14 09:27:26 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -303,28 +303,22 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
   int                          i,j;
   int                          id;
   MetricResourceId             singleResource;
-  MetricResourceId             *resources=NULL;
   int                          resnum=0; 
   int                         *numv=NULL;
   int                          totalnum=0;
   int                          actnum=0;
   int                          useIntervals=0;
   int                          intervalnum=0;
+  int                          syslen;
+  int                          reslen;
   
   if (vs) {
     mc=RPR_GetMetric(vs->vsId);
     if (mc && mc->mcCalc) {
       id = (mc->mcMetricType&MD_CALCULATED) ? mc->mcAliasId : vs->vsId;
-      if  (vs->vsResource && vs->vsSystemId) {
-	resources = &singleResource;
-	resources->mrid_resource = vs->vsResource;
-	resources->mrid_system = vs->vsSystemId;
-	resnum = 1;
-      } else {
-	resnum = MetricRepository->mres_retrieve(id,&resources,
-						 vs->vsResource,
-						 vs->vsSystemId);
-      }
+      singleResource.mrid_resource = vs->vsResource;
+      singleResource.mrid_system = vs->vsSystemId;
+      resnum = 1;
       if ( (mc->mcMetricType&MD_INTERVAL) 
 	   || (mc->mcMetricType&MD_RATE) 
 	   || (mc->mcMetricType&MD_AVERAGE) ) {
@@ -334,20 +328,14 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	/* client specified number of values per resource */
 	intervalnum=vs->vsNumValues;
       }
-      if (resnum) {
-	mv = calloc(resnum, sizeof(MetricValue*));
-	numv = calloc(resnum,sizeof(int));
-	for (j=0; j < resnum; j++) {
-	  if (MetricRepository->mrep_retrieve(id,
-					      resources + j,
-					      &mv[j],
-					      &numv[j],
-					      vs->vsFrom,
-					      vs->vsTo,
-					      intervalnum) != -1 ) {
-	    totalnum += numv[j];
-	  }
-	}
+      if ((totalnum=MetricRepository->mrep_retrieve(id,
+						    &singleResource,
+						    &resnum,
+						    &mv,
+						    &numv,
+						    vs->vsFrom,
+						    vs->vsTo,
+						    intervalnum)) != -1 ) {
 	if (useIntervals) {
 	  /* here the interval-type metrics are computed - by resource */
 	  vs->vsNumValues=resnum; /* one per resource */
@@ -365,70 +353,55 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	vs->vsValues=ch_alloc(ch,vs->vsNumValues*sizeof(ValueItem));
 	vs->vsDataType=mc->mcDataType;
 	for (j=0;j < resnum; j++) {
+	  syslen=strlen(mv[j][numv[j]-1].mvSystemId) + 1;
+	  reslen=strlen(mv[j][numv[j]-1].mvResource) + 1;
 	  if (useIntervals && numv[j] > 0) {
 	    vs->vsValues[actnum].viCaptureTime=mv[j][numv[j]-1].mvTimeStamp;
 	    vs->vsValues[actnum].viDuration=
 	      mv[j][0].mvTimeStamp -
 	      vs->vsValues[actnum].viCaptureTime;
 	    vs->vsValues[actnum].viValueLen=100; /* TODO : calc meaningful length */
-	    vs->vsValues[actnum].viSystemId=
-	      ch_alloc(ch,strlen(mv[j][numv[j]-1].mvSystemId)+1);	    
-	    strcpy(vs->vsValues[actnum].viSystemId,
-		   mv[j][numv[j]-1].mvSystemId);
+	    vs->vsValues[actnum].viSystemId=ch_alloc(ch,syslen);	    
+	    memcpy(vs->vsValues[actnum].viSystemId,mv[j][numv[j]-1].mvSystemId,syslen);
 	    vs->vsValues[actnum].viValue=
 	      ch_alloc(ch,vs->vsValues[actnum].viValueLen);
 	    if (mc->mcCalc(mv[j],
-			  numv[j],
-			  vs->vsValues[actnum].viValue,
-			  vs->vsValues[actnum].viValueLen) == -1) {
+			   numv[j],
+			   vs->vsValues[actnum].viValue,
+			   vs->vsValues[actnum].viValueLen) == -1) {
 	      /* failed to obtain value */
 	      resnum -= 1;
 	      vs->vsNumValues -= 1;
 	      continue;
 	    }
-	    /* Q: Shouldn't we use the resource from the value ?*/
-	    vs->vsValues[actnum].viResource=
-	      ch_alloc(ch,strlen(resources[j].mrid_resource)+1);
-	    strcpy(vs->vsValues[actnum].viResource,
-		   resources[j].mrid_resource);
+	    vs->vsValues[actnum].viResource=ch_alloc(ch,reslen);	    
+	    memcpy(vs->vsValues[actnum].viResource, mv[j][numv[j]-1].mvResource,reslen);
 	    actnum += 1;
 	  } else {	
 	    for (i=0; i < numv[j]; i++) {
 	      vs->vsValues[actnum+i].viCaptureTime=mv[j][i].mvTimeStamp;
 	      vs->vsValues[actnum+i].viDuration=0;
 	      vs->vsValues[actnum+i].viValueLen=100;
-	      vs->vsValues[actnum+i].viSystemId=
-		ch_alloc(ch,strlen(mv[j][i].mvSystemId)+1);	    
-	      strcpy(vs->vsValues[actnum+i].viSystemId,
-		     mv[j][i].mvSystemId);
+	      vs->vsValues[actnum+i].viSystemId=ch_alloc(ch,syslen);	    
+	      memcpy(vs->vsValues[actnum+i].viSystemId,mv[j][i].mvSystemId,syslen);
 	      vs->vsValues[actnum+i].viValue=
 		ch_alloc(ch,vs->vsValues[actnum+i].viValueLen);
 	      if (mc->mcCalc(&mv[j][i],
-			    1,
-			    vs->vsValues[actnum+i].viValue,
-			    vs->vsValues[actnum+i].viValueLen) == -1) {
+			     1,
+			     vs->vsValues[actnum+i].viValue,
+			     vs->vsValues[actnum+i].viValueLen) == -1) {
 		/* failed to obtain value */
 		numv[j] -= 1;
 		vs->vsNumValues -= 1;
 		continue;
 	      }	      
-	      /* Q: Shouldn't we use the resource from the value ?*/
-	      vs->vsValues[actnum+i].viResource=
-		ch_alloc(ch,strlen(resources[j].mrid_resource)+1);
-	      strcpy(vs->vsValues[actnum+i].viResource,
-		     resources[j].mrid_resource);
+	      vs->vsValues[actnum+i].viResource=ch_alloc(ch,reslen);	    
+	      memcpy(vs->vsValues[actnum+i].viResource,mv[j][numv[j]-1].mvResource,reslen);
 	    }
 	    actnum = actnum + numv[j];
 	  }
 	}
-	if (vs->vsResource == NULL && vs->vsSystemId == NULL &&  resources) {
-	  MetricRepository->mres_release(id,resources);
-	}
-	for (j=0; j < resnum; j++) {
-	  MetricRepository->mrep_release(mv[j]);
-	}
-	if (numv) free(numv);
-	if (mv) free(mv);
+	MetricRepository->mrep_release(mv,numv);
 	if (vs->vsNumValues > 0) return 0;
       }
     }

@@ -1,3 +1,48 @@
+2006-03-14  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* mrepos.h, mreposl.c, repos.c: 
+	Bug 1449436: Changed repository metric retrieval interface to internally
+	process the resource information. This allows to retrieve the metric values
+	for a set of resources in one call to the repository.
+	Use binary search in resource localization and insertion code ,
+	which enhances the effort from O(n**2) to O(n*log n) for metric insertions.
+	Changed local repository data structures for faster access by maintaining
+	per-resource value lists. This costs 4% more memory but changes the
+	effort from O(n**2) to O(log n) for current metric data retrievals.
+
+	* reposd.c, rreg.c, rrepos.c, comms/rcserv_ip.c:
+	Bug 1449436: Optimized various string and memory operations with respect
+	to path lengths.
+
+2006-03-10  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* gatherd.c, rgather.c: 
+	Bug 1446497: Added support for two-part response for metricplugin_list.
+
+	* reposctl.c, reposd.c, rrepos.c:
+	Bug 1446497: Added support for two-part response for plugin definition 
+	and resources lists.
+
+	* comms/mcclt_unix.c:
+	Bug 1446497: Enabled partial write support for mcc_request.
+	
+2006-03-09  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* gatherc.h: 
+	Bug 1446497: Reduced default value buffer size to 10000. Added new 
+	request header type for two-part responses.
+
+	* mrepos.h, mreposl.c, mreposp.c, repos.c:
+	Bug 1446497: Added new shutdown function for the repository. This 
+	allowsto purge the repository contents before reposd shutdown.
+
+	* reposd.c, rrepos.c:
+	Bug 1446497: BIG: Added support for two-part responses.
+
+	* comms/mcclt_unix.c, comms/mcserv_unix.c:
+	Bug 1446497: Added code to deal with partial writev's and fixup code 
+	for the handle in mcc_response.
+
 2006-03-07  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* marshal.c, reposctl.c, reposd.c, slisten.c, 

@@ -1,5 +1,5 @@
 /*
- * $Id: rreg.c,v 1.1 2004/07/16 15:30:05 mihajlov Exp $
+ * $Id: rreg.c,v 1.2 2006/03/14 09:27:26 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -86,8 +86,13 @@ void RPR_FinishRegistry()
 int RPR_IdForString(const char *pluginname, const char * name)
 {
   int i,id;
+  size_t len;
   char fullname[300];
-  sprintf(fullname,"%s:%s",pluginname,name);
+  /* this is called quite often - make it efficient */
+  len = strlen(pluginname)+1;
+  memcpy(fullname,pluginname,len);
+  fullname[len]=':';
+  strcpy(fullname+len+1,name);
   MReadLock(&RregLock);
   for (i=0, id=-1; i<PR_NumEntries;i++) {    
     if (PR_Entries[i].mceName && strcmp(PR_Entries[i].mceName,fullname)==0) {
