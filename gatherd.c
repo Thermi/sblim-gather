@@ -1,5 +1,5 @@
 /*
- * $Id: gatherd.c,v 1.12 2006/03/10 12:21:02 mihajlov Exp $
+ * $Id: gatherd.c,v 1.13 2006/03/15 13:58:22 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -41,8 +41,8 @@ int main(int argc, char * argv[])
   GATHERCOMM   *comm;
   COMMHEAP     *ch;
   size_t        buffersize=GATHERVALBUFLEN;
-  char         *buffer=malloc(buffersize);
-  size_t        bufferlen=buffersize;
+  char         *buffer;
+  size_t        bufferlen;
   char          cfgbuf[1000];
 #ifndef NOTRACE
   char         *cfgidx1, *cfgidx2;
@@ -113,7 +113,8 @@ int main(int argc, char * argv[])
     }
   }
 
-  memset(buffer, 0, buffersize);
+  buffer=malloc(buffersize);
+  bufferlen=buffersize;
 
   while (!quit && mcs_accept(&hdr)==0) {
     while (!quit && mcs_getrequest(&hdr, buffer, &bufferlen)==0) {
@@ -198,7 +199,7 @@ int main(int argc, char * argv[])
 	break;
       case GCMD_QUIT:
 	quit=1;
-	comm->gc_result=0;
+	comm->gc_result=gather_terminate();;
 	comm->gc_datalen=0;
 	break;
       default:
@@ -230,6 +231,7 @@ int main(int argc, char * argv[])
     }
   }
   mcs_term();
+  free(buffer);
   m_log(M_INFO,M_QUIET,"Gatherd is shutting down.\n");
   M_TRACE(MTRACE_FLOW,MTRACE_GATHER,("Gatherd is shutting down.\n"));
   return 0;

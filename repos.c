@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.23 2006/03/15 09:20:36 mihajlov Exp $
+ * $Id: repos.c,v 1.24 2006/03/15 13:58:22 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -111,6 +111,7 @@ int repos_terminate()
     while (pluginhead) {
       reposplugin_remove(pluginhead->plugin->rpName);
     };
+    pluginhead=NULL;
     MetricRepository->mrep_shutdown();
     RPR_FinishRegistry();
     return 0;
@@ -288,10 +289,13 @@ int reposresource_list(const char * metricid,
 int reposvalue_put(const char *reposplugin, const char *metric, 
 		   MetricValue *mv)
 {
-  int id = RPR_IdForString(reposplugin,metric);
-  if (id > 0) {
-    mv->mvId=id; /* we are overwriting the caller's argument in good faith */
-    return MetricRepository->mrep_add(mv);
+  int id;
+  if (initialized) {
+    id = RPR_IdForString(reposplugin,metric);
+    if (id > 0) {
+      mv->mvId=id; /* we are overwriting the caller's argument in good faith */
+      return MetricRepository->mrep_add(mv);
+    }
   }
   return -1;
 }

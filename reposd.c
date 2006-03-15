@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.30 2006/03/14 09:27:26 mihajlov Exp $
+ * $Id: reposd.c,v 1.31 2006/03/15 13:58:22 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -158,7 +158,9 @@ int main(int argc, char * argv[])
   if (pthread_create(&rcomm,NULL,repos_remote,NULL) != 0) {
     m_log(M_ERROR,M_SHOW,"Could not create remote reposd thread: %s.\n",
 	  strerror(errno));
+    return -1;
   }
+  pthread_detach(rcomm);
 
   /* check whether autoloading is requested */
   if (reposcfg_getitem("AutoLoad",cfgbuf,sizeof(cfgbuf))==0) {
@@ -667,7 +669,8 @@ int main(int argc, char * argv[])
 	break;
       case GCMD_QUIT:
 	quit=1;
-	comm->gc_result=0;
+	/* terminate as well */
+	comm->gc_result=repos_terminate();
 	comm->gc_datalen=0;
 	break;
       default:
@@ -755,7 +758,6 @@ static void * rrepos_getrequest(void * hdl)
 {
   GATHERCOMM    *comm;
   char          *buffer = malloc(GATHERVALBUFLEN);
-;
   size_t         bufferlen;
   char          *pluginname, *metricname;
   int            is64=0;

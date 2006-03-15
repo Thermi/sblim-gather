@@ -1,5 +1,5 @@
 /*
- * $Id: mcfg.c,v 1.3 2004/10/21 15:51:18 mihajlov Exp $
+ * $Id: mcfg.c,v 1.4 2006/03/15 13:58:23 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -96,6 +96,7 @@ int set_configfile(const char * filename, const char ** keys)
 	  }
 	}
       }
+      fclose(cfgf);
       return CfgFiles;
     }
   }
