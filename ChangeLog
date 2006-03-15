@@ -1,3 +1,9 @@
+2006-03-15  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* repos.c: 
+	Bug 1450216: Fall back to bubblesort if quicksort recursion level gets
+	to high. Fixed value comparison for floats.
+
 2006-03-14  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* plugin/metricXen.c: 

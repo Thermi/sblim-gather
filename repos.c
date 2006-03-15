@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.22 2006/03/14 12:34:24 mihajlov Exp $
+ * $Id: repos.c,v 1.23 2006/03/15 09:20:36 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -797,7 +797,13 @@ inline int valueCompare(int type, ValueItem *v, ValueItem *w, int dir)
       dv = *(float*)v->viValue;
       dw = *(float*)w->viValue;
     }
-    return dir ? dv - dw : dw - dv;
+    if (dv == dw) {
+      return 0;
+    } else if (dv - dw > 0) {
+      return dir ? 1 : -1;
+    } else {
+      return dir ? -1 : 1;
+    }
   } else if (type == MD_CHAR16) {
     ulv = *(unsigned short*)v->viValue;
     ulw = *(unsigned short*)w->viValue;
@@ -822,12 +828,33 @@ inline void mswap(ValueRequest *vr, int low, int high)
   vr->vsValues[high] = temp;
 }
 
-void mqsort(ValueRequest *vr, int left, int right, int asc)
+
+void _mbsort(ValueRequest *vr, int left, int right, int asc)
+{
+  int swaps,i,j;
+  for (i=left; i < right; i++) {
+    swaps=0;
+    for (j=left; j < right + left  - i ; j++) {
+      if (valueCompare(vr->vsDataType,&vr->vsValues[j],&vr->vsValues[j+1],asc) > 0) {
+	mswap(vr,j,j+1);
+	swaps=1;
+      }
+    }
+    if (!swaps) {
+      /* already sorted -- quit */
+      break;
+    }
+  }
+}
+
+void _mqsort(ValueRequest *vr, int left, int right, int asc, int depth, int maxdepth)
 {
   int pivot=right;
   int low=left;
   int high=pivot-1;
-  if (left == right) {
+  if (depth == maxdepth || right - left < 10) {
+    /* switch to bubble sort */
+    _mbsort(vr,left,right,asc);
     return;
   }
   do {
@@ -844,13 +871,20 @@ void mqsort(ValueRequest *vr, int left, int right, int asc)
   } while (low < high);
   /* position pivot in the middle */
   mswap(vr,low,pivot);
-  /* less than 3 elements are already sorted by loop above 
-     consider insertion sort for < 10 elements */
-  if (left < low - 1) {
-    mqsort(vr,left,low-1,asc);
+  /* pivot element is "above" all lhs elements */
+  _mqsort(vr,left,low-1,asc,depth+1,maxdepth);
+  /* pivot element is "below or equal" all lhs elements */
+  _mqsort(vr,low+1,right,asc,depth+1,maxdepth);
+}
+
+void mqsort(ValueRequest *vr, int left, int right, int asc)
+{
+  int num = right - left;
+  int maxdepth = 0;
+  while (num) {
+    num >>= 1;
+    maxdepth +=1;
   }
-  if (high < right - 1) {
-    mqsort(vr,low+1,right,asc);
-  }
+  _mqsort(vr,left,right,asc,0,maxdepth);
 }
 
