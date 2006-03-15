@@ -1,5 +1,5 @@
 /*
- * $Id: metricMassive.c,v 1.1 2006/03/14 08:25:22 mihajlov Exp $
+ * $Id: metricMassive.c,v 1.2 2006/03/15 18:17:56 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -61,7 +61,7 @@ int _StartStopMetrics (int starting)
 
 int metricRetriever(int mid, MetricReturner mret)
 {
-  int         numvalue = 100, i;  
+  int         numvalue = 100000, i;  
   MetricValue *mv;
 
   if (mret==NULL)
