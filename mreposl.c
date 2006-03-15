@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.12 2006/03/14 09:27:26 mihajlov Exp $
+ * $Id: mreposl.c,v 1.13 2006/03/15 13:57:15 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -24,6 +24,7 @@
 #include <mtrace.h> 
 #include <mlog.h> 
 #include <reposcfg.h> 
+#include <commheap.h> 
 
 #include <stdlib.h>
 #include <limits.h>
@@ -107,7 +108,7 @@ static int pruneRepository();
 static int _LocalMetricResources(int midx, LocalResourceId ** resources,
 				 const char * resource, const char * system);
 static int _LocalMetricFreeResources(int midx, LocalResourceId * resources);
-static int _MetricRetrieveNoLock (int mid, LocalResourceId *resource, int resnum,
+static int _MetricRetrieveNoLock (COMMHEAP ch, int mid, LocalResourceId *resource, int resnum,
 				  MetricValue **mv, int *num, 
 				  time_t from, time_t to, int maxnum);
 
@@ -140,8 +141,9 @@ int LocalMetricAdd (MetricValue *mv)
       mrv->mrv_value->mvSystemId=strdup(mv->mvSystemId);
       LocalReposHeader[idx].mrh_reslist[ridx].lrid_first=mrv;
       if (LocalReposHeader[idx].mrh_cb) {
-	MetricValue     **mvList = malloc(sizeof(MetricValue*));
-	int             *num = calloc(2,sizeof(int)); /* first byte contains length of array */
+	COMMHEAP        ch = ch_init();
+	MetricValue   **mvList = ch_alloc(ch,sizeof(MetricValue*)*2);
+	int            *num = ch_alloc(ch,sizeof(int)); 
 	MReposCallback *cblist = LocalReposHeader[idx].mrh_cb;
 	M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
 		("LocalMetricAdd processing callbacks for mid=%d", mv->mvId));
@@ -150,8 +152,9 @@ int LocalMetricAdd (MetricValue *mv)
 	   Further, we don't bother whether it's a point or interval
 	   metric: we always return the previous element, if available.
 	 */
-	num += 1;
-	_MetricRetrieveNoLock(mv->mvId,LocalReposHeader[idx].mrh_reslist+ridx,1,
+	
+	*mvList++ = (void*)ch; /* set COMMHEAP for later automatic release */
+	_MetricRetrieveNoLock(ch,mv->mvId,LocalReposHeader[idx].mrh_reslist+ridx,1,
 			      mvList,num,0,mv->mvTimeStamp,2);
 	while (num > 0 && cblist && cblist->mrc_callback) {
 	  cblist->mrc_callback(*mvList,*num);
@@ -181,7 +184,7 @@ int LocalMetricAdd (MetricValue *mv)
  *    ii) from == 0 retrieve the newest "maxnum" entries 
  */
 
-static int _MetricRetrieveNoLock (int mid, LocalResourceId *resource, int resnum,
+static int _MetricRetrieveNoLock (COMMHEAP ch, int mid, LocalResourceId *resource, int resnum,
 				  MetricValue **mv, int *num, 
 				  time_t from, time_t to, int maxnum)
 {
@@ -228,18 +231,18 @@ static int _MetricRetrieveNoLock (int mid, LocalResourceId *resource, int resnum
     }
     if (num[k]) {
       totalnum += num[k];
-      mv[k]=calloc(num[k],sizeof(MetricValue));	
+      mv[k]=ch_alloc(ch,num[k]*sizeof(MetricValue));	
       for (j=0, mrv=first; j<num[k]; mrv=mrv->mrv_next) {
 	/* copy over */
 	memcpy(&mv[k][j],mrv->mrv_value,sizeof(MetricValue));
-	mv[k][j].mvData=malloc(mrv->mrv_value->mvDataLength);
+	mv[k][j].mvData=ch_alloc(ch,mrv->mrv_value->mvDataLength);
 	memcpy(mv[k][j].mvData,
 	       mrv->mrv_value->mvData,
 	       mrv->mrv_value->mvDataLength);
-	mv[k][j].mvResource=malloc(reslen);
-	memcpy(mv[k][j].mvResource,mrv->mrv_value->mvResource,reslen);
-	mv[k][j].mvSystemId=malloc(syslen);
-	memcpy(mv[k][j].mvSystemId,mrv->mrv_value->mvSystemId,syslen);
+	mv[k][j].mvResource=ch_alloc(ch,reslen);
+	memcpy(mv[k][j].mvResource,resource[k].lrid_resource,reslen);
+	mv[k][j].mvSystemId=ch_alloc(ch,syslen);
+	memcpy(mv[k][j].mvSystemId,resource[k].lrid_system,syslen);
 	j+=1;
       }
     }
@@ -254,16 +257,17 @@ int LocalMetricRetrieve (int mid, MetricResourceId *resource, int *rnum,
   int              rc=-1;
   int              idx;
   LocalResourceId *rList;
+  COMMHEAP         ch;
   
   if (resource && rnum && mv && num && from >=0 && MReadLock(&LocalRepLock)==0) {
     idx=locateIndex(mid);
     if (idx >= 0) {
+      ch=ch_init();
       *rnum = _LocalMetricResources(idx,&rList,resource->mrid_resource,resource->mrid_system);
-      *num=calloc(*rnum+1,sizeof(int));
-      *num[0]=*rnum;
-      (*num)+=1;
-      *mv=calloc(*rnum,sizeof(MetricValue*));
-      rc = _MetricRetrieveNoLock(mid,rList,*rnum,
+      *num=ch_alloc(ch,(*rnum)*sizeof(int));
+      *mv=ch_alloc(ch,(*rnum+1)*sizeof(MetricValue*));
+      *(*mv)++=(void*)ch; /* store COMMHEAP in first element */
+      rc = _MetricRetrieveNoLock(ch,mid,rList,*rnum,
 				 *mv,*num,from,to,maxnum);
       _LocalMetricFreeResources(idx,rList);
     }
@@ -274,20 +278,13 @@ int LocalMetricRetrieve (int mid, MetricResourceId *resource, int *rnum,
 
 int LocalMetricRelease (MetricValue **mv, int *num)
 {
-  int i,j;
+  COMMHEAP ch;
   if (mv && num) {
-    for (i=0;i<num[-1];i++) {
-      for (j=0;j<num[i];j++) {
-	free (mv[i][j].mvData);
-	free (mv[i][j].mvResource);
-	free (mv[i][j].mvSystemId);
-      } 
-      free(mv[i]);
-    }
-    free(mv);
-    free(num-1);
+    ch = (COMMHEAP)mv[-1];
+    ch_release(ch);
+    return 0;
   }
-  return 0;
+  return -1;
 }
 
 int LocalMetricRegisterCallback (MetricCallback *mcb, int mid, int state)
@@ -394,8 +391,15 @@ int LocalMetricShutdown()
 	  v=v->mrv_next;
 	  free(bv);
 	}
+	/* delete resource list */
+	free(LocalReposHeader[i].mrh_reslist[j].lrid_resource);
+	free(LocalReposHeader[i].mrh_reslist[j].lrid_system);
       }
+      free(LocalReposHeader[i].mrh_reslist);
     }
+    LocalReposNumIds = 0;
+    free(LocalReposHeader);
+    LocalReposHeader=NULL;
     MWriteUnlock(&LocalRepLock);
   }
   return 0;
