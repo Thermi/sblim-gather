@@ -8,6 +8,7 @@ Features added:
 - 1436591 Added new config option to specify the repository expiration.
 - 1436671 New plugin for Xen.
 - 1441802 Added new config option for synchronized sampling.
+- 1450569 Multiple gather installations can coexist now on one system. 
 
 Bugs fixed:
 - 1395363 Removed provider postinstall location dependencies.
