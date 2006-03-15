@@ -1,5 +1,5 @@
 /*
- * $Id: mretr.c,v 1.1 2003/10/17 13:56:01 mihajlov Exp $
+ * $Id: mretr.c,v 1.2 2006/03/15 14:00:03 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -123,7 +123,7 @@ static void * MR_Controller(void * arg)
 {
   MR_Control *mc = arg;
   
-  if(!mc) pthread_exit(NULL);
+  if(!mc) return NULL;
 
   if (startRetrievers(mc)==0 && pthread_mutex_lock(&(mc->mutex))==0) {
 #ifdef DEBUG
@@ -160,7 +160,7 @@ static void * MR_Controller(void * arg)
     }
     pthread_mutex_unlock(&(mc->mutex));
   }
-  pthread_exit(NULL);
+  return NULL;
 }
 
 static void * MR_Retriever(void * arg)
@@ -170,7 +170,7 @@ static void * MR_Retriever(void * arg)
   time_t currentTime, nextTime;
   int retrieverid;
 
-  if(!mc) pthread_exit(NULL);
+  if(!mc) return NULL;
 
 #ifdef DEBUG
   fprintf(stderr,"Retriever thread created.\n");
@@ -226,10 +226,10 @@ static void * MR_Retriever(void * arg)
     mc->retrieverNum-=1; /* we are gone */
     pthread_mutex_unlock(&(mc->mutex));
     pthread_cond_signal(&(mc->condController)); /* wake up controller */
-    pthread_exit(NULL);
+    return NULL;
   } else {
     fprintf(stderr,"couldn't aquire mutex - going down\n.");
-    pthread_exit(NULL); /* no need for signals: this one went entirely wrong */
+    return NULL; /* no need for signals: this one went entirely wrong */
   }
 }
 

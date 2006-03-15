@@ -1,5 +1,13 @@
 2006-03-15  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
+	* mreposl.c, util/commheap.c: 
+	Bug 1449436 Update: Rewrote commheap to use much less malloc/free calls.
+	Use commheap in local repository as well now. Overall improvement for
+	a reposvalue_get call > 50%.
+
+	* gatherd.c, reposd.c, mretr.c, mcfg.c, repos.c:
+	Minor cleanups in daemon _terminate processing.
+
 	* repos.c: 
 	Bug 1450216: Fall back to bubblesort if quicksort recursion level gets
 	to high. Fixed value comparison for floats.
