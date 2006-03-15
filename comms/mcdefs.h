@@ -1,5 +1,5 @@
 /*
- * $Id: mcdefs.h,v 1.5 2006/02/08 20:50:57 mihajlov Exp $ 
+ * $Id: mcdefs.h,v 1.6 2006/03/15 18:19:24 mihajlov Exp $ 
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -33,10 +33,14 @@ extern "C" {
 #define MC_ERR_INVPARAM      (MC_ERR_BASE+ 5)
 #define MC_ERR_OVERFLOW      (MC_ERR_BASE+ 6)
 
+
+#ifndef GATHER_RUNDIR
+#define GATHER_RUNDIR "/var/run/gather"
+#endif
   
-#define MC_SOCKET  "/tmp/.%s-socket"
-#define MC_LOCKFILE  "/tmp/.%s-lockfile"
-#define MC_IPCFILE "/tmp/.%s-ipc"
+#define MC_SOCKET    GATHER_RUNDIR "/.%s-socket"
+#define MC_LOCKFILE  GATHER_RUNDIR "/.%s-lockfile"
+#define MC_IPCFILE   GATHER_RUNDIR "/.%s-ipc"
 #define MC_IPCPROJ 100
 
 struct _MC_REQHDR

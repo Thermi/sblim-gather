@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.6 2006/02/22 14:11:59 mihajlov Exp $
+# $Id: Makefile.am,v 1.7 2006/03/15 18:19:23 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -70,6 +70,7 @@ libgatherutil_la_SOURCES = util/mrwlock.c util/commheap.c util/commutil.c \
 libgatherutil_la_CPPFLAGS = $(AM_CPPFLAGS) -DGATHER_CONFDIR=\"$(sysconfdir)\"
 
 libmcserv_la_SOURCES = comms/mcclt_unix.c comms/mcserv_unix.c
+libmcserv_la_CPPFLAGS = $(AM_CPPFLAGS) -DGATHER_RUNDIR=\"$(localstatedir)/run/gather\" 
 libmcserv_la_LIBADD = -lgatherutil
 libmcserv_la_DEPENDENCIES = libgatherutil.la
 

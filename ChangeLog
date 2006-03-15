@@ -1,5 +1,9 @@
 2006-03-15  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
+	* comms/mcdefs.h, Makefile.am: 
+	Bug 1450569: Allow multiple gather installations by using prefix-relative
+	socket file names.
+	
 	* mreposl.c, util/commheap.c: 
 	Bug 1449436 Update: Rewrote commheap to use much less malloc/free calls.
 	Use commheap in local repository as well now. Overall improvement for
