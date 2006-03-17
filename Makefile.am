@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.7 2006/03/15 18:19:23 mihajlov Exp $
+# $Id: Makefile.am,v 1.8 2006/03/17 11:26:32 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -19,6 +19,9 @@ SUBDIRS=. $(PROVIDER_SUBDIR)
 
 # Start from an empty extra distribution file list
 EXTRA_DIST=
+
+# gatherer run dir
+gatherrundir=$(localstatedir)/run/gather
 
 # docdir defines where the documentation goes
 docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
@@ -70,7 +73,7 @@ libgatherutil_la_SOURCES = util/mrwlock.c util/commheap.c util/commutil.c \
 libgatherutil_la_CPPFLAGS = $(AM_CPPFLAGS) -DGATHER_CONFDIR=\"$(sysconfdir)\"
 
 libmcserv_la_SOURCES = comms/mcclt_unix.c comms/mcserv_unix.c
-libmcserv_la_CPPFLAGS = $(AM_CPPFLAGS) -DGATHER_RUNDIR=\"$(localstatedir)/run/gather\" 
+libmcserv_la_CPPFLAGS = $(AM_CPPFLAGS) -DGATHER_RUNDIR=\"$(gatherrundir)\" 
 libmcserv_la_LIBADD = -lgatherutil
 libmcserv_la_DEPENDENCIES = libgatherutil.la
 
@@ -222,6 +225,9 @@ EXTRA_DIST += $(sysconf_DATA)
 EXTRA_DIST+=sblim-gather.spec
 
 EXTRA_DIST += samples
+
+install-data-hook:
+	$(mkdir_p) $(gatherrundir)
 
 postinstall:
 	$(MAKE) -C $(PROVIDER_SUBDIR) postinstall
