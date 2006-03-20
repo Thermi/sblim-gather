@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv_unix.c,v 1.8 2006/03/09 15:55:58 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.9 2006/03/20 17:07:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -42,8 +42,8 @@ static void _sigpipe_h(int signal)
 
 static int commhandle = -1;
 static int fdlockfile = -1;
-static char sockname[PATH_MAX+1] = {0};
-static char lockname[PATH_MAX+1] = {0};
+static char sockname[PATH_MAX+2] = {0};
+static char lockname[PATH_MAX+2] = {0};
 
 int mcs_init(const char *commid)
 {
@@ -59,10 +59,10 @@ int mcs_init(const char *commid)
       return -1;
     }
     if (fdlockfile == -1) {
-      if (snprintf(lockname,sizeof(lockname),MC_LOCKFILE,commid) > 
-	  sizeof(lockname)) {
+      if (snprintf(lockname,PATH_MAX+2,MC_LOCKFILE,commid) > 
+	  PATH_MAX) {
 	m_log(M_ERROR,M_QUIET,
-	      "mcs_init: could not cimplete lockfile name %s\n"
+	      "mcs_init: could not complete lockfile name %s\n"
 	      MC_LOCKFILE);
 	return -1;
       }
@@ -82,10 +82,10 @@ int mcs_init(const char *commid)
 	      strerror(errno));
       return -1;
     } 
-    if (snprintf(sockname,sizeof(sockname),MC_SOCKET,commid) > 
-	sizeof(sockname)) {
+    if (snprintf(sockname,PATH_MAX+2,MC_SOCKET,commid) > 
+	PATH_MAX) {
 	m_log(M_ERROR,M_QUIET,
-	      "mcs_init: could not cimplete socket name %s\n"
+	      "mcs_init: could not complete socket name %s\n"
 	      MC_SOCKET);
 	return -1;
     }

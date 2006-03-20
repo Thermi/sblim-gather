@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.12 2006/03/10 12:21:03 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.13 2006/03/20 17:07:53 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -45,7 +45,7 @@ static void _sigpipe_h(int signal)
 /* this must be done in the app layer */
 static pthread_mutex_t sockname_mutex = PTHREAD_MUTEX_INITIALIZER;
 static struct {
-  char sn_name[PATH_MAX+1];
+  char sn_name[PATH_MAX+2];
   int  sn_handle;
   /* runtime statistics */
   int  sn_connects;
@@ -66,8 +66,8 @@ int mcc_init(const char *commid)
     M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_init search free handle"));
     if (sockname[i].sn_name[0]==0) {
       M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_init found free handle %d",i));
-      if (snprintf(sockname[i].sn_name,sizeof(sockname),MC_SOCKET,commid) > 
-	  sizeof(sockname[i].sn_name)) {
+      if (snprintf(sockname[i].sn_name,PATH_MAX+2,MC_SOCKET,commid) > 
+	  PATH_MAX) {
 	m_seterrno(MC_ERR_BADINIT);
 	m_setstrerror("mcc_init could not complete socket name %s",commid);
 	M_TRACE(MTRACE_ERROR,MTRACE_COMM,
