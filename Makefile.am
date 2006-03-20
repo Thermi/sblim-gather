@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.8 2006/03/17 11:26:32 mihajlov Exp $
+# $Id: Makefile.am,v 1.9 2006/03/20 17:15:12 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -30,6 +30,9 @@ docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
 metricplugindir=$(libdir)/gather/mplug
 reposplugindir=$(libdir)/gather/rplug
 
+# development headers
+pkgincludedir=$(includedir)/gather
+
 #
 # Automake instructions for documentation
 #
@@ -53,12 +56,15 @@ AM_CPPFLAGS = -I $(srcdir)/util -I $(srcdir)/comms @ARCHDEF@
 AM_CFLAGS = -Wall
 
 # Include files
-noinst_HEADERS = cimplug.h gatherc.h marshal.h mlist.h mplugmgr.h \
+pkginclude_HEADERS = cimplug.h metric.h mplugin.h util/commutil.h 
+nodist_pkginclude_HEADERS = gather-config.h
+
+noinst_HEADERS = gatherc.h marshal.h mlist.h mplugmgr.h \
 	mrepos.h repos.h rplugin.h rreg.h sforward.h \
-	gather.h metric.h mplugin.h mreg.h mretr.h \
+	gather.h mplugin.h mreg.h mretr.h \
 	rgather.h rplugmgr.h rrepos.h slisten.h \
 	util/commheap.h util/gathercfg.h util/merrdefs.h \
-	util/mlog.h util/mtrace.h util/commutil.h util/mcfg.h \
+	util/mlog.h util/mtrace.h util/mcfg.h \
 	util/merrno.h util/mrwlock.h util/reposcfg.h util/dirutil.h \
 	comms/mcclt.h comms/mcdefs.h comms/mcserv.h comms/rcclt.h \
 	comms/rcserv.h 
@@ -222,12 +228,12 @@ sysconf_DATA = gatherd.conf reposd.conf
 EXTRA_DIST += $(sysconf_DATA)
 
 # We must explicity add the RPM spec file to the distribution package
-EXTRA_DIST+=sblim-gather.spec
+EXTRA_DIST+=$(PACKAGE).spec $(PACKAGE).rh.spec
 
 EXTRA_DIST += samples
 
 install-data-hook:
-	$(mkdir_p) $(gatherrundir)
+	$(mkdir_p) $(DESTDIR)$(gatherrundir)
 
 postinstall:
 	$(MAKE) -C $(PROVIDER_SUBDIR) postinstall

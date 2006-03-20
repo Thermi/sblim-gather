@@ -1,5 +1,5 @@
 /*
- * $Id: commutil.c,v 1.4 2006/03/07 12:55:21 mihajlov Exp $
+ * $Id: commutil.c,v 1.5 2006/03/20 17:15:13 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -18,7 +18,7 @@
 
 
 #include <commutil.h>
-#include "config.h"
+#include "gather-config.h"
 
 #ifndef AIX
 uint64_t htonll(uint64_t v)

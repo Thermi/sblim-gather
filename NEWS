@@ -18,6 +18,7 @@ Bugs fixed:
 - 1449436 Enhanced metric repository performance for large data volumes
 - 1449628 Fixed segfault in Xen plugin
 - 1450216 Enhanced filter performance by adaptive sorting algorithms
+- 1454722 Fixed potential memory overwrite in local communications code
 
 Changes in Version 2.0.4
 ========================

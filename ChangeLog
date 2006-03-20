@@ -1,3 +1,16 @@
+2006-03-20  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* metric.h, util/commutil.c:
+	Bug 1454734: Changed config header file name to gather-config.h
+	to avoid name clashes with other config.h's.
+
+	* Makefile.am, configure.ac, sblim-gather.spec.in: 
+	Bug 1454734: Support for separate devel package.
+
+	* comms/mcclt_unix.c, comms/mcserv_unix.c: 
+	Bug 1454722: Extended the sockname buffer by one character to make sure
+	there's a trailing 0 after snprintf.
+
 2006-03-15  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* comms/mcdefs.h, Makefile.am: 

@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.10 2006/02/08 20:50:57 mihajlov Exp $
+ * $Id: metric.h,v 1.11 2006/03/20 17:15:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -21,7 +21,7 @@
 #define METRIC_H
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "gather-config.h"
 #ifndef SIZEOF_LONG
 #error "SIZEOF_LONG must be defined for compilation."
 #endif

@@ -2,9 +2,9 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([sblim-gather],[2.0.99i],[sblim-devel@lists.sourceforge.net])
+AC_INIT([sblim-gather],[2.0.99k],[sblim-devel@lists.sourceforge.net])
 AC_CONFIG_SRCDIR([cimplug.h])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADER([gather-config.h])
 AM_INIT_AUTOMAKE
 
 # Host Type
