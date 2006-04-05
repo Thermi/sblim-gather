@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.24 2006/03/15 13:58:22 mihajlov Exp $
+ * $Id: repos.c,v 1.25 2006/04/05 11:45:39 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -311,6 +311,7 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
   int                         *numv=NULL;
   int                          totalnum=0;
   int                          actnum=0;
+  int                          validnum;
   int                          useIntervals=0;
   int                          intervalnum=0;
   int                          syslen;
@@ -372,19 +373,19 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	    memcpy(vs->vsValues[actnum].viSystemId,mv[j][numv[j]-1].mvSystemId,syslen);
 	    vs->vsValues[actnum].viValue=
 	      ch_alloc(ch,vs->vsValues[actnum].viValueLen);
+	    vs->vsValues[actnum].viResource=ch_alloc(ch,reslen);	    
+	    memcpy(vs->vsValues[actnum].viResource, mv[j][numv[j]-1].mvResource,reslen);
 	    if (mc->mcCalc(mv[j],
 			   numv[j],
 			   vs->vsValues[actnum].viValue,
 			   vs->vsValues[actnum].viValueLen) == -1) {
 	      /* failed to obtain value */
-	      resnum -= 1;
 	      vs->vsNumValues -= 1;
 	      continue;
 	    }
-	    vs->vsValues[actnum].viResource=ch_alloc(ch,reslen);	    
-	    memcpy(vs->vsValues[actnum].viResource, mv[j][numv[j]-1].mvResource,reslen);
 	    actnum += 1;
 	  } else {	
+	    validnum = 0;
 	    for (i=0; i < numv[j]; i++) {
 	      vs->vsValues[actnum+i].viCaptureTime=mv[j][i].mvTimeStamp;
 	      vs->vsValues[actnum+i].viDuration=0;
@@ -393,19 +394,19 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	      memcpy(vs->vsValues[actnum+i].viSystemId,mv[j][i].mvSystemId,syslen);
 	      vs->vsValues[actnum+i].viValue=
 		ch_alloc(ch,vs->vsValues[actnum+i].viValueLen);
+	      vs->vsValues[actnum+i].viResource=ch_alloc(ch,reslen);	    
+	      memcpy(vs->vsValues[actnum+i].viResource,mv[j][numv[j]-1].mvResource,reslen);
 	      if (mc->mcCalc(&mv[j][i],
 			     1,
 			     vs->vsValues[actnum+i].viValue,
 			     vs->vsValues[actnum+i].viValueLen) == -1) {
 		/* failed to obtain value */
-		numv[j] -= 1;
 		vs->vsNumValues -= 1;
 		continue;
-	      }	      
-	      vs->vsValues[actnum+i].viResource=ch_alloc(ch,reslen);	    
-	      memcpy(vs->vsValues[actnum+i].viResource,mv[j][numv[j]-1].mvResource,reslen);
+	      }
+	      validnum += 1;
 	    }
-	    actnum = actnum + numv[j];
+	    actnum += validnum;
 	  }
 	}
 	MetricRepository->mrep_release(mv,numv);
