@@ -13,5 +13,5 @@ Name : -eq gatherd
 EnabledState: -eq 2
 Started: -eq TRUE
 Sampling: -eq TRUE
-NumberOfPlugins: -eq 6
+NumberOfPlugins: -eq 7
 NumberOfMetrics: -eq 20

@@ -4,7 +4,8 @@
 
 #******************************************************************************#
 
-#export SBLIM_TESTSUITE_RUN=1;
+export SBLIM_TESTSUITE_RUN=1;
+SCRIPT_PATH=`dirname ${BASH_SOURCE}`
 
 #******************************************************************************#
 while [ "$#" -gt 0 ]
@@ -116,8 +117,9 @@ then
 OPTS="$OPTS -p $PASSWORD"
 fi
 
+cd $SCRIPT_PATH
 while(($i<=$max))
 do
-  . run.sh ${CLASSNAMES[$i]} $OPTS || exit 1;
+  . $SCRIPT_PATH/run.sh ${CLASSNAMES[$i]} $OPTS || exit 1;
   i=$i+1;
 done
