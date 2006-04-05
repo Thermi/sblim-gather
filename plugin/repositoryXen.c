@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryXen.c,v 1.2 2006/02/23 13:20:39 obenke Exp $
+ * $Id: repositoryXen.c,v 1.3 2006/04/05 14:40:03 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -19,10 +19,9 @@
  *    TotalCPUTime
  *    ActiveVirtualProcessors
  *    ExternalViewTotalCPUPercentage
- *    PartitionClaimedMemory
- *    PartitionClaimedMaximumMemory
+ *    PhysicalMemoryAllocatedToVirtualSystem
  *    HostFreePhysicalMemory
- *    ClaimedMemoryPercentage
+ *    PhysicalMemoryAllocatedToVirtualSystemPercentage
  *    HostMemoryPercentage
  * 
  * plus the following metrics which are only intended for internal usage:
@@ -63,11 +62,8 @@ static MetricCalculator metricCalcExtTotalCPUTimePerc;
 // metric ActiveVirtualProcessors 
 static MetricCalculator metricCalcActiveVirtualProcessors;
 
-// metric PartitionClaimedMemory
-static MetricCalculator metricCalcPartitionClaimedMemory;
-
-// metric PartitionMaximumMemory
-static MetricCalculator metricCalcPartitionMaximumMemory;
+// metric PhysicalMemoryAllocatedToVirtualSystem
+static MetricCalculator metricCalcPhysicalMemoryAllocatedToVirtualSystem;
 
 // metric HostFreePhysicalMemory
 static MetricCalculator metricCalcHostFreePhysicalMemory;
@@ -75,8 +71,8 @@ static MetricCalculator metricCalcHostFreePhysicalMemory;
 // internal metric - not externalized
 static MetricCalculator metricCalcInternal;
 
-// metric ClaimedMemoryPercentage
-static MetricCalculator metricCalcClaimedMemoryPercentage;
+// metric PhysicalMemoryAllocatedToVirtualSystemPercentage
+static MetricCalculator metricCalcPhysicalMemoryAllocatedToVirtualSystemPercentage;
 
 // metric HostMemoryPercentage
 static MetricCalculator metricCalcHostMemoryPercentage;
@@ -204,42 +200,43 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[7].mcUnits = muNA;
 
     metricCalcDef[8].mcVersion = MD_VERSION;
-    metricCalcDef[8].mcName = "PartitionClaimedMemory";
+    metricCalcDef[8].mcName = "PhysicalMemoryAllocatedToVirtualSystem";
     metricCalcDef[8].mcId = mr(pluginname, metricCalcDef[8].mcName);
     metricCalcDef[8].mcMetricType = MD_PERIODIC | MD_CALCULATED | MD_POINT;
     metricCalcDef[8].mcChangeType = MD_GAUGE;
     metricCalcDef[8].mcIsContinuous = MD_TRUE;
     metricCalcDef[8].mcCalculable = MD_NONSUMMABLE;
     metricCalcDef[8].mcDataType = MD_UINT64;
-    metricCalcDef[8].mcCalc = metricCalcPartitionClaimedMemory;
+    metricCalcDef[8].mcCalc = metricCalcPhysicalMemoryAllocatedToVirtualSystem;
     metricCalcDef[8].mcAliasId = metricCalcDef[7].mcId;
     metricCalcDef[8].mcUnits = muKiloBytes;
 
     metricCalcDef[9].mcVersion = MD_VERSION;
-    metricCalcDef[9].mcName = "PartitionMaximumMemory";
+    metricCalcDef[9].mcName = "HostFreePhysicalMemory";
     metricCalcDef[9].mcId = mr(pluginname, metricCalcDef[9].mcName);
-    metricCalcDef[9].mcMetricType = MD_PERIODIC | MD_CALCULATED | MD_POINT;
+    metricCalcDef[9].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT;
     metricCalcDef[9].mcChangeType = MD_GAUGE;
     metricCalcDef[9].mcIsContinuous = MD_TRUE;
     metricCalcDef[9].mcCalculable = MD_NONSUMMABLE;
     metricCalcDef[9].mcDataType = MD_UINT64;
-    metricCalcDef[9].mcCalc = metricCalcPartitionMaximumMemory;
-    metricCalcDef[9].mcAliasId = metricCalcDef[7].mcId;
+    metricCalcDef[9].mcCalc = metricCalcHostFreePhysicalMemory;
     metricCalcDef[9].mcUnits = muKiloBytes;
 
     metricCalcDef[10].mcVersion = MD_VERSION;
-    metricCalcDef[10].mcName = "HostFreePhysicalMemory";
+    metricCalcDef[10].mcName = "PhysicalMemoryAllocatedToVirtualSystemPercentage";
     metricCalcDef[10].mcId = mr(pluginname, metricCalcDef[10].mcName);
-    metricCalcDef[10].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+    metricCalcDef[10].mcMetricType =
+	MD_PERIODIC | MD_CALCULATED | MD_POINT;
     metricCalcDef[10].mcChangeType = MD_GAUGE;
     metricCalcDef[10].mcIsContinuous = MD_TRUE;
     metricCalcDef[10].mcCalculable = MD_NONSUMMABLE;
-    metricCalcDef[10].mcDataType = MD_UINT64;
-    metricCalcDef[10].mcCalc = metricCalcHostFreePhysicalMemory;
-    metricCalcDef[10].mcUnits = muKiloBytes;
+    metricCalcDef[10].mcDataType = MD_FLOAT32;
+    metricCalcDef[10].mcCalc = metricCalcPhysicalMemoryAllocatedToVirtualSystemPercentage;
+    metricCalcDef[10].mcAliasId = metricCalcDef[7].mcId;
+    metricCalcDef[10].mcUnits = muPercent;
 
     metricCalcDef[11].mcVersion = MD_VERSION;
-    metricCalcDef[11].mcName = "ClaimedMemoryPercentage";
+    metricCalcDef[11].mcName = "HostMemoryPercentage";
     metricCalcDef[11].mcId = mr(pluginname, metricCalcDef[11].mcName);
     metricCalcDef[11].mcMetricType =
 	MD_PERIODIC | MD_CALCULATED | MD_POINT;
@@ -247,49 +244,36 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[11].mcIsContinuous = MD_TRUE;
     metricCalcDef[11].mcCalculable = MD_NONSUMMABLE;
     metricCalcDef[11].mcDataType = MD_FLOAT32;
-    metricCalcDef[11].mcCalc = metricCalcClaimedMemoryPercentage;
+    metricCalcDef[11].mcCalc = metricCalcHostMemoryPercentage;
     metricCalcDef[11].mcAliasId = metricCalcDef[7].mcId;
     metricCalcDef[11].mcUnits = muPercent;
 
     metricCalcDef[12].mcVersion = MD_VERSION;
-    metricCalcDef[12].mcName = "HostMemoryPercentage";
+    metricCalcDef[12].mcName = "TenMinuteTotalCPUTime";
     metricCalcDef[12].mcId = mr(pluginname, metricCalcDef[12].mcName);
     metricCalcDef[12].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_POINT;
+	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
     metricCalcDef[12].mcChangeType = MD_GAUGE;
     metricCalcDef[12].mcIsContinuous = MD_TRUE;
-    metricCalcDef[12].mcCalculable = MD_NONSUMMABLE;
-    metricCalcDef[12].mcDataType = MD_FLOAT32;
-    metricCalcDef[12].mcCalc = metricCalcHostMemoryPercentage;
-    metricCalcDef[12].mcAliasId = metricCalcDef[7].mcId;
-    metricCalcDef[12].mcUnits = muPercent;
+    metricCalcDef[12].mcCalculable = MD_SUMMABLE;
+    metricCalcDef[12].mcDataType = MD_UINT64;
+    metricCalcDef[12].mcAliasId = metricCalcDef[3].mcId;
+    metricCalcDef[12].mcCalc = metricCalcTotalCPUTime;
+    metricCalcDef[12].mcUnits = muMilliSeconds;
 
     metricCalcDef[13].mcVersion = MD_VERSION;
-    metricCalcDef[13].mcName = "TenMinuteTotalCPUTime";
+    metricCalcDef[13].mcName =
+	"TenMinuteExternalViewTotalCPUTimePercentage";
     metricCalcDef[13].mcId = mr(pluginname, metricCalcDef[13].mcName);
     metricCalcDef[13].mcMetricType =
 	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
     metricCalcDef[13].mcChangeType = MD_GAUGE;
     metricCalcDef[13].mcIsContinuous = MD_TRUE;
-    metricCalcDef[13].mcCalculable = MD_SUMMABLE;
-    metricCalcDef[13].mcDataType = MD_UINT64;
-    metricCalcDef[13].mcAliasId = metricCalcDef[3].mcId;
-    metricCalcDef[13].mcCalc = metricCalcTotalCPUTime;
-    metricCalcDef[13].mcUnits = muMilliSeconds;
-
-    metricCalcDef[14].mcVersion = MD_VERSION;
-    metricCalcDef[14].mcName =
-	"TenMinuteExternalViewTotalCPUTimePercentage";
-    metricCalcDef[14].mcId = mr(pluginname, metricCalcDef[14].mcName);
-    metricCalcDef[14].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
-    metricCalcDef[14].mcChangeType = MD_GAUGE;
-    metricCalcDef[14].mcIsContinuous = MD_TRUE;
-    metricCalcDef[14].mcCalculable = MD_NONSUMMABLE;
-    metricCalcDef[14].mcDataType = MD_FLOAT32;
-    metricCalcDef[14].mcAliasId = metricCalcDef[6].mcId;
-    metricCalcDef[14].mcCalc = metricCalcExtTotalCPUTimePerc;
-    metricCalcDef[14].mcUnits = muPercent;
+    metricCalcDef[13].mcCalculable = MD_NONSUMMABLE;
+    metricCalcDef[13].mcDataType = MD_FLOAT32;
+    metricCalcDef[13].mcAliasId = metricCalcDef[6].mcId;
+    metricCalcDef[13].mcCalc = metricCalcExtTotalCPUTimePerc;
+    metricCalcDef[13].mcUnits = muPercent;
 
     *mcnum = 15;
     *mc = metricCalcDef;
@@ -430,10 +414,10 @@ size_t metricCalcActiveVirtualProcessors(MetricValue * mv,
 
 
 /* ---------------------------------------------------------------------------*/
-/* PartitionClaimedMemory                                                     */
+/* PhysicalMemoryAllocatedToVirtualSystem                                     */
 /* ---------------------------------------------------------------------------*/
 
-size_t metricCalcPartitionClaimedMemory(MetricValue * mv,
+size_t metricCalcPhysicalMemoryAllocatedToVirtualSystem(MetricValue * mv,
 					int mnum, void *v, size_t vlen)
 {
 #ifdef DEBUG
@@ -540,10 +524,10 @@ size_t metricCalcInternal(MetricValue * mv, int mnum, void *v, size_t vlen)
 
 
 /* ---------------------------------------------------------------------------*/
-/* ClaimedMemoryPercentage                                                    */
+/* PhysicalMemoryAllocatedToVirtualSystemPercentage                           */
 /* ---------------------------------------------------------------------------*/
 
-size_t metricCalcClaimedMemoryPercentage(MetricValue * mv,
+size_t metricCalcPhysicalMemoryAllocatedToVirtualSystemPercentage(MetricValue * mv,
 					 int mnum, void *v, size_t vlen)
 {
 #ifdef DEBUG
@@ -575,7 +559,7 @@ size_t metricCalcClaimedMemoryPercentage(MetricValue * mv,
 
 
 /* ---------------------------------------------------------------------------*/
-/* ClaimedMemoryPercentage                                                    */
+/* HostMemoryPercentage                                                       */
 /* ---------------------------------------------------------------------------*/
 
 size_t metricCalcHostMemoryPercentage(MetricValue * mv,

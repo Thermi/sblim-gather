@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.3 2006/03/14 15:08:35 mihajlov Exp $
+ * $Id: metricXen.c,v 1.4 2006/04/05 14:40:03 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -19,10 +19,10 @@
  *    TotalCPUTime
  *    ActiveVirtualProcessors
  *    ExternalViewTotalCPUPercentage
- *    PartitionClaimedMemory
+ *    PhysicalMemoryAllocatedToVirtualSystem
  *    PartitionClaimedMaximumMemory
  *    HostFreePhysicalMemory
- *    ClaimedMemoryPercentage
+ *    PhysicalMemoryAllocatedToVirtualSystemPercentage
  *    HostMemoryPercentage
  * 
  * plus the following metrics which are only intended for internal usage:
@@ -432,7 +432,7 @@ int metricRetrInternalMemory(int mid, MetricReturner mret)
 
 #ifdef DEBUG
     fprintf(stderr,
-	    "--- %s(%i) : Retrieving Xen MaximumPartitionClaimedMemory metric\n",
+	    "--- %s(%i) : Retrieving Xen MaximumPhysicalMemoryAllocatedToVirtualSystem metric\n",
 	    __FILE__, __LINE__);
 #endif
 
