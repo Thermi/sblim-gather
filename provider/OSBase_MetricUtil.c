@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.13 2006/03/06 18:04:08 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.14 2006/04/11 11:27:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -811,10 +811,10 @@ CMPIString * val2string(CMPIBroker * broker, const ValueItem *val,
     sprintf(valbuf,"%hd",*(short*)val->viValue);
     break;
   case MD_UINT32:
-    sprintf(valbuf,"%lu",*(unsigned long*)val->viValue);
+    sprintf(valbuf,"%u",*(unsigned*)val->viValue);
     break;
   case MD_SINT32:
-    sprintf(valbuf,"%ld",*(long*)val->viValue);
+    sprintf(valbuf,"%d",*(int*)val->viValue);
     break;
   case MD_UINT64:
     sprintf(valbuf,"%llu",*(unsigned long long*)val->viValue);
