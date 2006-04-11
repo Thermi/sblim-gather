@@ -1,3 +1,9 @@
+Changes in Version 2.1.1
+========================
+
+Bugs fixed:
+- 1468385 Fixed 32bit value display 
+
 Changes in Version 2.1.0
 ========================
 
@@ -19,6 +25,7 @@ Bugs fixed:
 - 1449628 Fixed segfault in Xen plugin
 - 1450216 Enhanced filter performance by adaptive sorting algorithms
 - 1454722 Fixed potential memory overwrite in local communications code
+- 1464845 Fixed potential repository failure for interval metrics
 
 Changes in Version 2.0.4
 ========================

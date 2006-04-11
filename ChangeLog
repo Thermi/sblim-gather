@@ -1,3 +1,16 @@
+2006-04-11  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* provider/Makefile.am: 
+	Added inter-library dependencies for better support of parallel makes.
+
+	* provider/OSBase_MetricUtil.c: 
+	Bug 1468385: Fixed conversion of 32bit integer values.
+
+2006-03-31  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* repos.c: 
+	Bug 1464845: Fixed total number calculation for returned metric values.
+
 2006-03-20  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* metric.h, util/commutil.c:

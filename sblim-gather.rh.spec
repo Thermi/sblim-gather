@@ -1,5 +1,5 @@
 #
-# $Id: sblim-gather.rh.spec,v 1.2 2006/04/05 11:21:30 mihajlov Exp $
+# $Id: sblim-gather.rh.spec,v 1.3 2006/04/11 11:28:00 mihajlov Exp $
 #
 # Package spec for sblim-gather
 #
@@ -11,7 +11,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Summary: SBLIM Performance Data Gatherer
 Name: sblim-gather
 Version: 2.1.0
-Release: 1.rh%{?rhel4:el4}
+Release: 2.rh%{?rhel4:el4}
 Group: Systems Management/Base
 URL: http://www.sblim.org
 License: CPL
@@ -160,6 +160,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/sblim-testsuite
 
 %changelog
+
+* Wed Apr 11 2006 Viktor Mihajlovski <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com> - 2.1.0-2.rh%{?rhel4:el4}
+- Update for second build of RPM
 
 * Fri Mar 31 2006 Viktor Mihajlovski <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com> - 2.1.0-1.rh%{?rhel4:el4}
 - Initial specfile for 2.1.0 for RH/Fedora

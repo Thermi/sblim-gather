@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.6 2006/02/22 14:11:59 mihajlov Exp $
+# $Id: Makefile.am,v 1.7 2006/04/11 11:28:00 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -81,27 +81,35 @@ provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \
 
 libOSBase_MetricDefinitionProvider_la_SOURCES = OSBase_MetricDefinitionProvider.c
 libOSBase_MetricDefinitionProvider_la_LIBADD = -lOSBase_MetricUtil
+libOSBase_MetricDefinitionProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricValueProvider_la_SOURCES = OSBase_MetricValueProvider.c
 libOSBase_MetricValueProvider_la_LIBADD = -lOSBase_MetricUtil
+libOSBase_MetricValueProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricGathererProvider_la_SOURCES = OSBase_MetricGathererProvider.c
 libOSBase_MetricGathererProvider_la_LIBADD = -lOSBase_MetricUtil -lrgather @LIBSBLIMBASE@
+libOSBase_MetricGathererProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricRepositoryServiceProvider_la_SOURCES = OSBase_MetricRepositoryServiceProvider.c
 libOSBase_MetricRepositoryServiceProvider_la_LIBADD = -lOSBase_MetricUtil @LIBSBLIMBASE@
+libOSBase_MetricRepositoryServiceProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricForMEProvider_la_SOURCES = OSBase_MetricForMEProvider.c
 libOSBase_MetricForMEProvider_la_LIBADD = -lOSBase_MetricUtil
+libOSBase_MetricForMEProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricDefForMEProvider_la_SOURCES = OSBase_MetricDefForMEProvider.c
 libOSBase_MetricDefForMEProvider_la_LIBADD = -lOSBase_MetricUtil
+libOSBase_MetricDefForMEProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricInstanceProvider_la_SOURCES = OSBase_MetricInstanceProvider.c
 libOSBase_MetricInstanceProvider_la_LIBADD = -lOSBase_MetricUtil
+libOSBase_MetricInstanceProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricIndicationProvider_la_SOURCES = OSBase_MetricIndicationProvider.c
 libOSBase_MetricIndicationProvider_la_LIBADD = -lOSBase_MetricUtil
+libOSBase_MetricIndicationProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 #
 # Automake instructions for ./mof subdir
