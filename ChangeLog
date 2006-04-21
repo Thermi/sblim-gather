@@ -1,3 +1,8 @@
+2006-04-21  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
+
+	* sblim-gather.spec.in, sblim-gather.rh.spec:
+	Bug 1474178: fixed bogus file ownerships.
+
 2006-04-11  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* provider/Makefile.am: 

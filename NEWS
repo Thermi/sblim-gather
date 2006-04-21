@@ -2,7 +2,8 @@ Changes in Version 2.1.1
 ========================
 
 Bugs fixed:
-- 1468385 Fixed 32bit value display 
+- 1468385 Fixed 32bit value display
+- 1474178 Fixed bogus file ownerships in RPM specfiles
 
 Changes in Version 2.1.0
 ========================

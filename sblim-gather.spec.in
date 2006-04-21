@@ -1,5 +1,5 @@
 #
-# $Id: sblim-gather.spec.in,v 1.4 2006/04/05 11:21:30 mihajlov Exp $
+# $Id: sblim-gather.spec.in,v 1.5 2006/04/21 12:34:50 mihajlov Exp $
 #
 # Package spec for @PACKAGE@
 #
@@ -119,7 +119,6 @@ fi
 %files
 
 %defattr(-,root,root) 
-
 %config(noreplace) %{_sysconfdir}/*.conf
 %docdir %{_datadir}/doc/%{name}-%{version}
 %{_bindir}/*
@@ -131,17 +130,20 @@ fi
 %{_libdir}/gather/rplug
 
 %files provider
+
+%defattr(-,root,root) 
 %{_libdir}/gather/cplug
 %{_libdir}/libOSBase*.so.*
 %{_libdir}/cmpi
 %{_datadir}/%{name}
 
 %files devel
+%defattr(-,root,root) 
+
 %{_libdir}/lib[^O]*.so
 %{_includedir}/gather
 
 %files test
-
 %defattr(-,root,root)
 %{_datadir}/sblim-testsuite
 

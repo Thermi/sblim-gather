@@ -1,5 +1,5 @@
 #
-# $Id: sblim-gather.rh.spec,v 1.3 2006/04/11 11:28:00 mihajlov Exp $
+# $Id: sblim-gather.rh.spec,v 1.4 2006/04/21 12:34:50 mihajlov Exp $
 #
 # Package spec for sblim-gather
 #
@@ -133,7 +133,6 @@ rm -rf $RPM_BUILD_ROOT
 %files
 
 %defattr(-,root,root) 
-
 %config(noreplace) %{_sysconfdir}/*.conf
 %docdir %{_datadir}/doc/%{name}-%{version}
 %{_bindir}/*
@@ -145,12 +144,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gather/rplug
 
 %files provider
+
+%defattr(-,root,root) 
 %{_libdir}/gather/cplug
 %{_libdir}/libOSBase*.so.*
 %{providerdir}
 %{_datadir}/%{name}
 
 %files devel
+
+%defattr(-,root,root) 
 %{_libdir}/lib[^O]*.so
 %{_includedir}/gather
 
@@ -160,6 +163,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/sblim-testsuite
 
 %changelog
+
+* Fri Apr 21 2006 Viktor Mihajlovski <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com> - 2.1.0-3.rh%{?rhel4:el4}
+- Fixed file ownerships
 
 * Wed Apr 11 2006 Viktor Mihajlovski <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com> - 2.1.0-2.rh%{?rhel4:el4}
 - Update for second build of RPM
