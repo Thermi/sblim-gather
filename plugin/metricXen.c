@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.4 2006/04/05 14:40:03 obenke Exp $
+ * $Id: metricXen.c,v 1.5 2006/04/26 15:08:04 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -637,7 +637,7 @@ int parseXm()
 	if (NULL != xen_statistics.domain_name[num_domains])
 	    free(xen_statistics.domain_name[num_domains]);
 	xen_statistics.domain_name[num_domains] =
-	    calloc(xm_endp - xm_result + 2, 0);
+	    calloc(1,xm_endp - xm_result + 2);
 	strncpy(xen_statistics.domain_name[num_domains], xm_result,
 		xm_endp - xm_result);
 #ifdef DEBUG
