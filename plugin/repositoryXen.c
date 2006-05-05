@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryXen.c,v 1.3 2006/04/05 14:40:03 obenke Exp $
+ * $Id: repositoryXen.c,v 1.4 2006/05/05 14:48:30 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -29,7 +29,7 @@
  *    _Internal_TotalCPUTime
  *    _Internal_Memory
  *
- */
+*/
 
 /* ---------------------------------------------------------------------------*/
 
@@ -275,7 +275,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[13].mcCalc = metricCalcExtTotalCPUTimePerc;
     metricCalcDef[13].mcUnits = muPercent;
 
-    *mcnum = 15;
+    *mcnum = 14;
     *mc = metricCalcDef;
     return 0;
 }
