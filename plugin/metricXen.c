@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.6 2006/05/05 14:55:47 obenke Exp $
+ * $Id: metricXen.c,v 1.7 2006/05/05 20:29:53 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -706,7 +706,7 @@ int parseXmInfo()
       if (EOF == (signed char)(*buf_current++ = fgetc(fp)))
 	    break;
     }
-    *buf_current = "\0";
+    *buf_current = '\0';
 
     if (0 == strlen(buffer)) {
 	perror("fgets");
