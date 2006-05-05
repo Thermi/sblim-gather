@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.5 2006/04/26 15:08:04 obenke Exp $
+ * $Id: metricXen.c,v 1.6 2006/05/05 14:55:47 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -400,7 +400,7 @@ int metricRetrActiveVirtualProcessors(int mid, MetricReturner mret)
 	for (i = 0; i < num_domains; i++) {
 
 	    mv = calloc(1, sizeof(MetricValue) +
-			sizeof(unsigned short) +
+			sizeof(float) +
 			strlen(xen_statistics.domain_name[i]) + 1);
 
 	    if (mv) {
@@ -571,12 +571,13 @@ int parseXm()
     }
 
     buf_current = (char *) &buffer[0];
-    buf_end = (char *) &buffer[BUFFER_MAX] - 1;
+    buf_end = (char *) &buffer[BUFFER_MAX-1];
 
     while (buf_current < buf_end) {
       if (EOF == (signed char)(*buf_current++ = fgetc(fp)))
 	    break;
     }
+    *buf_current = '\0';
 
     if (0 == strlen(buffer)) {
 	perror("fgets");
@@ -699,12 +700,13 @@ int parseXmInfo()
     }
 
     buf_current = (char *) &buffer[0];
-    buf_end = (char *) &buffer[BUFFER_MAX] - 1;
+    buf_end = (char *) &buffer[BUFFER_MAX-1];
 
     while (buf_current < buf_end) {
       if (EOF == (signed char)(*buf_current++ = fgetc(fp)))
 	    break;
     }
+    *buf_current = "\0";
 
     if (0 == strlen(buffer)) {
 	perror("fgets");
