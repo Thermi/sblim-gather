@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.7 2006/05/05 20:29:53 obenke Exp $
+ * $Id: metricXen.c,v 1.8 2006/05/22 14:55:26 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -451,32 +451,30 @@ int metricRetrInternalMemory(int mid, MetricReturner mret)
 #endif
 
 	char buf[70];		// 3 unsigned long, max 20 characters each
-	int size = 0;
 
 	for (i = 0; i < num_domains; i++) {
-
+	    memset(buf,0,sizeof(buf));
 	    sprintf(buf,
-		    "c%lldm%lldt%llde",
+		    "%lld:%lld:%lld",
 		    xen_statistics.claimed_memory[i],
 		    xen_statistics.max_memory[i], total_memory);
-	    size = strlen(buf);
 #ifdef DEBUG
 	    fprintf(stderr, "%s internal memory metric: %s size: %d\n",
-		    xen_statistics.domain_name[i], buf, size);
+		    xen_statistics.domain_name[i], buf, strlen(buf));
 #endif
 	    mv = calloc(1, sizeof(MetricValue) +
-			size + strlen(xen_statistics.domain_name[i]) + 1);
+			strlen(buf) + strlen(xen_statistics.domain_name[i]) + 2);
 
 	    if (mv) {
 		mv->mvId = mid;
 		mv->mvTimeStamp = time(NULL);
-		mv->mvDataType = MD_UINT64;
-		mv->mvDataLength = size;
+		mv->mvDataType = MD_STRING;
+		mv->mvDataLength = (strlen(buf)+1);
 		mv->mvData = (char *) mv + sizeof(MetricValue);
-		strncpy(mv->mvData, buf, size);
+		strncpy(mv->mvData, buf, strlen(buf));
 
 		mv->mvResource = (char *) mv + sizeof(MetricValue)
-		    + size;
+		  + (strlen(buf)+1);
 		strcpy(mv->mvResource, xen_statistics.domain_name[i]);
 		mret(mv);
 	    }
@@ -706,7 +704,7 @@ int parseXmInfo()
       if (EOF == (signed char)(*buf_current++ = fgetc(fp)))
 	    break;
     }
-    *buf_current = '\0';
+    *buf_current = "\0";
 
     if (0 == strlen(buffer)) {
 	perror("fgets");

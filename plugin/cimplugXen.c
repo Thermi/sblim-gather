@@ -1,6 +1,6 @@
 
 /*
- * $Id: cimplugXen.c,v 1.2 2006/02/23 13:20:39 obenke Exp $
+ * $Id: cimplugXen.c,v 1.3 2006/05/22 14:55:26 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -35,11 +35,8 @@ CMPIObjectPath *COP4VALID(CMPIBroker * broker, const char *id,
 	CMNewObjectPath(broker, NULL, "Xen_ComputerSystem",
 			NULL);
     if (cop) {
-	CMAddKey(cop, "Name", systemid, CMPI_chars);
+	CMAddKey(cop, "Name", id, CMPI_chars);
 	CMAddKey(cop, "CreationClassName", "Xen_ComputerSystem",
-		 CMPI_chars);
-	CMAddKey(cop, "CSName", systemid, CMPI_chars);
-	CMAddKey(cop, "CSCreationClassName", "Linux_ComputerSystem",
 		 CMPI_chars);
     }
     return cop;
@@ -51,21 +48,18 @@ int VALID4COP(CMPIObjectPath * cop, char *id, size_t idlen,
     CMPIData data;
     char *str;
 
+    return -1;
     if (cop && id && systemid) {
-	if (strlen("OperatingSystem") + 1 > idlen) {
-	    return -1;
-	} else {
-	    strcpy(id, "OperatingSystem");
-	}
-	data = CMGetKey(cop, "CSName", NULL);
+	data = CMGetKey(cop, "Name", NULL);
 	if (data.type == CMPI_string && data.value.string) {
 	    str = CMGetCharPtr(data.value.string);
-	    if (strlen(str) < systemidlen) {
-		strcpy(systemid, str);
+	    if (strlen(id) < idlen) {
+		strcpy(id, str);
 		return 0;
 	    }
 	}
     }
+    // systemid is not a key property of Xen_ComputerSystem
     return -1;
 }
 

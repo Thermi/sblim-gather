@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.readme,v 1.3 2006/04/05 14:40:03 obenke Exp $
+ * $Id: metricXen.readme,v 1.4 2006/05/22 14:55:26 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -27,9 +27,10 @@ The Plugin offers the following metrics :
 - ActiveVirtualProcessors
 - ExternalViewTotalCPUPercentage
 - TenMinuteExternalViewTotalCPUPercentage
-- PhysicalMemoryAllocatedToVirtualSystem
+- PartitionClaimedMemory
+- PartitionClaimedMaximumMemory
 - HostFreePhysicalMemory
-- PhysicalMemoryAllocatedToVirtualSystemPercentage
+- ClaimedMemoryPercentage
 - HostMemoryPercentage
 
 plus the following metrics which are only intended for internal usage:
@@ -97,8 +98,19 @@ Value Source    : like ExternalViewTotalCPUPercentage
 
 /* ---------------------------------------------------------------------------*/
 
-PhysicalMemoryAllocatedToVirtualSystem                 
---------------------------------------                  
+PartitionClaimedMemory                 
+----------------------                  
+
+Metric Type     : Point   
+Sample Interval : 30 sec
+CIM Data Type   : uint64
+Units           : KiloBytes
+
+Value Source    : "xm list --long"                         
+
+
+PartitionClaimedMaximumMemory                 
+-----------------------------                  
 
 Metric Type     : Point   
 Sample Interval : 30 sec
@@ -119,8 +131,8 @@ Units           : KiloBytes
 Value Source    : "xm info"
 
 
-PhysicalMemoryAllocatedToVirtualSystemPercentage
-------------------------------------------------                  
+ClaimedMemoryPercentage
+----------------------                  
 
 Metric Type     : Point   
 Sample Interval : 30 sec

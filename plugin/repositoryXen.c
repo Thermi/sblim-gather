@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryXen.c,v 1.4 2006/05/05 14:48:30 obenke Exp $
+ * $Id: repositoryXen.c,v 1.5 2006/05/22 14:55:26 obenke Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -68,7 +68,7 @@ static MetricCalculator metricCalcPhysicalMemoryAllocatedToVirtualSystem;
 // metric HostFreePhysicalMemory
 static MetricCalculator metricCalcHostFreePhysicalMemory;
 
-// internal metric - not externalized
+// internal metric - only implemented for internal usage
 static MetricCalculator metricCalcInternal;
 
 // metric PhysicalMemoryAllocatedToVirtualSystemPercentage
@@ -189,6 +189,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[6].mcUnits = muSeconds;
 
     // ----- Xen_ComputerSystem Memory metrics -----
+   
     metricCalcDef[7].mcVersion = MD_VERSION;
     metricCalcDef[7].mcName = "_Internal_Memory";
     metricCalcDef[7].mcId = mr(pluginname, metricCalcDef[7].mcName);
@@ -431,7 +432,7 @@ size_t metricCalcPhysicalMemoryAllocatedToVirtualSystem(MetricValue * mv,
 	unsigned long long claimed_memory = 0;
 	unsigned long long total_memory = 0;
 	unsigned long long max_memory = 0;
-	sscanf(buf, "c%lldm%lldt%llde",
+	sscanf(buf, "%lld:%lld:%lld",
 	       &claimed_memory, &max_memory, &total_memory);
 
 #ifdef DEBUG
@@ -465,7 +466,7 @@ size_t metricCalcPartitionMaximumMemory(MetricValue * mv,
 	unsigned long long claimed_memory = 0;
 	unsigned long long total_memory = 0;
 	unsigned long long max_memory = 0;
-	sscanf(buf, "c%lldm%lldt%llde",
+	sscanf(buf, "%lld:%lld:%lld",
 	       &claimed_memory, &max_memory, &total_memory);
 
 #ifdef DEBUG
@@ -541,7 +542,7 @@ size_t metricCalcPhysicalMemoryAllocatedToVirtualSystemPercentage(MetricValue * 
 	unsigned long long claimed_memory = 0;
 	unsigned long long total_memory = 0;
 	unsigned long long max_memory = 0;
-	sscanf(buf, "c%lldm%lldt%llde",
+	sscanf(buf, "%lld:%lld:%lld",
 	       &claimed_memory, &max_memory, &total_memory);
 
 #ifdef DEBUG
@@ -576,7 +577,7 @@ size_t metricCalcHostMemoryPercentage(MetricValue * mv,
 	unsigned long long claimed_memory = 0;
 	unsigned long long total_memory = 0;
 	unsigned long long max_memory = 0;
-	sscanf(buf, "c%lldm%lldt%llde",
+	sscanf(buf, "%lld:%lld:%lld",
 	       &claimed_memory, &max_memory, &total_memory);
 
 #ifdef DEBUG
@@ -590,6 +591,7 @@ size_t metricCalcHostMemoryPercentage(MetricValue * mv,
 	return sizeof(float);
     }
 
+    return -1;
 }
 
 
