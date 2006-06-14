@@ -1,3 +1,8 @@
+2006-06-14  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-50.boeblingen.de.ibm.com>
+
+	* provider/test/test-gather.sh: 
+	Bug 1506037: testsuite invocation fails with https connections.
+
 2006-04-21  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* sblim-gather.spec.in, sblim-gather.rh.spec:

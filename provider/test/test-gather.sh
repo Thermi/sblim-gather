@@ -35,7 +35,7 @@ elif  [[ -n $USERID && -n $PASSWORD ]]; then
     SBLIM_TESTSUITE_ACCESS="$USERID:$PASSWORD@";
 fi
 
-CIMTEST=`wbemgc http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:CIM_ManagedElement 2>&1`
+CIMTEST=`wbemgc ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:CIM_ManagedElement 2>&1`
 if ! echo $CIMTEST | grep anaged > /dev/null
 then
     echo "Error occurred ... is the CIMOM running?"
@@ -46,7 +46,7 @@ fi
 # Initialize Gatherer Service 
 echo k | gatherctl
 echo d | gatherctl
-GATHER=`wbemein http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricGatherer 2>&1`
+GATHER=`wbemein ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricGatherer 2>&1`
 if echo $GATHER | grep -v Linux_MetricGatherer > /dev/null
 then
     echo "Error occurred listing the Metric Gatherer ... are the providers installed?"
@@ -55,11 +55,11 @@ then
 fi
 
 # Stopping everything to be in a defined state then start
-wbemcm http://${SBLIM_TESTSUITE_ACCESS}$GATHER StopSampling > /dev/null
-wbemcm http://${SBLIM_TESTSUITE_ACCESS}$GATHER StopService > /dev/null
+wbemcm ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER StopSampling > /dev/null
+wbemcm ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER StopService > /dev/null
 
-wbemcm http://${SBLIM_TESTSUITE_ACCESS}$GATHER StartService > /dev/null
-SAMPLING=`wbemcm http://${SBLIM_TESTSUITE_ACCESS}$GATHER StartSampling`
+wbemcm ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER StartService > /dev/null
+SAMPLING=`wbemcm ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER StartSampling`
 if ! echo $SAMPLING | grep -i TRUE > /dev/null
 then
     echo "The Metric Gather is not sampling - have to quit"
@@ -69,7 +69,7 @@ fi
 # Initialize Repository Service 
 #echo k | reposctl
 #echo d | reposctl
-REPOS=`wbemein http://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricRepositoryService 2>&1`
+REPOS=`wbemein ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricRepositoryService 2>&1`
 if echo $REPOS | grep -v Linux_MetricRepositoryService > /dev/null
 then
     echo "Error occurred listing the Repository Service ... are the providers installed?"
@@ -78,9 +78,9 @@ then
 fi
 
 # Stopping everything to be in a defined state then start
-wbemcm http://${SBLIM_TESTSUITE_ACCESS}$REPOS StopService > /dev/null
+wbemcm ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$REPOS StopService > /dev/null
 
-wbemcm http://${SBLIM_TESTSUITE_ACCESS}$REPOS StartService > /dev/null
+wbemcm ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$REPOS StartService > /dev/null
 
 # Wait 60 seconds to make sure that enough samples are generated
 echo "need to wait 60 seconds for gatherd and sampling initialization ... please stand by ... we will be back ;-) ...";
