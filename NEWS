@@ -5,6 +5,7 @@ Bugs fixed:
 - 1468385 Fixed 32bit value display
 - 1474178 Fixed bogus file ownerships in RPM specfiles
 - 1506037 Fixed testsuite for https CIM server connections
+- 1509900 Fixed memory corruption in Xen Plugin
 
 Changes in Version 2.1.0
 ========================

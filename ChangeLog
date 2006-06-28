@@ -3,6 +3,27 @@
 	* provider/test/test-gather.sh: 
 	Bug 1506037: testsuite invocation fails with https connections.
 
+2006-05-22  obenke
+
+	* plugin/: cimplugXen.c, metricXen.c, metricXen.readme,
+	  repositoryXen.c: fixed memory leak fixed cimplugXen module for
+	  enumerateInstanceNames operation
+
+2006-05-05 obenke
+
+	* plugin/metricXen.c: single quote for single character `\n`
+
+	* plugin/metricXen.c: solved memory leak problem (thanks to Viktor
+	  and Wayne!)
+
+	* plugin/repositoryXen.c: fixed memory leak (thanks to Viktor and
+	  Wayne!)
+
+2006-04-26 obenke
+
+	* plugin/metricXen.c:
+	  (hopefully) fixed memory leak
+
 2006-04-21  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
 	* sblim-gather.spec.in, sblim-gather.rh.spec:
@@ -15,6 +36,11 @@
 
 	* provider/OSBase_MetricUtil.c: 
 	Bug 1468385: Fixed conversion of 32bit integer values.
+
+2006-04-05 obenke
+
+	* plugin/: metricXen.c, metricXen.readme, repositoryXen.c: some
+	  renames of Xen metrics
 
 2006-03-31  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com>
 
