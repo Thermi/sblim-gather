@@ -12,5 +12,5 @@ Name : -eq reposd
 
 EnabledState: -eq 2
 Started: -eq TRUE
-NumberOfPlugins: -eq 7
-NumberOfMetrics: -eq 79
+NumberOfPlugins: -eq 11
+NumberOfMetrics: -eq 114

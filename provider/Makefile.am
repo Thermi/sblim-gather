@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.7 2006/04/11 11:28:00 mihajlov Exp $
+# $Id: Makefile.am,v 1.8 2006/07/03 15:27:37 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -53,7 +53,11 @@ cimplugin_LTLIBRARIES = libcimplugOperatingSystem.la \
 	libcimplugProcessor.la \
 	libcimplugXen.la \
 	libcimplugNetworkPort.la \
-	libcimplugIPProtocolEndpoint.la
+	libcimplugIPProtocolEndpoint.la \
+	libcimplugzECKD.la \
+	libcimplugzCEC.la \
+	libcimplugzLPAR.la \
+	libcimplugzCH.la
 
 libcimplugOperatingSystem_la_SOURCES=$(srcdir)/../plugin/cimplugOperatingSystem.c
 libcimplugLocalFileSystem_la_SOURCES=$(srcdir)/../plugin/cimplugLocalFileSystem.c
@@ -62,6 +66,10 @@ libcimplugProcessor_la_SOURCES=$(srcdir)/../plugin/cimplugProcessor.c
 libcimplugXen_la_SOURCES=$(srcdir)/../plugin/cimplugXen.c
 libcimplugNetworkPort_la_SOURCES=$(srcdir)/../plugin/cimplugNetworkPort.c
 libcimplugIPProtocolEndpoint_la_SOURCES=$(srcdir)/../plugin/cimplugIPProtocolEndpoint.c
+libcimplugzECKD_la_SOURCES=$(srcdir)/../plugin/cimplugzECKD.c
+libcimplugzCEC_la_SOURCES=$(srcdir)/../plugin/cimplugzCEC.c
+libcimplugzCH_la_SOURCES=$(srcdir)/../plugin/cimplugzCH.c
+libcimplugzLPAR_la_SOURCES=$(srcdir)/../plugin/cimplugzLPAR.c
 
 # Gather CMPI provider utility libraries
 lib_LTLIBRARIES = libOSBase_MetricUtil.la
@@ -121,7 +129,11 @@ MOFS=	$(srcdir)/mof/Linux_Metric.mof \
 	$(srcdir)/mof/Linux_OperatingSystemMetric.mof \
 	$(srcdir)/mof/Linux_ProcessorMetric.mof \
 	$(srcdir)/mof/Linux_XenMetric.mof \
-	$(srcdir)/mof/Linux_UnixProcessMetric.mof 
+	$(srcdir)/mof/Linux_UnixProcessMetric.mof \
+	$(srcdir)/mof/Linux_zECKDMetric.mof \
+	$(srcdir)/mof/Linux_zCECMetric.mof \
+	$(srcdir)/mof/Linux_zLPARMetric.mof \
+	$(srcdir)/mof/Linux_zCHMetric.mof
 REGS=	$(srcdir)/mof/Linux_IPProtocolEndpointMetric.registration \
 	$(srcdir)/mof/Linux_LocalFileSystemMetric.registration \
 	$(srcdir)/mof/Linux_Metric.registration \
@@ -129,7 +141,11 @@ REGS=	$(srcdir)/mof/Linux_IPProtocolEndpointMetric.registration \
 	$(srcdir)/mof/Linux_OperatingSystemMetric.registration \
 	$(srcdir)/mof/Linux_ProcessorMetric.registration \
 	$(srcdir)/mof/Linux_XenMetric.registration \
-	$(srcdir)/mof/Linux_UnixProcessMetric.registration
+	$(srcdir)/mof/Linux_UnixProcessMetric.registration \
+	$(srcdir)/mof/Linux_zECKDMetric.registration \
+	$(srcdir)/mof/Linux_zCECMetric.registration \
+	$(srcdir)/mof/Linux_zLPARMetric.registration \
+	$(srcdir)/mof/Linux_zCHMetric.registration
 
 # Register the provider(s) and class definition(s) to the current CIM server/CIMOM
 postinstall:

@@ -7,6 +7,11 @@
 export SBLIM_TESTSUITE_RUN=1;
 SCRIPT_PATH=`dirname ${BASH_SOURCE}`
 
+if test x$SBLIM_TESTSUITE_PROTOCOL=x
+then
+   SBLIM_TESTSUITE_PROTOCOL=http
+fi
+
 #******************************************************************************#
 while [ "$#" -gt 0 ]
 do

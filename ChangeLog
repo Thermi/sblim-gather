@@ -1,3 +1,13 @@
+2006-07-03  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-50.boeblingen.de.ibm.com>
+
+	* configure.ac, Makefile.am, sblim-gather.rh.spec, 
+	sblim-gather.spec.in, provider/Makefile.am, 
+	provider/test/test-gather.sh,
+	provider/test/system/linux/Linux_MetricGatherer.system, 
+	provider/test/system/linux/Linux_MetricRepositoryService.system: 
+	Bug 1509902: New plugins for System z. Necessary adaptations of
+	build, deployment and test files.
+
 2006-06-14  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-50.boeblingen.de.ibm.com>
 
 	* provider/test/test-gather.sh: 

@@ -7,6 +7,9 @@ Bugs fixed:
 - 1506037 Fixed testsuite for https CIM server connections
 - 1509900 Fixed memory corruption in Xen Plugin
 
+Features added:
+- 1509902 Added plugins for IBM System z
+
 Changes in Version 2.1.0
 ========================
 

@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.9 2006/03/20 17:15:12 mihajlov Exp $
+# $Id: Makefile.am,v 1.10 2006/07/03 15:27:35 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -45,7 +45,11 @@ doc_DATA+=plugin/metricIPProtocolEndpoint.readme \
 	plugin/metricLocalFileSystem.readme \
 	plugin/metricOperatingSystem.readme \
 	plugin/metricUnixProcess.readme \
-	plugin/metricXen.readme
+	plugin/metricXen.readme \
+	plugin/metriczECKD.readme \
+	plugin/metriczCEC.readme \
+	plugin/metriczLPAR.readme \
+	plugin/metriczCH.readme
 EXTRA_DIST+=$(doc_DATA)
 
 #doc_DATA+=doc/rpmbuild.txt
@@ -67,11 +71,13 @@ noinst_HEADERS = gatherc.h marshal.h mlist.h mplugmgr.h \
 	util/mlog.h util/mtrace.h util/mcfg.h \
 	util/merrno.h util/mrwlock.h util/reposcfg.h util/dirutil.h \
 	comms/mcclt.h comms/mcdefs.h comms/mcserv.h comms/rcclt.h \
-	comms/rcserv.h 
+	comms/rcserv.h \
+	plugin/channelutil.h plugin/hypfs.h
 
 # Gather support utility libraries
 lib_LTLIBRARIES = libgatherutil.la libmcserv.la librcserv.la \
-	librrepos.la librepos.la libgather.la librgather.la
+	librrepos.la librepos.la libgather.la librgather.la \
+	libsysfswrapper.la libhypfs.la liblparutil.la libchannelutil.la
 
 libgatherutil_la_SOURCES = util/mrwlock.c util/commheap.c util/commutil.c \
 	util/gatherutil.c util/mcfg.c util/gathercfg.c util/reposcfg.c \
@@ -105,6 +111,20 @@ libgather_la_CPPFLAGS = $(AM_CPPFLAGS) -DGATHER_PLUGINDIR=\"$(metricplugindir)\"
 libgather_la_LIBADD = -lrrepos -lgatherutil
 libgather_la_DEPENDENCIES = librrepos.la libgatherutil.la
 
+# Plugin Utility 
+libsysfswrapper_la_SOURCES = plugin/sysfswrapper.c plugin/sysfswrapper.h
+libsysfswrapper_la_LIBADD = -lsysfs
+
+libhypfs_la_SOURCES = plugin/hypfs.c plugin/hypfs.h
+
+liblparutil_la_SOURCES = plugin/lparutil.c plugin/lparutil.h
+liblparutil_la_LIBADD = -lhypfs
+liblparutil_la_DEPENDENCIES = libhypfs.la
+
+libchannelutil_la_SOURCES = plugin/channelutil.c plugin/channelutil.h
+libchannelutil_la_LIBADD = -lsysfs -lsysfswrapper
+libchannelutil_la_DEPENDENCIES = libsysfswrapper.la
+
 # Gather daemons
 sbin_PROGRAMS = gatherd reposd
 
@@ -135,7 +155,11 @@ metricplugin_LTLIBRARIES = libmetricOperatingSystem.la \
 	libmetricProcessor.la \
 	libmetricNetworkPort.la \
 	libmetricIPProtocolEndpoint.la \
-	libmetricXen.la
+	libmetricXen.la \
+	libmetriczECKD.la \
+	libmetriczLPAR.la \
+	libmetriczCEC.la \
+	libmetriczCH.la
 
 libmetricOperatingSystem_la_SOURCES=plugin/metricOperatingSystem.c
 libmetricOperatingSystem_la_LIBADD=-lgatherutil
@@ -159,13 +183,33 @@ libmetricNetworkPort_la_SOURCES=plugin/metricNetworkPort.c
 
 libmetricIPProtocolEndpoint_la_SOURCES=plugin/metricIPProtocolEndpoint.c
 
+libmetriczECKD_la_SOURCES=plugin/metriczECKD.c
+libmetriczECKD_la_LIBADD=-lsysfswrapper -lgatherutil
+libmetriczECKD_la_DEPENDENCIES=libsysfswrapper.la
+
+libmetriczLPAR_la_SOURCES=plugin/metriczLPAR.c
+libmetriczLPAR_la_LIBADD=-llparutil -lgatherutil
+libmetriczLPAR_la_DEPENDENCIES=liblparutil.la
+
+libmetriczCEC_la_SOURCES=plugin/metriczCEC.c
+libmetriczCEC_la_LIBADD=-llparutil -lgatherutil
+libmetriczCEC_la_DEPENDENCIES=liblparutil.la
+
+libmetriczCH_la_SOURCES=plugin/metriczCH.c
+libmetriczCH_la_LIBADD=-lchannelutil -lgatherutil
+libmetriczCH_la_DEPENDENCIES=libchannelutil.la
+
 reposplugin_LTLIBRARIES = librepositoryOperatingSystem.la \
 	librepositoryLocalFileSystem.la \
 	librepositoryUnixProcess.la \
 	librepositoryProcessor.la \
 	librepositoryNetworkPort.la \
 	librepositoryIPProtocolEndpoint.la \
-	librepositoryXen.la
+	librepositoryXen.la \
+        librepositoryzECKD.la \
+	librepositoryzLPAR.la \
+	librepositoryzCEC.la \
+	librepositoryzCH.la
 
 librepositoryOperatingSystem_la_SOURCES=plugin/repositoryOperatingSystem.c
 librepositoryOperatingSystem_la_LIBADD=-lgatherutil
@@ -188,10 +232,23 @@ librepositoryXen_la_DEPENDENCIES=libgatherutil.la
 librepositoryNetworkPort_la_SOURCES=plugin/repositoryNetworkPort.c
 
 librepositoryIPProtocolEndpoint_la_SOURCES=plugin/repositoryIPProtocolEndpoint.c
+librepositoryzECKD_la_SOURCES=plugin/repositoryzECKD.c
+librepositoryzECKD_la_LIBADD=-lgatherutil
+
+librepositoryzLPAR_la_SOURCES=plugin/repositoryzLPAR.c
+librepositoryzLPAR_la_LIBADD=-lgatherutil
+
+librepositoryzCEC_la_SOURCES=plugin/repositoryzCEC.c
+librepositoryzCEC_la_LIBADD=-lgatherutil
+
+librepositoryzCH_la_SOURCES=plugin/repositoryzCH.c
+librepositoryzCH_la_LIBADD=-lchannelutil -lgatherutil -lm
+librepositoryzCH_la_DEPENDENCIES=libchannelutil.la
 
 # Gather utility test programs (not installed)
 noinst_PROGRAMS = mcfgtest mtracetest merrnotest mcstest mcctest \
-	rcstest rcctest
+	rcstest rcctest \
+        hyptest channelclt
 
 mcfgtest_SOURCES = util/mcfgtest.c
 mcfgtest_LDADD = -lgatherutil
@@ -222,6 +279,16 @@ rcctest_LDADD = -lrcserv
 rcctest_DEPENDENCIES = librcserv.la
 
 EXTRA_DIST += util/test.cfg
+
+# Plugin Test
+
+hyptest_SOURCES = plugin/hyptest.c
+hyptest_LDADD = -lhypfs
+hyptest_DEPENDENCIES = libhypfs.la
+
+channelclt_SOURCES = plugin/channelclt.c 
+channelclt_LDADD = -lsysfs -lchannelutil -lsysfswrapper
+channelclt_DEPENDENCIES = libsysfswrapper.la libchannelutil.la
 
 # Gather config files
 sysconf_DATA = gatherd.conf reposd.conf

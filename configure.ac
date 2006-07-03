@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([sblim-gather],[2.1.0a],[sblim-devel@lists.sourceforge.net])
+AC_INIT([sblim-gather],[2.1.1],[sblim-devel@lists.sourceforge.net])
 AC_CONFIG_SRCDIR([cimplug.h])
 AC_CONFIG_HEADER([gather-config.h])
 AM_INIT_AUTOMAKE
@@ -40,6 +40,7 @@ AC_ARG_VAR([CIMSERVER],[the target CIM server (pegasus|sfcb|openwbem|sniacimom).
 # Checks for libraries.
 AC_CHECK_LIB([pthread], [pthread_create])
 AC_CHECK_LIB([dl], [dlopen])
+AC_CHECK_LIB([sysfs], [sysfs_open_driver])
 
 # Checks for header files.
 AC_HEADER_DIRENT

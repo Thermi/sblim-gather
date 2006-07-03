@@ -1,5 +1,5 @@
 #
-# $Id: sblim-gather.rh.spec,v 1.4 2006/04/21 12:34:50 mihajlov Exp $
+# $Id: sblim-gather.rh.spec,v 1.5 2006/07/03 15:27:35 mihajlov Exp $
 #
 # Package spec for sblim-gather
 #
@@ -10,8 +10,8 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Summary: SBLIM Performance Data Gatherer
 Name: sblim-gather
-Version: 2.1.0
-Release: 2.rh%{?rhel4:el4}
+Version: 2.1.1pre1
+Release: 1.rh%{?rhel4:el4}
 Group: Systems Management/Base
 URL: http://www.sblim.org
 License: CPL
@@ -26,6 +26,9 @@ BuildRequires: sblim-cmpi-devel
 BuildRequires: tog-pegasus-devel >= 2.5
 %endif
 BuildRequires: sblim-cmpi-base-devel
+BuildRequires: sysfsutils-devel
+Requires: sysfsutils
+Provides: sblim-gather-pluginz = %{version}
 
 %Description
 Standards Based Linux Instrumentation Performance Data Gatherer Base.
@@ -44,6 +47,7 @@ Requires: tog-pegasus >= 2.4
 Requires: tog-pegasus >= 2.5
 %endif
 Requires: sblim-cmpi-base
+Provides: sblim-gather-pluginz-provider = %{version}
 
 %Description provider
 This package is containing the CIM Providers for the SBLIM Gatherer.
@@ -93,8 +97,8 @@ find $RPM_BUILD_ROOT/%{_libdir} -maxdepth 1 -name "*.so" ! -name libgatherutil.s
 
 %pre provider
 
-%define SCHEMA 	%{_datadir}/%{name}/Linux_Metric.mof %{_datadir}/%{name}/Linux_IPProtocolEndpointMetric.mof %{_datadir}/%{name}/Linux_LocalFileSystemMetric.mof %{_datadir}/%{name}/Linux_NetworkPortMetric.mof %{_datadir}/%{name}/Linux_OperatingSystemMetric.mof %{_datadir}/%{name}/Linux_ProcessorMetric.mof %{_datadir}/%{name}/Linux_UnixProcessMetric.mof %{_datadir}/%{name}/Linux_XenMetric.mof 
-%define REGISTRATION %{_datadir}/%{name}/Linux_IPProtocolEndpointMetric.registration %{_datadir}/%{name}/Linux_LocalFileSystemMetric.registration %{_datadir}/%{name}/Linux_Metric.registration %{_datadir}/%{name}/Linux_NetworkPortMetric.registration %{_datadir}/%{name}/Linux_OperatingSystemMetric.registration %{_datadir}/%{name}/Linux_ProcessorMetric.registration %{_datadir}/%{name}/Linux_UnixProcessMetric.registration %{_datadir}/%{name}/Linux_XenMetric.registration 
+%define SCHEMA 	%{_datadir}/%{name}/Linux_Metric.mof %{_datadir}/%{name}/Linux_IPProtocolEndpointMetric.mof %{_datadir}/%{name}/Linux_LocalFileSystemMetric.mof %{_datadir}/%{name}/Linux_NetworkPortMetric.mof %{_datadir}/%{name}/Linux_OperatingSystemMetric.mof %{_datadir}/%{name}/Linux_ProcessorMetric.mof %{_datadir}/%{name}/Linux_UnixProcessMetric.mof %{_datadir}/%{name}/Linux_XenMetric.mof %{_datadir}/%{name}/Linux_XenMetric.mof %{_datadir}/%{name}/Linux_zECKDMetric.mof %{_datadir}/%{name}/Linux_zCECMetric.mof %{_datadir}/%{name}/Linux_zLPARMetric.mof %{_datadir}/%{name}/Linux_zCHMetric.mof
+%define REGISTRATION %{_datadir}/%{name}/Linux_IPProtocolEndpointMetric.registration %{_datadir}/%{name}/Linux_LocalFileSystemMetric.registration %{_datadir}/%{name}/Linux_Metric.registration %{_datadir}/%{name}/Linux_NetworkPortMetric.registration %{_datadir}/%{name}/Linux_OperatingSystemMetric.registration %{_datadir}/%{name}/Linux_ProcessorMetric.registration %{_datadir}/%{name}/Linux_UnixProcessMetric.registration %{_datadir}/%{name}/Linux_XenMetric.registration %{_datadir}/%{name}/Linux_zECKDMetric.registration %{_datadir}/%{name}/Linux_zCECMetric.registration %{_datadir}/%{name}/Linux_zLPARMetric.registration %{_datadir}/%{name}/Linux_zCHMetric.registration
 
 # If upgrading, deregister old version
 if [ $1 -gt 1 ]
@@ -163,6 +167,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/sblim-testsuite
 
 %changelog
+
+* Mon Jul  3 2006 Viktor Mihajlovski <mihajlov@dyn-9-152-143-50.boeblingen.de.ibm.com> - 2.1.1pre-1.{?rhel4:el4}
+- Update for 2.1.1
 
 * Fri Apr 21 2006 Viktor Mihajlovski <mihajlov@dyn-9-152-143-45.boeblingen.de.ibm.com> - 2.1.0-3.rh%{?rhel4:el4}
 - Fixed file ownerships
