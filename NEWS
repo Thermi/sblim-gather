@@ -1,4 +1,10 @@
-Changes in Version 2.1.1
+Changes in Version 2.1.2
+========================
+
+Bugs fixed:
+- 1525914 Fixed repository overwrite by z channel plugin.
+
+Changes  in Version 2.1.1
 ========================
 
 Bugs fixed:

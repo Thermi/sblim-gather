@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryzCH.c,v 1.1 2006/07/03 15:27:37 mihajlov Exp $
+ * $Id: repositoryzCH.c,v 1.2 2006/07/20 16:02:43 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -180,8 +180,8 @@ size_t metricCalcCUE( MetricValue *mv,
 
   if ( mv ) {
     strncpy(v, mv->mvData, vlen-1);
-    mv->mvData[vlen-1] = '\0';
-    return strlen(mv->mvData);
+    ((char*)v)[vlen-1] = '\0';
+    return strlen(v);
   }
   return -1;
 }
