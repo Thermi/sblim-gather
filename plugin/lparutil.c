@@ -23,6 +23,7 @@
 
 pthread_mutex_t  datamutex  = PTHREAD_MUTEX_INITIALIZER;
 HypSystem       *systemdata = NULL;
+HypSystem       *systemdata_old = NULL;
 
 unsigned long long cpusum(int cputime, HypSystem *system)
 {
@@ -62,7 +63,10 @@ void refreshSystemData()
     if (systemdata == NULL) {
       systemdata=get_hypervisor_info(get_hypervisor_rootpath());
     } else if (abs(now-systemdata->hs_timestamp) > 2 ) {
-      release_hypervisor_info(systemdata);
+      if (systemdata_old) {
+	release_hypervisor_info(systemdata_old);
+      }
+      systemdata_old = systemdata;
       systemdata=get_hypervisor_info(get_hypervisor_rootpath());
     }
     pthread_mutex_unlock(&datamutex);

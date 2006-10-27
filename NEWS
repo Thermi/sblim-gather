@@ -3,6 +3,8 @@ Changes in Version 2.1.2
 
 Bugs fixed:
 - 1525914 Fixed repository overwrite by z channel plugin.
+- 1585629 Fixed z channel timestamp wrap
+- 1585628 Fixed invalid CPU values for z LPARs and CEC
 
 Changes  in Version 2.1.1
 ========================

@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryzCH.c,v 1.2 2006/07/20 16:02:43 mihajlov Exp $
+ * $Id: repositoryzCH.c,v 1.3 2006/10/27 08:11:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -198,6 +198,15 @@ long long max_ll(long long lhs, long long rhs) {
 	return (lhs>rhs) ? lhs : rhs;
 }
 
+static unsigned int wrapsafe_24delta(unsigned int new, unsigned int old)
+{
+  if (new < old) {
+    return 0x01000000 - (old - new);
+  } else {
+    return new - old;
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Calculated metrics                                                         */
 /* -------------------------------------------------------------------------- */
@@ -221,7 +230,7 @@ size_t metricCalcPartitionUtilizationPercentage( MetricValue *mv,
 	  	if (!(cu1.cuiv & 0x10 && cu2.cuiv & 0x10)) return -1;
 	  	
 	    int work_units = cu1.block2.lpar_channel_work_units - cu2.block2.lpar_channel_work_units;
-	    float interval = (cu1.timestamp - cu2.timestamp) * tick;
+	    float interval = wrapsafe_24delta(cu1.timestamp, cu2.timestamp) * tick;
 	    unsigned int max_work_units = cmc.block2.maximum_channel_work_units;
 	    float denominator = interval * max_work_units;
 	    if (denominator != 0.0) {
@@ -250,7 +259,7 @@ size_t metricCalcTotalUtilizationPercentage( MetricValue *mv,
 	  	parseMetricBlock(mv[0].mvData, &cu1, &cmc);
 	  	parseMetricBlock(mv[mnum-1].mvData, &cu2, NULL);
 	    int work_units = cu1.block2.cpc_channel_work_units - cu2.block2.cpc_channel_work_units;
-	    float interval = (cu1.timestamp - cu2.timestamp) * tick;
+	    float interval = wrapsafe_24delta(cu1.timestamp, cu2.timestamp) * tick;
 	    unsigned int max_work_units = cmc.block2.maximum_channel_work_units;
 	    float denominator = interval * max_work_units;
 	    if (denominator != 0.0) {
@@ -279,7 +288,7 @@ size_t metricCalcBusUtilizationPercentage( MetricValue *mv,
 	  	parseMetricBlock(mv[0].mvData, &cu1, &cmc);
 	  	parseMetricBlock(mv[mnum-1].mvData, &cu2, NULL);
 	    int bus_cycles = cu1.block2.cpc_bus_cycles - cu2.block2.cpc_bus_cycles;
-	    float interval = (cu1.timestamp - cu2.timestamp) * tick;
+	    float interval = wrapsafe_24delta(cu1.timestamp, cu2.timestamp) * tick;
 	    unsigned int max_bus_cycles = cmc.block2.maximum_bus_cycles;
 	    float denominator = interval * max_bus_cycles;
 	    if (denominator != 0.0) {
@@ -308,7 +317,7 @@ size_t metricCalcPartitionReadThroughput( MetricValue *mv,
 		time_t interval;
 	  	parseMetricBlock(mv[0].mvData, &cu1, &cmc);
 	  	parseMetricBlock(mv[mnum-1].mvData, &cu2, NULL);
-		interval = ceil((cu1.timestamp - cu2.timestamp) * tick);
+		interval = ceil(wrapsafe_24delta(cu1.timestamp, cu2.timestamp) * tick);
 
 	  	if (!(cu1.cuiv & 0x01 && cu2.cuiv & 0x01)) return -1;
 	  	
@@ -341,7 +350,7 @@ size_t metricCalcPartitionWriteThroughput( MetricValue *mv,
 		time_t interval;
 	  	parseMetricBlock(mv[0].mvData, &cu1, &cmc);
 	  	parseMetricBlock(mv[mnum-1].mvData, &cu2, NULL);
-		interval = ceil((cu1.timestamp - cu2.timestamp) * tick);
+		interval = ceil(wrapsafe_24delta(cu1.timestamp, cu2.timestamp) * tick);
 	  	
 	  	if (!(cu1.cuiv & 0x04 && cu2.cuiv & 0x04)) return -1;
 	  	
@@ -374,7 +383,7 @@ size_t metricCalcTotalReadThroughput( MetricValue *mv,
 		time_t interval;
 	  	parseMetricBlock(mv[0].mvData, &cu1, &cmc);
 	  	parseMetricBlock(mv[mnum-1].mvData, &cu2, NULL);
-		interval = ceil((cu1.timestamp - cu2.timestamp) * tick);
+		interval = ceil(wrapsafe_24delta(cu1.timestamp, cu2.timestamp) * tick);
 
 	  	long long units =  cu1.block2.cpc_data_units_read - cu2.block2.cpc_data_units_read;
  	    if (interval > 0 ) {
@@ -405,7 +414,7 @@ size_t metricCalcTotalWriteThroughput( MetricValue *mv,
 		time_t interval;
 	  	parseMetricBlock(mv[0].mvData, &cu1, &cmc);
 	  	parseMetricBlock(mv[mnum-1].mvData, &cu2, NULL);
-		interval = ceil((cu1.timestamp - cu2.timestamp) * tick);
+		interval = ceil(wrapsafe_24delta(cu1.timestamp, cu2.timestamp) * tick);
 
 	  	long long units =  cu1.block2.cpc_data_units_written - cu2.block2.cpc_data_units_written;
  	    if (interval > 0 ) {

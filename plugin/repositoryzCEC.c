@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryzCEC.c,v 1.1 2006/07/03 15:27:37 mihajlov Exp $
+ * $Id: repositoryzCEC.c,v 1.2 2006/10/27 08:11:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -59,6 +59,13 @@ static MetricCalculator  metricCalcCECExternalViewTotalCPUPercentage;
 static char * muNA = "n/a";
 static char * muMilliSeconds = "Milliseconds";
 static char * muPercent = "Percent";
+
+/* helper */
+static int parseCECTimes(const char * s, unsigned long long * kerneltime, 	 
+			 unsigned long long * usertime, 
+			 unsigned long long * kerneltime_adj, 
+			 unsigned long long * usertime_adj, 
+			 int * numcpus);
 
 /* ---------------------------------------------------------------------------*/
 
@@ -201,13 +208,18 @@ size_t metricCalcCECKernelModeTime( MetricValue *mv,
 				    void *v, 
 				    size_t vlen ) 
 {
-  unsigned long long kmt1, kmt2;
+  unsigned long long kmt1, kmt2, kmt_adj, not_used1;
+  int not_used2;
   DBGONLY(fprintf(stderr,"--- %s(%i) : Calculate CEC.KernelModeTime\n", __FILE__,__LINE__);)
 
   if ( mv && (vlen>=sizeof(unsigned long long))) {
-    sscanf(mv[0].mvData,"%llu:%*d:%*u",&kmt1);
-    sscanf(mv[mnum-1].mvData,"%llu:%*d:%*u",&kmt2);
-    *(unsigned long long *)v = (kmt1 - kmt2) / 1000;
+    parseCECTimes(mv[0].mvData,&kmt1,&not_used1,&kmt_adj,&not_used1,&not_used2);
+    parseCECTimes(mv[mnum-1].mvData,&kmt2,&not_used1,&not_used1,&not_used1,&not_used2);
+    if (kmt1 + kmt_adj > kmt2) {
+      *(unsigned long long *)v = (kmt1 - kmt2 + kmt_adj) / 1000;
+    } else {
+      *(unsigned long long *)v = 0ULL;
+    }
     return sizeof(unsigned long long);
   }
   return -1;
@@ -222,13 +234,18 @@ size_t metricCalcCECUserModeTime( MetricValue *mv,
 				  void *v, 
 				  size_t vlen ) 
 {
-  unsigned long long umt1, umt2;
+  unsigned long long umt1, umt2, umt_adj, not_used1;
+  int not_used2;
   DBGONLY(fprintf(stderr,"--- %s(%i) : Calculate CEC.UserModeTime\n", __FILE__,__LINE__);)
 
   if ( mv && (vlen>=sizeof(unsigned long long))) {
-    sscanf(mv[0].mvData,"%*u:%*d:%llu",&umt1);
-    sscanf(mv[mnum-1].mvData,"%*u:%*d:%llu",&umt2);
-    *(unsigned long long *)v = (umt1 - umt2) / 1000;
+    parseCECTimes(mv[0].mvData,&not_used1,&umt1,&not_used1,&umt_adj,&not_used2);
+    parseCECTimes(mv[mnum-1].mvData,&not_used1,&umt2,&not_used1,&not_used1,&not_used2);
+    if (umt1 + umt_adj > umt2) {
+      *(unsigned long long *)v = (umt1 - umt2 + umt_adj) / 1000;
+    } else {
+      *(unsigned long long *)v = 0ULL;
+    }
     return sizeof(unsigned long long);
   }
   return -1;
@@ -243,14 +260,19 @@ size_t metricCalcCECTotalCPUTime( MetricValue *mv,
 				  void *v, 
 				  size_t vlen ) 
 {
-  unsigned long long umt1, umt2;
-  unsigned long long kmt1, kmt2;
+  unsigned long long umt1, umt2, umt_adj, not_used1;
+  unsigned long long kmt1, kmt2, kmt_adj;
+  int not_used2;
   DBGONLY(fprintf(stderr,"--- %s(%i) : Calculate CEC.TotalCPUTime\n", __FILE__,__LINE__);)
 
   if ( mv && (vlen>=sizeof(unsigned long long))) {
-    sscanf(mv[0].mvData,"%llu:%*d:%llu",&kmt1,&umt1);
-    sscanf(mv[mnum-1].mvData,"%llu:%*d:%llu",&kmt2,&umt2);
-    *(unsigned long long *)v = ((kmt1 + umt1) - (kmt2 + umt2))/1000;
+    parseCECTimes(mv[0].mvData,&kmt1,&umt1,&kmt_adj,&umt_adj,&not_used2);
+    parseCECTimes(mv[mnum-1].mvData,&kmt2,&umt2,&not_used1,&not_used1,&not_used2);
+    if (umt1 + kmt1 + umt_adj + kmt_adj > umt2 + kmt2) {
+      *(unsigned long long *)v = ((kmt1 + umt1) - (kmt2 + umt2) + kmt_adj + umt_adj)/1000;
+    } else {
+      *(unsigned long long *)v = 0ULL;
+    }
     return sizeof(unsigned long long);
   }
   return -1;
@@ -265,19 +287,19 @@ size_t metricCalcCECUnusedGlobalCPUCapacity( MetricValue *mv,
 					     void *v, 
 					     size_t vlen ) 
 {
-  unsigned long long umt1, umt2;
-  unsigned long long kmt1, kmt2;
-  int                num_cpus;
+  unsigned long long umt1, umt2, umt_adj;
+  unsigned long long kmt1, kmt2, kmt_adj, not_used1;
+  int                num_cpus, not_used2;
   time_t             interval;
 
   DBGONLY(fprintf(stderr,"--- %s(%i) : Calculate CEC.UnusedGlobalCPUCapacity\n", __FILE__,__LINE__);)
 
   if ( mv && (vlen>=sizeof(unsigned long long))) {
-    sscanf(mv[0].mvData,"%llu:%d:%llu",&kmt1,&num_cpus,&umt1);
-    sscanf(mv[mnum-1].mvData,"%llu:%*d:%llu",&kmt2,&umt2);
+    parseCECTimes(mv[0].mvData,&kmt1,&umt1,&kmt_adj,&umt_adj,&num_cpus);
+    parseCECTimes(mv[mnum-1].mvData,&kmt2,&umt2,&not_used1,&not_used1,&not_used2);
     interval = mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp;
-    if ( interval > 0) {
-      *(unsigned long long *)v = interval*1000*num_cpus - ((kmt1 + umt1) - (kmt2 + umt2))/1000;
+    if ( interval > 0 && (kmt1 + umt1 + kmt_adj + umt_adj > kmt2 + umt2)) {
+      *(unsigned long long *)v = interval*1000*num_cpus - ((kmt1 + umt1) - (kmt2 + umt2) + kmt_adj + umt_adj)/1000;
     } else {
       *(unsigned long long *)v = 0ULL;
     }
@@ -295,20 +317,23 @@ size_t metricCalcCECExternalViewKernelModePercentage( MetricValue *mv,
 						      void *v, 
 						      size_t vlen ) 
 {
-  unsigned long long kernel1;
-  unsigned long long kernel2;
-  int                num_cpus;
+  unsigned long long kmt1;
+  unsigned long long kmt2;
+  unsigned long long kmt_adj, not_used1;
+  int                num_cpus, not_used2;
   time_t             interval;
   DBGONLY(fprintf(stderr,"--- %s(%i) : Calculate CEC.ExternalViewKernelModePercentage\n", __FILE__,__LINE__);)
 
   if ( mv && (vlen>=sizeof(float))) {
-    sscanf(mv[0].mvData,"%llu:%*d:%*u",&kernel1);
-    sscanf(mv[mnum-1].mvData,"%llu:%d:%*u",&kernel2,&num_cpus);
+    parseCECTimes(mv[0].mvData,&kmt1,&not_used1,&kmt_adj,&not_used1,&num_cpus);
+    parseCECTimes(mv[mnum-1].mvData,&kmt2,&not_used1,&not_used1,&not_used1,&not_used2);
     interval = mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp;
-    if ( interval > 0) {
+    if ( interval > 0 && (kmt1 + kmt_adj > kmt2)) {
       /* raw values are microseconds */
-      *(float*) v = (float)(kernel1 - kernel2)/(interval*10000*num_cpus);
+      *(float*) v = (float)(kmt1 - kmt2 + kmt_adj)/(interval*10000*num_cpus);
       return sizeof(float);
+    } else {
+      *(float*) v = 0;
     }
   }
   return -1;
@@ -323,20 +348,23 @@ size_t metricCalcCECExternalViewUserModePercentage( MetricValue *mv,
 						    void *v, 
 						    size_t vlen ) 
 {
-  unsigned long long user1;
-  unsigned long long user2;
-  int                num_cpus;
+  unsigned long long umt1;
+  unsigned long long umt2;
+  unsigned long long umt_adj, not_used1;
+  int                num_cpus, not_used2;
   time_t             interval;
   DBGONLY(fprintf(stderr,"--- %s(%i) : Calculate CEC.ExternalViewUserModePercentage\n", __FILE__,__LINE__);)
 
   if ( mv && (vlen>=sizeof(float))) {
-    sscanf(mv[0].mvData,"%*u:%*d:%llu",&user1);
-    sscanf(mv[mnum-1].mvData,"%*u:%d:%llu",&num_cpus,&user2);
+    parseCECTimes(mv[0].mvData,&not_used1,&umt1,&not_used1,&umt_adj,&num_cpus);
+    parseCECTimes(mv[mnum-1].mvData,&not_used1,&umt2,&not_used1,&not_used1,&not_used2);
     interval = mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp;
-    if ( interval > 0) {
+    if ( interval > 0 && (umt1 + umt_adj > umt2)) {
       /* raw values are microseconds */
-      *(float*) v = (float)(user1 - user2)/(interval*10000*num_cpus);
+      *(float*) v = (float)(umt1 - umt2 + umt_adj)/(interval*10000*num_cpus);
       return sizeof(float);
+    } else {
+      *(float*) v = 0;
     }
   }
   return -1;
@@ -351,22 +379,45 @@ size_t metricCalcCECExternalViewTotalCPUPercentage( MetricValue *mv,
 						    void *v, 
 						    size_t vlen ) 
 {
-  unsigned long long kernel1, user1;
-  unsigned long long kernel2, user2;
-  int                num_cpus;
+  unsigned long long kmt1, umt1;
+  unsigned long long kmt2, umt2;
+  unsigned long long kmt_adj, umt_adj, not_used1;
+  int                num_cpus, not_used2;
   time_t             interval;
   DBGONLY(fprintf(stderr,"--- %s(%i) : Calculate CEC.ExternalViewTotalCPUPercentage\n", __FILE__,__LINE__);)
 
   if ( mv && (vlen>=sizeof(float))) {
-    sscanf(mv[0].mvData,"%llu:%*d:%llu",&kernel1,&user1);
-    sscanf(mv[mnum-1].mvData,"%llu:%d:%llu",&kernel2,&num_cpus,&user2);
+    parseCECTimes(mv[0].mvData,&kmt1,&umt1,&kmt_adj,&umt_adj,&num_cpus);
+    parseCECTimes(mv[mnum-1].mvData,&kmt2,&umt2,&not_used1,&not_used1,&not_used2);
     interval = mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp;
-    if ( interval > 0) {
+    if ( interval > 0 && (kmt1 + umt1 + kmt_adj + umt_adj > kmt2 + umt2)) {
       /* raw values are microseconds */
-      *(float*) v = (float)((user1 + kernel1) - (user2 + kernel2))/(interval*10000*num_cpus);
+      *(float*) v = (float)((umt1 + kmt1) - (umt2 + kmt2) + umt_adj + kmt_adj)/(interval*10000*num_cpus);
       return sizeof(float);
+    } else {
+      *(float*) v = 0;
     }
   }
   return -1;
 }
 
+static int parseCECTimes(const char * s, unsigned long long * kerneltime, 	 
+			 unsigned long long * usertime, 
+			 unsigned long long * kerneltime_adj, 
+			 unsigned long long * usertime_adj, 
+			 int * numcpus)
+{
+  /* scan the _CECTimes metric in a backward-compatible way */
+  int num = sscanf(s,"%llu:%d:%llu:%llu:%llu",kerneltime,numcpus,usertime,kerneltime_adj,usertime_adj);
+  if (num < 3) {
+    return -1;
+  } else {
+    if (num < 5) {
+      usertime_adj=0ULL;
+    }
+    if (num < 4) {
+      kerneltime_adj=0ULL;
+    }
+    return 0;
+  }
+}

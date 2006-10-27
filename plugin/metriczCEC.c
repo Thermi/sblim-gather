@@ -1,5 +1,5 @@
 /*
- * $Id: metriczCEC.c,v 1.1 2006/07/03 15:27:36 mihajlov Exp $
+ * $Id: metriczCEC.c,v 1.2 2006/10/27 08:11:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -111,11 +111,15 @@ int metricRetrCEC( int mid, MetricReturner mret )
 {
   MetricValue       *mv;
   int                num=0;
-  size_t             maxvallen = strlen("18446744073709551615ULL:4294967296:18446744073709551615ULL:18446744073709551615ULL") + 1;
+  size_t             maxvallen = strlen("18446744073709551615ULL:4294967296:18446744073709551615ULL:18446744073709551615ULL:18446744073709551615ULL") + 1;
+  unsigned long long utime, ktime, utime_a, ktime_a;
   unsigned long long usertime = 0ULL;  
+  unsigned long long kerneltime = 0ULL;  
+  unsigned long long usertime_adj = 0ULL;  
+  unsigned long long kerneltime_adj = 0ULL;  
   int i;
 
-  /* Format: <LPAR mgmt time>:<number physical CPUs>:< user time> */
+  /* Format: <LPAR mgmt time>:<number physical CPUs>:< user time>:<LPAR time adjustment>:<user time adjustment> */
 
 #ifdef DEBUG  
   fprintf(stderr,"--- %s(%i) : retrieving %d\n",
@@ -125,20 +129,37 @@ int metricRetrCEC( int mid, MetricReturner mret )
   refreshSystemData();
   if (pthread_mutex_lock(&datamutex) == 0) {
     if (systemdata) {
-      /* only one metric: kernelmodetime */
       mv = calloc(1, sizeof(MetricValue) + 
 		  maxvallen +
 		  (strlen(systemdata->hs_id)+1) );
       if (mv) {
 	/* compute totals */
 	for (i=0;i<systemdata->hs_numsys;i++) {
-	  usertime += cpusum(CPU_TIME,systemdata->hs_sys+i);
+	  utime = cpusum(CPU_TIME,systemdata->hs_sys+i);
+	  ktime = cpusum(CPU_MGMTTIME,systemdata->hs_sys+i);
+	  usertime += utime;
+	  kerneltime += ktime;
+	  if (systemdata_old && 
+	      systemdata_old->hs_numsys == systemdata->hs_numsys &&
+	      strcmp(systemdata->hs_sys[i].hs_id,systemdata_old->hs_sys[i].hs_id) == 0) {
+	    utime_a = cpusum(CPU_TIME,systemdata_old->hs_sys+i);
+	    ktime_a = cpusum(CPU_MGMTTIME,systemdata_old->hs_sys+i);
+	    /* check if an LPAR has been deactivated since the last sample and add adjustment ticks if necessary */
+	    if (utime_a != -1LL && (utime == -1LL || utime_a > utime)) {
+	      usertime_adj += (utime_a - utime);
+	    }
+	    if (ktime_a != -1LL && (ktime == -1LL || ktime_a > ktime)) {
+	      kerneltime_adj += (ktime_a - ktime);
+	    }
+	  }
 	}
 	mv->mvId = mid;
 	mv->mvTimeStamp = systemdata->hs_timestamp;
 	mv->mvDataType = MD_STRING;
 	mv->mvData = (char*)mv + sizeof(MetricValue);
-	snprintf(mv->mvData,maxvallen,"%llu:%d:%llu",cpusum(CPU_MGMTTIME,systemdata),systemdata->hs_numcpu,usertime);
+	snprintf(mv->mvData,maxvallen,"%llu:%d:%llu:%llu:%llu",
+		 cpusum(CPU_MGMTTIME,systemdata) + kerneltime,
+		 systemdata->hs_numcpu,usertime, kerneltime_adj, usertime_adj);
 	mv->mvDataLength = strlen(mv->mvData) + 1;
 	mv->mvResource = mv->mvData + mv->mvDataLength;
 	strcpy(mv->mvResource,systemdata->hs_id);

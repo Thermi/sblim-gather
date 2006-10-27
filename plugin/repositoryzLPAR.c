@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryzLPAR.c,v 1.1 2006/07/03 15:27:37 mihajlov Exp $
+ * $Id: repositoryzLPAR.c,v 1.2 2006/10/27 08:11:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -236,7 +236,11 @@ size_t metricCalcKernelModeTime( MetricValue *mv,
   if ( mv && (vlen>=sizeof(unsigned long long))) {
     sscanf(mv[0].mvData,"%llu:%llu:%llu",&cputime1,&mgmttime1,&onlinetime1);
     sscanf(mv[mnum-1].mvData,"%llu:%llu:%llu",&cputime2,&mgmttime2,&onlinetime2);
-    *(unsigned long long *)v = (mgmttime1 - mgmttime2) / 1000;
+    if (mgmttime1 > mgmttime2) {
+      *(unsigned long long *)v = (mgmttime1 - mgmttime2) / 1000;
+    } else {
+      *(unsigned long long *)v = 0ULL;
+    }
     return sizeof(unsigned long long);
   }
   return -1;
@@ -259,7 +263,11 @@ size_t metricCalcUserModeTime( MetricValue *mv,
   if ( mv && (vlen>=sizeof(unsigned long long))) {
     sscanf(mv[0].mvData,"%llu:%llu:%llu",&cputime1,&mgmttime1,&onlinetime1);
     sscanf(mv[mnum-1].mvData,"%llu:%llu:%llu",&cputime2,&mgmttime2,&onlinetime2);
-    *(unsigned long long *)v = (cputime1 - cputime2) / 1000;
+    if (cputime1 > cputime2) {
+      *(unsigned long long *)v = (cputime1 - cputime2) / 1000;
+    } else {
+      *(unsigned long long *)v = 0ULL;
+    }
     return sizeof(unsigned long long);
   }
   return -1;
@@ -282,8 +290,12 @@ size_t metricCalcTotalCPUTime( MetricValue *mv,
   if ( mv && (vlen>=sizeof(unsigned long long))) {
     sscanf(mv[0].mvData,"%llu:%llu:%llu",&cputime1,&mgmttime1,&onlinetime1);
     sscanf(mv[mnum-1].mvData,"%llu:%llu:%llu",&cputime2,&mgmttime2,&onlinetime2);
-    *(unsigned long long *)v = 
-      ((cputime1 + mgmttime1) - (cputime2 + mgmttime2)) / 1000;
+    if (cputime1 + mgmttime1 > cputime2 + mgmttime2) {
+      *(unsigned long long *)v = 
+	((cputime1 + mgmttime1) - (cputime2 + mgmttime2)) / 1000;
+    } else {
+      *(unsigned long long *)v = 0ULL;
+    }
     return sizeof(unsigned long long);
   }
   return -1;
@@ -336,7 +348,11 @@ size_t metricCalcKernelModePercentage( MetricValue *mv,
     sscanf(mv[0].mvData,"%llu:%llu:%llu",&cputime1,&mgmttime1,&onlinetime1);
     sscanf(mv[mnum-1].mvData,"%llu:%llu:%llu",&cputime2,&mgmttime2,&onlinetime2);
     if (onlinetime1>onlinetime2) {
-      *(float *)v = (float)(mgmttime1-mgmttime2)/(onlinetime1-onlinetime2)*100;
+      if (mgmttime1 > mgmttime2) {
+	*(float *)v = (float)(mgmttime1-mgmttime2)/(onlinetime1-onlinetime2)*100;
+      } else {
+	*(float *)v = 0.0;
+      }
       return sizeof(float);
     }
   }
@@ -361,7 +377,11 @@ size_t metricCalcUserModePercentage( MetricValue *mv,
     sscanf(mv[0].mvData,"%llu:%llu:%llu",&cputime1,&mgmttime1,&onlinetime1);
     sscanf(mv[mnum-1].mvData,"%llu:%llu:%llu",&cputime2,&mgmttime2,&onlinetime2);
     if (onlinetime1>onlinetime2) {
-      *(float *)v = (float)(cputime1-cputime2)/(onlinetime1-onlinetime2)*100;
+      if (cputime1>cputime2) {
+	*(float *)v = (float)(cputime1-cputime2)/(onlinetime1-onlinetime2)*100;
+      } else {
+	*(float *)v = 0.0;
+      }
       return sizeof(float);
     }
   }
@@ -386,8 +406,12 @@ size_t metricCalcTotalCPUPercentage( MetricValue *mv,
     sscanf(mv[0].mvData,"%llu:%llu:%llu",&cputime1,&mgmttime1,&onlinetime1);
     sscanf(mv[mnum-1].mvData,"%llu:%llu:%llu",&cputime2,&mgmttime2,&onlinetime2);
     if (onlinetime1>onlinetime2) {
-      *(float *)v = (float)((cputime1 + mgmttime1) - (cputime2 + mgmttime2))/
-	(onlinetime1-onlinetime2)*100;
+      if (cputime1 + mgmttime1 > cputime2 + mgmttime2) {
+	*(float *)v = (float)((cputime1 + mgmttime1) - (cputime2 + mgmttime2))/
+	  (onlinetime1-onlinetime2)*100;
+      } else {
+	*(float *)v = 0.0;
+      }
       return sizeof(float);
     }
   }
@@ -443,7 +467,7 @@ size_t metricCalcActiveVirtualProcessors( MetricValue *mv,
     sscanf(mv[0].mvData,"%llu:%llu:%llu",&cputime1,&mgmttime1,&onlinetime1);
     sscanf(mv[mnum-1].mvData,"%llu:%llu:%llu",&cputime2,&mgmttime2,&onlinetime2);
     interval = mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp;
-    if ( interval > 0) {
+    if ( interval > 0 && onlinetime1 > onlinetime2) {
       /* raw values are microseconds */
       *(float*) v = (float)(onlinetime1 - onlinetime2)/(interval*1000000);
       return sizeof(float);

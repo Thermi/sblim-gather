@@ -1,3 +1,15 @@
+2006-10-27  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-50.boeblingen.de.ibm.com>
+
+	* plugin/lparutil.c, plugin/lparutil.c, plugin/metriczCEC.c, 
+	plugin/repositoryzCEC.c, plugin/repositoryzLPAR.c:  
+	Fixed 1585628: no recognize deactived LPARs by holding two
+	snapshots of hypfs and comparing old an new counters. If new
+	counter is smaller then old one, the LPAR has been deactivated
+	between the two samples.
+
+	* plugin/repositoryzCH.c: 
+	Fixed 1585629: channel timestamp wrap is handled correctly now.
+
 2006-07-20  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-50.boeblingen.de.ibm.com>
 
 	* plugin/repositoryzCH.c: 

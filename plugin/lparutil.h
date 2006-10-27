@@ -1,5 +1,5 @@
 /*
- * $Id: lparutil.h,v 1.1 2006/07/03 15:27:36 mihajlov Exp $
+ * $Id: lparutil.h,v 1.2 2006/10/27 08:11:12 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -28,6 +28,7 @@
 
 extern pthread_mutex_t  datamutex;
 extern HypSystem       *systemdata;
+extern HypSystem       *systemdata_old;
 
 #define CPU_MGMTTIME   0
 #define CPU_ONLINETIME 1
