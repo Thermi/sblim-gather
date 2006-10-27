@@ -5,6 +5,7 @@ Bugs fixed:
 - 1525914 Fixed repository overwrite by z channel plugin.
 - 1585629 Fixed z channel timestamp wrap
 - 1585628 Fixed invalid CPU values for z LPARs and CEC
+- 1565458 Fixed CIMOM crash after invalid getinstance ops
 
 Changes  in Version 2.1.1
 ========================

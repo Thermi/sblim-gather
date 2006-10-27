@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.14 2006/04/11 11:27:33 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.15 2006/10/27 11:11:15 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -406,9 +406,9 @@ char * makeMetricDefId(char * defid, const char * name, int id)
 int parseMetricDefId(const char * defid,
 		     char * name, int * id)
 {
-  char *parsebuf = strdup(defid);
-  char *nextdf = strstr(parsebuf,"..");
-  char *nextf = strchr(parsebuf,'.');
+  char *parsebuf = defid ? strdup(defid) : NULL;
+  char *nextdf = parsebuf ? strstr(parsebuf,"..") : NULL;
+  char *nextf = parsebuf ? strchr(parsebuf,'.') : NULL;
   while (nextdf && nextf == nextdf) {
     memmove(nextdf+1,nextdf+2,strlen(nextdf+2)+1); /* reduce double dot */
     nextf++;
@@ -419,10 +419,14 @@ int parseMetricDefId(const char * defid,
     *nextf=0;
     strcpy(name,parsebuf);
     sscanf(nextf+1,"%d",id);
-    free(parsebuf);
+    if (parsebuf) {
+      free(parsebuf);
+    }
     return 0;
   } else {
-    free(parsebuf);
+    if (parsebuf) {
+      free(parsebuf);
+    }
     return -1;
   }
 }
@@ -503,9 +507,9 @@ int parseMetricValueId(const char * instid,
 		       char * name, int * id, char * resource,
 		       char * systemid, time_t * timestamp)
 {
-  char *parsebuf = strdup(instid);
-  char *nextdf = strstr(parsebuf,"..");
-  char *nextf = strchr(parsebuf,'.');
+  char *parsebuf = instid ? strdup(instid) : NULL;
+  char *nextdf = parsebuf ? strstr(parsebuf,"..") : NULL;
+  char *nextf = parsebuf ? strchr(parsebuf,'.') : NULL;
   char *idxptr[MVNUMELEMENTS] = {parsebuf,NULL,NULL,NULL,NULL};
   int   i=1;
 
@@ -530,10 +534,14 @@ int parseMetricValueId(const char * instid,
     strcpy(resource,idxptr[2]);
     strcpy(systemid,idxptr[3]);
     sscanf(idxptr[4],"%ld",timestamp);
-    free(parsebuf);
+    if (parsebuf) {
+      free(parsebuf);
+    }
     return 0;
   } else {
-    free(parsebuf);
+    if (parsebuf) {
+      free(parsebuf);
+    }
     return -1;
   }
 }

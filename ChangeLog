@@ -1,5 +1,9 @@
 2006-10-27  Viktor Mihajlovski  <mihajlov@dyn-9-152-143-50.boeblingen.de.ibm.com>
 
+	* provider/OSBase_MetricDefinitionProvider.c, 
+	provider/OSBase_MetricUtil.c, provider/OSBase_MetricValueProvider.c: 
+	Fixed 1565458: added checks for non-existent metrics.
+
 	* plugin/lparutil.c, plugin/lparutil.c, plugin/metriczCEC.c, 
 	plugin/repositoryzCEC.c, plugin/repositoryzLPAR.c:  
 	Fixed 1585628: no recognize deactived LPARs by holding two

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricDefinitionProvider.c,v 1.6 2005/06/24 12:04:56 mihajlov Exp $
+ * $Id: OSBase_MetricDefinitionProvider.c,v 1.7 2006/10/27 11:11:14 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -158,6 +158,12 @@ CMPIStatus OSBase_MetricDefinitionProviderGetInstance( CMPIInstanceMI * mi,
 	if( _debug ) {
 	  if( rc.msg != NULL )
 	    { fprintf(stderr,"rc.msg: %s\n",CMGetCharPtr(rc.msg)); }
+	}
+	if (rc.rc == CMPI_RC_OK) {
+	  /* it can't be OK if we didn't get an instance */
+	  CMSetStatusWithChars( _broker, &rc, 
+				CMPI_RC_ERR_NOT_FOUND, 
+				"Invalid metric definition id" ); 
 	}
       } else {
 	CMReturnInstance( rslt, ci );
