@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.15 2006/03/07 09:49:52 mihajlov Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.16 2006/12/11 14:31:15 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -555,7 +555,7 @@ size_t metricCalcNumOfUser( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
-    *(unsigned long*)v = ntohl(*(unsigned long*)v);
+    *(unsigned*)v = ntohl(*(unsigned*)v);
     return mv->mvDataLength;
   }
   return -1;
@@ -578,7 +578,7 @@ size_t metricCalcNumOfProc( MetricValue *mv,
   /* plain copy */
   if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
     memcpy(v,mv->mvData,mv->mvDataLength);
-    *(unsigned long*)v = ntohl(*(unsigned long*)v);
+    *(unsigned*)v = ntohl(*(unsigned*)v);
     return mv->mvDataLength;
   }
   return -1;

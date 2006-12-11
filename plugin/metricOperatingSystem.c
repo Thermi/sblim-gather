@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.15 2004/12/03 14:30:59 mihajlov Exp $
+ * $Id: metricOperatingSystem.c,v 1.16 2006/12/11 14:31:15 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -245,16 +245,16 @@ int metricRetrNumOfUser( int mid,
     else { return -1; }
       
     mv = calloc(1, sizeof(MetricValue) + 
-		   sizeof(unsigned long) + 
+		   sizeof(unsigned) + 
 		   (strlen(resource)+1) );
     if (mv) {
       mv->mvId = mid;
       mv->mvTimeStamp = time(NULL);
       mv->mvDataType = MD_UINT32;
-      mv->mvDataLength = sizeof(unsigned long);
+      mv->mvDataLength = sizeof(unsigned);
       mv->mvData = (char*)mv + sizeof(MetricValue);
-      *(unsigned long*)mv->mvData = htonl(atol(str));
-      mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long);
+      *(unsigned*)mv->mvData = htonl(atol(str));
+      mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned);
       strcpy(mv->mvResource,resource);
       mret(mv);
     }
@@ -302,16 +302,16 @@ int metricRetrNumOfProc( int mid,
     else { return -1; }
 
     mv = calloc(1, sizeof(MetricValue) + 
-		   sizeof(unsigned long) + 
+		   sizeof(unsigned) + 
 		   (strlen(resource)+1) );
     if (mv) {
       mv->mvId = mid;
       mv->mvTimeStamp = time(NULL);
       mv->mvDataType = MD_UINT32;
-      mv->mvDataLength = sizeof(unsigned long);
+      mv->mvDataLength = sizeof(unsigned);
       mv->mvData = (char*)mv + sizeof(MetricValue);
-      *(unsigned long*)mv->mvData = htonl(nop);
-      mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned long);
+      *(unsigned*)mv->mvData = htonl(nop);
+      mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned);
       strcpy(mv->mvResource,resource);
       mret(mv);
     }
