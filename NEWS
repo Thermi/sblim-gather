@@ -1,3 +1,9 @@
+Changes in Version 2.1.3
+========================
+
+Bugs fixed:
+- 1648800 Fixed gather testsuite start script fails with https
+
 Changes in Version 2.1.2
 ========================
 
