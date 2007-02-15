@@ -65,7 +65,7 @@ void sysfsw_closeDevice(sysfsw_Device* device) {
 } 
 
 sysfsw_Device* sysfsw_openDeviceTree(const char* devicePath) {
-	return sysfs_open_device_tree(devicePath);
+	return sysfs_open_device_path(devicePath);
 }
 
 sysfsw_DeviceList* sysfsw_getDeviceList(sysfsw_Device* device) {

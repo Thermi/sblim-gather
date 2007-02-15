@@ -3,6 +3,7 @@ Changes in Version 2.1.3
 
 Bugs fixed:
 - 1648800 Fixed gather testsuite start script fails with https
+- 1652565 Fixed build problem with libsysfs v2
 
 Changes in Version 2.1.2
 ========================
@@ -15,7 +16,7 @@ Bugs fixed:
 - 1613105 Fixed handling of unsigned 32-bit integers
 
 Changes  in Version 2.1.1
-========================
+=========================
 
 Bugs fixed:
 - 1468385 Fixed 32bit value display
