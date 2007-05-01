@@ -36,7 +36,7 @@ The package consists of three parts:
 
 While the Gatherer and it's plugins can be used standalone, the greatest
 benefit comes from using it in conjuction with a CIM Object Manager (CIMOM)
-like Pegasus (The Open Group). Basically it allows to remoteley obtain
+like Pegasus (The Open Group). Basically it allows to remotely obtain
 performance information about a Linux system.
 For more information about CIM and the CIM Metrics Model you are referred to
 the Distributed Management Task Force (DMTF) at http://www.dmtf.org.
@@ -44,16 +44,16 @@ the Distributed Management Task Force (DMTF) at http://www.dmtf.org.
 Requirements
 ------------
 
-In order to build, install and operate this package you will need a 
+In order to build, install, and operate this package you will need a 
 contemporary (as of this writing) Linux System, like RHEL4, SLES9 
 or equivalent.
-Furhter the following packages are required:
+Further the following packages are required:
 
 A CIM Server supporting the CMPI Interface
 - Pegasus 2.4.1 or higher
 - OpenWBEM 3.0 or higher
 
-- SBLIM CMPI Base 1.2.1 or higher from http://oss.software.ibm.com/sblim
+- SBLIM CMPI Base 1.2.1 or higher from http://sblim.org
 
 Build and install the packages above according to the instructions contained
 therein before you continue.
@@ -68,7 +68,7 @@ followed by "make". The gatherer and the plugins should now be compiled.
 Performing "make install" (you have to do that with superuser rights) will
 put the executables and libraries in the "/usr/local" branch of your system.
 It might be necessary for you to point your PATH or LD_LIBRARY_PATH variables
-to /usr/local/[s]bin respectively /usr/local/lib.
+to /usr/local/[s]bin or /usr/local/lib, respectively.
 
 With the command line utility "gatherctl" you can now start and stop the
 gatherer (implemented by the "gatherd" program), load metric plugin libraries
