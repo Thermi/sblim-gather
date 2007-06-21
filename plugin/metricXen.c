@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.8 2006/05/22 14:55:26 obenke Exp $
+ * $Id: metricXen.c,v 1.9 2007/06/21 21:25:07 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2006
  *
@@ -558,6 +558,7 @@ int parseXm()
     char *buf_current;
     char *buf_end;
     char *xm_result;
+    char *xm_current;
     char *xm_endp;
 
     fp = popen("xm list --long", "r");
@@ -593,22 +594,15 @@ int parseXm()
 #endif
 
     // parse result of "xm list" command above
-    while (NULL != (xm_result = strstr(xm_result, "(domain"))) {
-	xm_result = strstr(xm_result, "(domid ") + strlen("domid ");
+    while (NULL != (xm_current = strstr(xm_result, "(domain"))) {
+	xm_result = strstr(xm_current, "(domid ") + strlen("(domid ");
 	if (NULL == xm_result)
 	    return -1;
 	xm_endp = strstr(xm_result, ")");
 	xen_statistics.domain_id[num_domains]
 	    = strtol(xm_result, &xm_endp, 10);
 
-	xm_result = strstr(xm_result, "(vcpus ") + strlen("(vcpus ");
-	if (NULL == xm_result)
-	    return -1;
-	xm_endp = strstr(xm_result, ")");
-	xen_statistics.vcpus[num_domains]
-	    = (unsigned short) strtol(xm_result, &xm_endp, 10);
-
-	xm_result = strstr(xm_endp, "(memory ") + strlen("(memory ");
+	xm_result = strstr(xm_current, "(memory ") + strlen("(memory ");
 	xm_endp = strstr(xm_result, ")");
 	xen_statistics.claimed_memory[num_domains]
 	    = strtol(xm_result, &xm_endp, 10) * 1024;
@@ -619,18 +613,7 @@ int parseXm()
 		xen_statistics.claimed_memory[num_domains]);
 #endif
 
-	xm_result = strstr(xm_endp, "(maxmem ") + strlen("(maxmem ");
-	xm_endp = strstr(xm_result, ")");
-	xen_statistics.max_memory[num_domains]
-	    = strtol(xm_result, &xm_endp, 10) * 1024;
-
-#ifdef DEBUG
-	fprintf(stderr, "--- %s(%i) : maxmem: %lld\n",
-		__FILE__, __LINE__,
-		xen_statistics.max_memory[num_domains]);
-#endif
-
-	xm_result = strstr(xm_endp, "(name ") + strlen("(name ");
+	xm_result = strstr(xm_current, "(name ") + strlen("(name ");
 	xm_endp = strstr(xm_result, ")");
 
 	if (NULL != xen_statistics.domain_name[num_domains])
@@ -645,7 +628,25 @@ int parseXm()
 		xen_statistics.domain_name[num_domains]);
 #endif
 
-	xm_result = strstr(xm_endp, "(cpu_time ") + strlen("(cpu_time ");
+	xm_result = strstr(xm_current, "(maxmem ") + strlen("(maxmem ");
+	xm_endp = strstr(xm_result, ")");
+	xen_statistics.max_memory[num_domains]
+	    = strtol(xm_result, &xm_endp, 10) * 1024;
+
+#ifdef DEBUG
+	fprintf(stderr, "--- %s(%i) : maxmem: %lld\n",
+		__FILE__, __LINE__,
+		xen_statistics.max_memory[num_domains]);
+#endif
+
+	xm_result = strstr(xm_current, "(vcpus ") + strlen("(vcpus ");
+	if (NULL == xm_result)
+	    return -1;
+	xm_endp = strstr(xm_result, ")");
+	xen_statistics.vcpus[num_domains]
+	    = (unsigned short) strtol(xm_result, &xm_endp, 10);
+
+	xm_result = strstr(xm_current, "(cpu_time ") + strlen("(cpu_time ");
 	xm_endp = strstr(xm_result, ")");
 
 	xen_statistics.cpu_time[num_domains]
