@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.15 2006/10/27 11:11:15 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.16 2007/07/10 13:42:30 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2004
+ * © Copyright IBM Corp. 2004, 2007
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 
@@ -120,7 +120,7 @@ static void removeDefinitionList()
   }
 }
 
-static int refreshMetricValueList(CMPIBroker * broker, CMPIContext * ctx, 
+static int refreshMetricValueList(const CMPIBroker * broker, const CMPIContext * ctx, 
 			      const char *namesp)
 {
   CMPIData         data, defdata, valdata;
@@ -154,7 +154,7 @@ static int refreshMetricValueList(CMPIBroker * broker, CMPIContext * ctx,
   return 0;
 }
 
-int refreshMetricDefClasses(CMPIBroker * broker, CMPIContext * ctx, 
+int refreshMetricDefClasses(const CMPIBroker * broker, const CMPIContext * ctx, 
 			    const char *namesp, int force)
      /* TODO: rework error handling */
 {
@@ -246,7 +246,7 @@ void releaseMetricDefClasses()
   MWriteUnlock(&MdefLock);
 }
 
-static int metricDefClassIndex(CMPIBroker *broker, CMPIContext *ctx, 
+static int metricDefClassIndex(const CMPIBroker *broker, const CMPIContext *ctx, 
 		       const char *namesp,const char *name, int id)
 {
   int i=0;
@@ -265,7 +265,7 @@ static int metricDefClassIndex(CMPIBroker *broker, CMPIContext *ctx,
   return -1;
 }
 
-int metricDefClassName(CMPIBroker *broker, CMPIContext *ctx, 
+int metricDefClassName(const CMPIBroker *broker, const CMPIContext *ctx, 
 		       const char *namesp,char *clsname, 
 		       const char *name, int id)
 {
@@ -286,7 +286,7 @@ int metricDefClassName(CMPIBroker *broker, CMPIContext *ctx,
   return -1;
 }
 
-int metricPluginName(CMPIBroker *broker, CMPIContext *ctx, 
+int metricPluginName(const CMPIBroker *broker, const CMPIContext *ctx, 
 		     const char *namesp,char *pluginname, 
 		     const char *name, int id)
 {
@@ -307,7 +307,7 @@ int metricPluginName(CMPIBroker *broker, CMPIContext *ctx,
   return -1;
 }
 
-int metricValueClassName(CMPIBroker *broker, CMPIContext *ctx, 
+int metricValueClassName(const CMPIBroker *broker, const CMPIContext *ctx, 
 			 const char *namesp,char *clsname, 
 			 const char *name, int id)
 {
@@ -331,7 +331,7 @@ int metricValueClassName(CMPIBroker *broker, CMPIContext *ctx,
   return -1;
 }
 
-char * makeMetricDefIdFromCache(CMPIBroker *broker, CMPIContext *ctx,
+char * makeMetricDefIdFromCache(const CMPIBroker *broker, const CMPIContext *ctx,
 				const char *namesp, char * defid, int id)
 {
   int i=0;
@@ -351,7 +351,7 @@ char * makeMetricDefIdFromCache(CMPIBroker *broker, CMPIContext *ctx,
   return NULL;
 }
 
-char * makeMetricValueIdFromCache(CMPIBroker *broker, CMPIContext *ctx,
+char * makeMetricValueIdFromCache(const CMPIBroker *broker, const CMPIContext *ctx,
 				  const char * namesp, char * valid, int id,
 				  const char * resource, const char * systemid,
 				  time_t timestamp)
@@ -546,7 +546,7 @@ int parseMetricValueId(const char * instid,
   }
 }
 
-static char * metricClassName(CMPIObjectPath *path)
+static char * metricClassName(const CMPIObjectPath *path)
 {
   /* return class name or NULL if CIM_ (base) class */
   CMPIStatus rc;
@@ -559,8 +559,8 @@ static char * metricClassName(CMPIObjectPath *path)
   }
 }
 
-static int pluginForClass(CMPIBroker *broker, CMPIContext *ctx, 
-			  CMPIObjectPath *cop, char *pluginname)
+static int pluginForClass(const CMPIBroker *broker, const CMPIContext *ctx, 
+			  const CMPIObjectPath *cop, char *pluginname)
 {
   char *metricclass = metricClassName(cop);
   int   i=0;
@@ -580,8 +580,8 @@ static int pluginForClass(CMPIBroker *broker, CMPIContext *ctx,
   return -1;
 }
 
-int getPluginNamesForValueClass(CMPIBroker *broker, CMPIContext *ctx, 
-				CMPIObjectPath *cop, char ***pluginnames)
+int getPluginNamesForValueClass(const CMPIBroker *broker, const CMPIContext *ctx, 
+				const CMPIObjectPath *cop, char ***pluginnames)
 {
   char  pluginname[500];
   char *valclassname;
@@ -656,8 +656,8 @@ void releasePluginNames(char **pluginnames)
   }
 }
 
-int getMetricDefsForClass(CMPIBroker *broker, CMPIContext *ctx, 
-			  CMPIObjectPath* cop,
+int getMetricDefsForClass(const CMPIBroker *broker, const CMPIContext *ctx, 
+			  const CMPIObjectPath* cop,
 			  char ***mnames, int **mids)
 {
   char pluginname[500];
@@ -721,8 +721,8 @@ static ValueIdFromCimObjectPath * _GetId4Cop(const char *pluginname);
 static GetResourceClasses * _GetGetRes(const char *pluginname);
 static FreeResourceClasses * _GetFreeRes(const char *pluginname);
 
-int getMetricIdsForResourceClass(CMPIBroker *broker, CMPIContext *ctx, 
-				 CMPIObjectPath* cop,
+int getMetricIdsForResourceClass(const CMPIBroker *broker, const CMPIContext *ctx, 
+				 const CMPIObjectPath* cop,
 				 char ***metricnames,
 				 int **mids, 
 				 char ***resourceids,
@@ -797,7 +797,7 @@ void releaseMetricIds(char **metricnames,int *mids, char **resourceids,
 {
 }
 
-CMPIString * val2string(CMPIBroker * broker, const ValueItem *val,
+CMPIString * val2string(const CMPIBroker * broker, const ValueItem *val,
 			unsigned   datatype)
 {
   char valbuf[1000];
@@ -846,13 +846,13 @@ CMPIString * val2string(CMPIBroker * broker, const ValueItem *val,
   return CMNewString(broker,valbuf,NULL);
 }
 
-CMPIInstance * makeMetricValueInst(CMPIBroker * broker, 
-				   CMPIContext * ctx,
+CMPIInstance * makeMetricValueInst(const CMPIBroker * broker, 
+				   const CMPIContext * ctx,
 				   const char * defname,
 				   int    defid,
 				   const ValueItem *val, 
 				   unsigned   datatype,
-				   CMPIObjectPath *cop,
+				   const CMPIObjectPath *cop,
 				   CMPIStatus * rc)
 {
   CMPIObjectPath * co;
@@ -900,12 +900,12 @@ CMPIInstance * makeMetricValueInst(CMPIBroker * broker,
   return ci;
 }
 
-CMPIObjectPath * makeMetricValuePath(CMPIBroker * broker,
-				     CMPIContext * ctx,
+CMPIObjectPath * makeMetricValuePath(const CMPIBroker * broker,
+				     const CMPIContext * ctx,
 				     const char * defname,
 				     int    defid,
 				     const ValueItem *val, 
-				     CMPIObjectPath *cop,
+				     const CMPIObjectPath *cop,
 				     CMPIStatus * rc)
 {
   CMPIObjectPath * co;
@@ -930,8 +930,8 @@ CMPIObjectPath * makeMetricValuePath(CMPIBroker * broker,
   return co;
 }
 
-CMPIObjectPath * makeMetricDefPath(CMPIBroker * broker,
-				   CMPIContext * ctx,
+CMPIObjectPath * makeMetricDefPath(const CMPIBroker * broker,
+				   const CMPIContext * ctx,
 				   const char * defname,
 				   int    defid,
 				   const char *namesp,
@@ -1001,8 +1001,8 @@ static int typetable[] = {
   MD_UINT8,
 };
 
-CMPIInstance * makeMetricDefInst(CMPIBroker * broker,
-				 CMPIContext * ctx,
+CMPIInstance * makeMetricDefInst(const CMPIBroker * broker,
+				 const CMPIContext * ctx,
 				 const char * defname,
 				 int    defid,
 				 const char *namesp,
@@ -1082,8 +1082,8 @@ CMPIInstance * makeMetricDefInst(CMPIBroker * broker,
 }
 
 
-CMPIObjectPath * makeResourcePath(CMPIBroker * broker,
-				  CMPIContext * ctx,
+CMPIObjectPath * makeResourcePath(const CMPIBroker * broker,
+				  const CMPIContext * ctx,
 				  const char * namesp,
 				  const char * defname,
 				  int defid,
@@ -1108,14 +1108,14 @@ CMPIObjectPath * makeResourcePath(CMPIBroker * broker,
  *       under Pegasus, it will be necessary to write alternative
  *       namespace computing functions and load them via a plugin mechanism.
  */ 
-void computeResourceNamespace(CMPIObjectPath *rescop,
-			      CMPIObjectPath *mcop,
+void computeResourceNamespace(const CMPIObjectPath *rescop,
+			      const CMPIObjectPath *mcop,
 			      const char *systemid)
 {
   char * namespace = CMGetCharPtr(CMGetNameSpace(mcop,NULL));
   if (namespace) {
-    CMSetNameSpace(rescop,namespace);
-    CMSetHostname(rescop,systemid);
+    CMSetNameSpace((CMPIObjectPath*)rescop,namespace);
+    CMSetHostname((CMPIObjectPath*)rescop,systemid);
   }
 }
 

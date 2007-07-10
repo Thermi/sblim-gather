@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricGathererProvider.c,v 1.7 2005/06/24 12:04:56 mihajlov Exp $
+ * $Id: OSBase_MetricGathererProvider.c,v 1.8 2007/07/10 13:42:30 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003, 2004
+ * © Copyright IBM Corp. 2003, 2007
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 
@@ -40,7 +40,7 @@
 #define _debug 0
 #endif
 
-CMPIBroker * _broker;
+const CMPIBroker * _broker;
 
 /* ---------------------------------------------------------------------------*/
 /* private declarations                                                       */
@@ -51,6 +51,9 @@ static char * _FILENAME = "OSBase_MetricGathererProvider.c";
 
 static char  _false=0;
 
+#ifdef CMPI_VER_100
+#define OSBase_MetricGathererProviderSetInstance OSBase_MetricGathererProviderModifyInstance 
+#endif
 
 /* ---------------------------------------------------------------------------*/
 
@@ -61,16 +64,17 @@ static char  _false=0;
 
 
 CMPIStatus OSBase_MetricGathererProviderCleanup( CMPIInstanceMI * mi, 
-           CMPIContext * ctx) { 
+						 const CMPIContext * ctx, 
+						 CMPIBoolean terminate) { 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI Cleanup()\n", _FILENAME, _ClassName );
   CMReturn(CMPI_RC_OK);
 }
 
 CMPIStatus OSBase_MetricGathererProviderEnumInstanceNames( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref) { 
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref) { 
   CMPIObjectPath * op = NULL;
   CMPIStatus       rc = {CMPI_RC_OK, NULL};
   
@@ -95,10 +99,10 @@ CMPIStatus OSBase_MetricGathererProviderEnumInstanceNames( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricGathererProviderEnumInstances( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref, 
-           char ** properties) { 
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref, 
+           const char ** properties) { 
   CMPIObjectPath * op = NULL;
   CMPIInstance * ci = NULL;
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
@@ -150,10 +154,10 @@ CMPIStatus OSBase_MetricGathererProviderEnumInstances( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricGathererProviderGetInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref, 
-           char ** properties) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref, 
+           const char ** properties) {
   CMPIObjectPath * op = NULL;
   CMPIInstance * ci = NULL;
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
@@ -204,10 +208,10 @@ CMPIStatus OSBase_MetricGathererProviderGetInstance( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricGathererProviderCreateInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop, 
-           CMPIInstance * ci) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop, 
+           const CMPIInstance * ci) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -219,11 +223,11 @@ CMPIStatus OSBase_MetricGathererProviderCreateInstance( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricGathererProviderSetInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop,
-           CMPIInstance * ci, 
-           char **properties) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop,
+           const CMPIInstance * ci, 
+           const char **properties) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -235,9 +239,9 @@ CMPIStatus OSBase_MetricGathererProviderSetInstance( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricGathererProviderDeleteInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop) {
   CMPIStatus rc = {CMPI_RC_OK, NULL}; 
 
   if( _debug )
@@ -249,11 +253,11 @@ CMPIStatus OSBase_MetricGathererProviderDeleteInstance( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricGathererProviderExecQuery( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref, 
-           char * lang, 
-           char * query) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref, 
+           const char * lang, 
+           const char * query) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -268,7 +272,8 @@ CMPIStatus OSBase_MetricGathererProviderExecQuery( CMPIInstanceMI * mi,
 /*                      Method Provider Interface                             */
 /* ---------------------------------------------------------------------------*/
 CMPIStatus OSBase_MetricGathererProviderMethodCleanup( CMPIMethodMI * mi, 
-					       CMPIContext * ctx) 
+						       const CMPIContext * ctx, 
+						       CMPIBoolean terminate) 
 {
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI MethodCleanup()\n", _FILENAME, _ClassName );
@@ -277,11 +282,11 @@ CMPIStatus OSBase_MetricGathererProviderMethodCleanup( CMPIMethodMI * mi,
 }
 
 CMPIStatus OSBase_MetricGathererProviderInvokeMethod( CMPIMethodMI * mi, 
-						      CMPIContext * ctx, 
-						      CMPIResult * rslt,
-						      CMPIObjectPath * cop,
+						      const CMPIContext * ctx, 
+						      const CMPIResult * rslt,
+						      const CMPIObjectPath * cop,
 						      const char * method,
-						      CMPIArgs * in,
+						      const CMPIArgs * in,
 						      CMPIArgs * out)
 {
   CMPIStatus   st = {CMPI_RC_OK,NULL};

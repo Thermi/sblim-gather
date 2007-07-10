@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricForMEProvider.c,v 1.7 2007/07/10 13:23:33 mihajlov Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.8 2007/07/10 13:42:30 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2004
+ * © Copyright IBM Corp. 2004, 2007
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 
@@ -30,15 +30,20 @@
 
 #define LOCALCLASSNAME "Linux_MetricForME"
 
-static CMPIBroker * _broker;
+static const CMPIBroker * _broker;
+
+#ifdef CMPI_VER_100
+#define OSBase_MetricForMEProviderSetInstance OSBase_MetricForMEProviderModifyInstance 
+#endif
+
 
 /* ------------------------------------------------------------------ *
  * Simplified Utility Functions
  * no support for assocClass, resultClass, etc.
  * ------------------------------------------------------------------ */
 
-static CMPIInstance * _makeRefInstance(CMPIObjectPath *defp,
-				       CMPIObjectPath *valp)
+static CMPIInstance * _makeRefInstance(const CMPIObjectPath *defp,
+				       const CMPIObjectPath *valp)
 {
   CMPIObjectPath *co = CMNewObjectPath(_broker,NULL,LOCALCLASSNAME,NULL);
   CMPIInstance   *ci = NULL;
@@ -53,8 +58,8 @@ static CMPIInstance * _makeRefInstance(CMPIObjectPath *defp,
   return ci;
 }
 
-static CMPIObjectPath * _makeRefPath(CMPIObjectPath *defp,
-				     CMPIObjectPath *valp)
+static CMPIObjectPath * _makeRefPath(const CMPIObjectPath *defp,
+				     const CMPIObjectPath *valp)
 {
   CMPIObjectPath *co = CMNewObjectPath(_broker,NULL,LOCALCLASSNAME,NULL);
   if (co) {
@@ -65,9 +70,9 @@ static CMPIObjectPath * _makeRefPath(CMPIObjectPath *defp,
   return co;
 }
 
-static CMPIStatus associatorHelper( CMPIResult * rslt,
-				    CMPIContext * ctx,
-				    CMPIObjectPath * cop,
+static CMPIStatus associatorHelper( const CMPIResult * rslt,
+				    const CMPIContext * ctx,
+				    const CMPIObjectPath * cop,
 				    int associators, int names ) 
 {
   CMPIStatus      st = {CMPI_RC_OK,NULL};
@@ -177,7 +182,8 @@ static CMPIStatus associatorHelper( CMPIResult * rslt,
  * ------------------------------------------------------------------ */
 
 CMPIStatus OSBase_MetricForMEProviderCleanup( CMPIInstanceMI * mi, 
-				 CMPIContext * ctx) 
+					      const CMPIContext * ctx, 
+					      CMPIBoolean terminate) 
 {
   releaseMetricDefClasses();
   CMReturn(CMPI_RC_OK);
@@ -189,65 +195,65 @@ CMPIStatus OSBase_MetricForMEProviderCleanup( CMPIInstanceMI * mi,
 
 
 CMPIStatus OSBase_MetricForMEProviderEnumInstanceNames( CMPIInstanceMI * mi, 
-					   CMPIContext * ctx, 
-					   CMPIResult * rslt, 
-					   CMPIObjectPath * ref) 
+					   const CMPIContext * ctx, 
+					   const CMPIResult * rslt, 
+					   const CMPIObjectPath * ref) 
 {
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
 CMPIStatus OSBase_MetricForMEProviderEnumInstances( CMPIInstanceMI * mi, 
-				       CMPIContext * ctx, 
-				       CMPIResult * rslt, 
-				       CMPIObjectPath * ref, 
-				       char ** properties) 
+				       const CMPIContext * ctx, 
+				       const CMPIResult * rslt, 
+				       const CMPIObjectPath * ref, 
+				       const char ** properties) 
 {
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
 
 CMPIStatus OSBase_MetricForMEProviderGetInstance( CMPIInstanceMI * mi, 
-				     CMPIContext * ctx, 
-				     CMPIResult * rslt, 
-				     CMPIObjectPath * cop, 
-				     char ** properties) 
+				     const CMPIContext * ctx, 
+				     const CMPIResult * rslt, 
+				     const CMPIObjectPath * cop, 
+				     const char ** properties) 
 {
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
 CMPIStatus OSBase_MetricForMEProviderCreateInstance( CMPIInstanceMI * mi, 
-					CMPIContext * ctx, 
-					CMPIResult * rslt, 
-					CMPIObjectPath * cop, 
-					CMPIInstance * ci) 
+					const CMPIContext * ctx, 
+					const CMPIResult * rslt, 
+					const CMPIObjectPath * cop, 
+					const CMPIInstance * ci) 
 {
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
 CMPIStatus OSBase_MetricForMEProviderSetInstance( CMPIInstanceMI * mi, 
-				     CMPIContext * ctx, 
-				     CMPIResult * rslt, 
-				     CMPIObjectPath * cop,
-				     CMPIInstance * ci, 
-				     char **properties) 
+				     const CMPIContext * ctx, 
+				     const CMPIResult * rslt, 
+				     const CMPIObjectPath * cop,
+				     const CMPIInstance * ci, 
+				     const char **properties) 
 {
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
 CMPIStatus OSBase_MetricForMEProviderDeleteInstance( CMPIInstanceMI * mi, 
-					CMPIContext * ctx, 
-					CMPIResult * rslt, 
-					CMPIObjectPath * cop) 
+					const CMPIContext * ctx, 
+					const CMPIResult * rslt, 
+					const CMPIObjectPath * cop) 
 { 
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
 
 CMPIStatus OSBase_MetricForMEProviderExecQuery( CMPIInstanceMI * mi, 
-				   CMPIContext * ctx, 
-				   CMPIResult * rslt, 
-				   CMPIObjectPath * cop, 
-				   char * lang, 
-				   char * query) 
+				   const CMPIContext * ctx, 
+				   const CMPIResult * rslt, 
+				   const CMPIObjectPath * cop, 
+				   const char * lang, 
+				   const char * query) 
 {
   CMReturn( CMPI_RC_ERR_NOT_SUPPORTED );
 }
@@ -257,7 +263,8 @@ CMPIStatus OSBase_MetricForMEProviderExecQuery( CMPIInstanceMI * mi,
  * ------------------------------------------------------------------ */
 
 CMPIStatus OSBase_MetricForMEProviderAssociationCleanup( CMPIAssociationMI * mi,
-					      CMPIContext * ctx) 
+							 const CMPIContext * ctx, 
+							 CMPIBoolean terminate) 
 {
   releaseMetricDefClasses();
   CMReturn(CMPI_RC_OK);
@@ -268,22 +275,22 @@ CMPIStatus OSBase_MetricForMEProviderAssociationCleanup( CMPIAssociationMI * mi,
  * ------------------------------------------------------------------ */
 
 CMPIStatus OSBase_MetricForMEProviderAssociators( CMPIAssociationMI * mi,
-				       CMPIContext * ctx,
-				       CMPIResult * rslt,
-				       CMPIObjectPath * cop,
+				       const CMPIContext * ctx,
+				       const CMPIResult * rslt,
+				       const CMPIObjectPath * cop,
 				       const char * assocClass,
 				       const char * resultClass,
 				       const char * role,
 				       const char * resultRole,
-				       char ** propertyList ) 
+				       const char ** propertyList ) 
 {
   return associatorHelper(rslt,ctx,cop,1,0);
 }
 
 CMPIStatus OSBase_MetricForMEProviderAssociatorNames( CMPIAssociationMI * mi,
-					   CMPIContext * ctx,
-					   CMPIResult * rslt,
-					   CMPIObjectPath * cop,
+					   const CMPIContext * ctx,
+					   const CMPIResult * rslt,
+					   const CMPIObjectPath * cop,
 					   const char * assocClass,
 					   const char * resultClass,
 					   const char * role,
@@ -293,21 +300,21 @@ CMPIStatus OSBase_MetricForMEProviderAssociatorNames( CMPIAssociationMI * mi,
 }
 
 CMPIStatus OSBase_MetricForMEProviderReferences( CMPIAssociationMI * mi,
-				      CMPIContext * ctx,
-				      CMPIResult * rslt,
-				      CMPIObjectPath * cop,
+				      const CMPIContext * ctx,
+				      const CMPIResult * rslt,
+				      const CMPIObjectPath * cop,
 				      const char * assocClass,
 				      const char * role,
-				      char ** propertyList ) 
+				      const char ** propertyList ) 
 {
   return associatorHelper(rslt,ctx,cop,0,0);
 }
 
 
 CMPIStatus OSBase_MetricForMEProviderReferenceNames( CMPIAssociationMI * mi,
-					  CMPIContext * ctx,
-					  CMPIResult * rslt,
-					  CMPIObjectPath * cop,
+					  const CMPIContext * ctx,
+					  const CMPIResult * rslt,
+					  const CMPIObjectPath * cop,
 					  const char * assocClass,
 					  const char * role) 
 {

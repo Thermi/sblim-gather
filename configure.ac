@@ -107,9 +107,6 @@ fi
 
 if test $enable_provider = "yes"
 then
-# CPPFLAGS for Provider Compilation
-CPPFLAGS="-DCMPI_VERSION=90 $CPPFLAGS"
-
 # Check for required CMPI header files (defined in acinclude.m4)
 CHECK_CMPI
 

@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.6 2006/03/07 12:55:21 mihajlov Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.7 2007/07/10 13:42:30 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2004, 2006
+ * © Copyright IBM Corp. 2004, 2007
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 
@@ -40,7 +40,7 @@
 #define _debug 0
 #endif
 
-CMPIBroker * _broker;
+const CMPIBroker * _broker;
 
 /* ---------------------------------------------------------------------------*/
 /* private declarations                                                       */
@@ -51,6 +51,9 @@ static char * _FILENAME = "OSBase_MetricRepositoryServiceProvider.c";
 
 static char  _false=0;
 
+#ifdef CMPI_VER_100
+#define OSBase_MetricRepositoryServiceProviderSetInstance OSBase_MetricRepositoryServiceProviderModifyInstance 
+#endif
 
 /* ---------------------------------------------------------------------------*/
 
@@ -61,16 +64,17 @@ static char  _false=0;
 
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderCleanup( CMPIInstanceMI * mi, 
-           CMPIContext * ctx) { 
+							  const CMPIContext * ctx, 
+							  CMPIBoolean terminate) { 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI Cleanup()\n", _FILENAME, _ClassName );
   CMReturn(CMPI_RC_OK);
 }
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstanceNames( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref) { 
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref) { 
   CMPIObjectPath * op = NULL;
   CMPIStatus       rc = {CMPI_RC_OK, NULL};
   
@@ -95,10 +99,10 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstanceNames( CMPIInstance
 }
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstances( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref, 
-           char ** properties) { 
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref, 
+           const char ** properties) { 
   CMPIObjectPath * op = NULL;
   CMPIInstance * ci = NULL;
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
@@ -155,10 +159,10 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstances( CMPIInstanceMI *
 }
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderGetInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref, 
-           char ** properties) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref, 
+           const char ** properties) {
   CMPIObjectPath * op = NULL;
   CMPIInstance * ci = NULL;
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
@@ -214,10 +218,10 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderGetInstance( CMPIInstanceMI * m
 }
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderCreateInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop, 
-           CMPIInstance * ci) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop, 
+           const CMPIInstance * ci) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -229,11 +233,11 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderCreateInstance( CMPIInstanceMI 
 }
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderSetInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop,
-           CMPIInstance * ci, 
-           char **properties) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop,
+           const CMPIInstance * ci, 
+           const char **properties) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -245,9 +249,9 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderSetInstance( CMPIInstanceMI * m
 }
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderDeleteInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop) {
   CMPIStatus rc = {CMPI_RC_OK, NULL}; 
 
   if( _debug )
@@ -259,11 +263,11 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderDeleteInstance( CMPIInstanceMI 
 }
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderExecQuery( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref, 
-           char * lang, 
-           char * query) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref, 
+           const char * lang, 
+           const char * query) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -278,7 +282,8 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderExecQuery( CMPIInstanceMI * mi,
 /*                      Method Provider Interface                             */
 /* ---------------------------------------------------------------------------*/
 CMPIStatus OSBase_MetricRepositoryServiceProviderMethodCleanup( CMPIMethodMI * mi, 
-					       CMPIContext * ctx) 
+								const CMPIContext * ctx, 
+								CMPIBoolean terminate ) 
 {
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI MethodCleanup()\n", _FILENAME, _ClassName );
@@ -287,11 +292,11 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderMethodCleanup( CMPIMethodMI * m
 }
 
 CMPIStatus OSBase_MetricRepositoryServiceProviderInvokeMethod( CMPIMethodMI * mi, 
-					      CMPIContext * ctx, 
-					      CMPIResult * rslt,
-					      CMPIObjectPath * cop,
+					      const CMPIContext * ctx, 
+					      const CMPIResult * rslt,
+					      const CMPIObjectPath * cop,
 					      const char * method,
-					      CMPIArgs * in,
+					      const CMPIArgs * in,
 					      CMPIArgs * out)
 {
   CMPIStatus   st = {CMPI_RC_OK,NULL};

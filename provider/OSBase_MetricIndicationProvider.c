@@ -1,8 +1,8 @@
 
 /*
- * $Id: OSBase_MetricIndicationProvider.c,v 1.5 2007/07/10 13:23:33 mihajlov Exp $
+ * $Id: OSBase_MetricIndicationProvider.c,v 1.6 2007/07/10 13:42:30 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003, 2004
+ * © Copyright IBM Corp. 2003, 2007
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 
@@ -20,7 +20,6 @@
  *
  */
 
-#define CMPI_VERSION 90
 #ifdef DEBUG
 #define _debug 1
 #else
@@ -41,16 +40,13 @@
 #include <rrepos.h>
 #include "OSBase_MetricUtil.h"
 
-CMPIBroker * _broker;
+static const CMPIBroker * _broker;
 
 /* ---------------------------------------------------------------------------*/
 /* private declarations                                                       */
 
 static char * _ClassName = "Linux_MetricIndication";
 static char * _FILENAME = "OSBase_MetricIndicationProvider.c";
-
-static char  _true=1;
-static char  _false=0;
 
 static pthread_mutex_t listenMutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_key_t   listen_key;
@@ -60,9 +56,9 @@ static CMPIContext   * listenContext = NULL;
 static int enabled = 0;
 static int runningCorrelator = 100;
 
-static int responsible(CMPISelectExp * filter,CMPIObjectPath * op, SubscriptionRequest * sr);
-static int addListenFilter(CMPISelectExp * filter, CMPIObjectPath * op, SubscriptionRequest *sr);
-static int removeListenFilter(CMPISelectExp * filter);
+static int responsible(const CMPISelectExp * filter,const CMPIObjectPath * op, SubscriptionRequest * sr);
+static int addListenFilter(const CMPISelectExp * filter, const CMPIObjectPath * op, SubscriptionRequest *sr);
+static int removeListenFilter(const CMPISelectExp * filter);
 static void enableFilters();
 static void disableFilters();
 
@@ -90,7 +86,8 @@ static CMPIContext * attachListenContext();
 /*                      Indication Provider Interface                             */
 /* ---------------------------------------------------------------------------*/
 CMPIStatus OSBase_MetricIndicationProviderIndicationCleanup( CMPIIndicationMI * mi, 
-					       CMPIContext * ctx) 
+							     const CMPIContext * ctx,
+							     CMPIBoolean terminate) 
 {
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI IndicationCleanup()\n", _FILENAME, _ClassName );
@@ -99,36 +96,72 @@ CMPIStatus OSBase_MetricIndicationProviderIndicationCleanup( CMPIIndicationMI * 
 }
 
 CMPIStatus OSBase_MetricIndicationProviderMustPoll
-(CMPIIndicationMI * mi, CMPIContext * ctx, CMPIResult * res, CMPISelectExp * filter,
- const char * evtype, CMPIObjectPath * co)
+(CMPIIndicationMI * mi, 
+ const CMPIContext * ctx, 
+#ifndef CMPI_VER_100
+ const CMPIResult * res, 
+#endif
+ const CMPISelectExp * filter,
+ const char * evtype, 
+ const CMPIObjectPath * co)
 {
   if( _debug )
     fprintf(stderr,"*** not polling for %s\n", _ClassName);
+#ifndef CMPI_VER_100
   CMReturnData(res, &_false, CMPI_boolean);
   CMReturnDone(res);
+#endif
+#ifndef CMPI_VER_100
   CMReturn(CMPI_RC_OK);
+#else
+  CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
+#endif
 }
 
 CMPIStatus OSBase_MetricIndicationProviderAuthorizeFilter
-(CMPIIndicationMI * mi, CMPIContext * ctx, CMPIResult * res, CMPISelectExp * filter,
- const char * evtype, CMPIObjectPath * co, const char * owner)
+(CMPIIndicationMI * mi, 
+ const CMPIContext * ctx, 
+#ifndef CMPI_VER_100
+ const CMPIResult * res, 
+#endif
+ const CMPISelectExp * filter,
+ const char * evtype, 
+ const CMPIObjectPath * co, 
+ const char * owner)
 {
   if (responsible(filter,co,NULL)) {
     if( _debug )
       fprintf(stderr,"*** successfully authorized filter for %s\n", _ClassName);
+#ifndef CMPI_VER_100
     CMReturnData(res, &_true, CMPI_boolean);
+#endif
   } else {
     if( _debug )
       fprintf(stderr,"*** refused to authorize filter for %s\n", _ClassName);
+#ifndef CMPI_VER_100
     CMReturnData(res, &_false, CMPI_boolean);
+#endif
   }
+#ifndef CMPI_VER_100
   CMReturnDone(res);
+#endif
+#ifndef CMPI_VER_100
   CMReturn(CMPI_RC_OK);
+#else
+  CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
+#endif
 }
 
 CMPIStatus OSBase_MetricIndicationProviderActivateFilter
-(CMPIIndicationMI * mi, CMPIContext * ctx, CMPIResult * res, CMPISelectExp * filter,
- const char * evtype, CMPIObjectPath * co, CMPIBoolean first)
+(CMPIIndicationMI * mi, 
+ const CMPIContext * ctx, 
+#ifndef CMPI_VER_100
+ const CMPIResult * res, 
+#endif
+ const CMPISelectExp * filter,
+ const char * evtype, 
+ const CMPIObjectPath * co, 
+ CMPIBoolean first)
 {
   SubscriptionRequest * sr = calloc(1,sizeof(SubscriptionRequest));
   if (responsible(filter,co,sr)) {
@@ -153,8 +186,15 @@ CMPIStatus OSBase_MetricIndicationProviderActivateFilter
 }
 
 CMPIStatus OSBase_MetricIndicationProviderDeActivateFilter
-(CMPIIndicationMI * mi, CMPIContext * ctx, CMPIResult * res, CMPISelectExp * filter,
- const char * evtype, CMPIObjectPath * co, CMPIBoolean last)
+(CMPIIndicationMI * mi, 
+ const CMPIContext * ctx,
+#ifndef CMPI_VER_100
+ const CMPIResult * res,
+#endif
+ const CMPISelectExp * filter,
+ const char * evtype,
+ const CMPIObjectPath * co,
+ CMPIBoolean last)
 {
   if (responsible(filter,co,NULL) && removeListenFilter(filter) == 0) {
     if( _debug )
@@ -168,7 +208,7 @@ CMPIStatus OSBase_MetricIndicationProviderDeActivateFilter
 }
 
 void OSBase_MetricIndicationProviderEnableIndications
-(CMPIIndicationMI * mi)
+(CMPIIndicationMI * mi, const CMPIContext * ctx)
 {
   enableFilters();
   if( _debug )
@@ -176,7 +216,7 @@ void OSBase_MetricIndicationProviderEnableIndications
 }
 
 void OSBase_MetricIndicationProviderDisableIndications
-(CMPIIndicationMI * mi)
+(CMPIIndicationMI * mi, const CMPIContext * ctx)
 {
   disableFilters();
   if( _debug )
@@ -208,7 +248,7 @@ CMIndicationMIStub( OSBase_MetricIndicationProvider,
 /*                               Private Stuff                                */
 /* ---------------------------------------------------------------------------*/
 
-static int responsible(CMPISelectExp * filter, CMPIObjectPath *op, SubscriptionRequest * sr)
+static int responsible(const CMPISelectExp * filter, const CMPIObjectPath *op, SubscriptionRequest * sr)
 {
   if (op && filter) {
     CMPISelectCond * cond = CMGetDoc(filter,NULL);
@@ -267,7 +307,7 @@ static int responsible(CMPISelectExp * filter, CMPIObjectPath *op, SubscriptionR
   return 0;
 }
 
-static int addListenFilter(CMPISelectExp * filter, CMPIObjectPath * op, SubscriptionRequest *sr)
+static int addListenFilter(const CMPISelectExp * filter, const CMPIObjectPath * op, SubscriptionRequest *sr)
 {
   ListenFilter *lf;
   pthread_mutex_lock(&listenMutex);
@@ -282,7 +322,7 @@ static int addListenFilter(CMPISelectExp * filter, CMPIObjectPath * op, Subscrip
     lf->lf_next = calloc(1,sizeof(ListenFilter));
     lf = lf->lf_next;
   }
-  lf->lf_filter = filter;
+  lf->lf_filter = (CMPISelectExp*)filter;
   lf->lf_subs = sr;
   lf->lf_namespace = strdup(CMGetCharPtr(CMGetNameSpace(op,NULL)));
   if (enabled) {
@@ -292,7 +332,7 @@ static int addListenFilter(CMPISelectExp * filter, CMPIObjectPath * op, Subscrip
   return 0;
 }
 
-static int removeListenFilter(CMPISelectExp * filter)
+static int removeListenFilter(const CMPISelectExp * filter)
 {
   ListenFilter *lf;
   ListenFilter *prev;

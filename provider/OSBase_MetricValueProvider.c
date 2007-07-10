@@ -1,7 +1,7 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.13 2006/10/27 11:11:15 mihajlov Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.14 2007/07/10 13:42:30 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003, 2004
+ * © Copyright IBM Corp. 2003, 2007
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE 
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE 
@@ -39,7 +39,7 @@
 #define _debug 0
 #endif
 
-CMPIBroker * _broker;
+const CMPIBroker * _broker;
 
 /* ---------------------------------------------------------------------------*/
 /* private declarations                                                       */
@@ -47,25 +47,28 @@ CMPIBroker * _broker;
 static char * _ClassName = "CIM_BaseMetricValue";
 static char * _FILENAME = "OSBase_MetricValueProvider.c";
 
+#ifdef CMPI_VER_100
+#define OSBase_MetricValueProviderSetInstance OSBase_MetricValueProviderModifyInstance 
+#endif
 
-static char * metricValueName(CMPIObjectPath *path);
+static char * metricValueName(const CMPIObjectPath *path);
 
-static void returnPathes(CMPIBroker *_broker,
-			 CMPIContext *ctx,
+static void returnPathes(const CMPIBroker *_broker,
+			 const CMPIContext *ctx,
 			 RepositoryPluginDefinition *rdef,
 			 int rdefnum,
 			 COMMHEAP *ch,
-			 CMPIObjectPath *ref,
-			 CMPIResult *rslt,
+			 const CMPIObjectPath *ref,
+			 const CMPIResult *rslt,
 			 CMPIStatus *rc);
 
-static void returnInstances(CMPIBroker *_broker,
-			    CMPIContext *ctx,
+static void returnInstances(const CMPIBroker *_broker,
+			    const CMPIContext *ctx,
 			    RepositoryPluginDefinition *rdef,
 			    int rdefnum,
 			    COMMHEAP *ch,
-			    CMPIObjectPath *ref,
-			    CMPIResult *rslt,
+			    const CMPIObjectPath *ref,
+			    const CMPIResult *rslt,
 			    CMPIStatus *rc);
 
 /* ---------------------------------------------------------------------------*/
@@ -77,7 +80,8 @@ static void returnInstances(CMPIBroker *_broker,
 
 
 CMPIStatus OSBase_MetricValueProviderCleanup( CMPIInstanceMI * mi, 
-           CMPIContext * ctx) { 
+					      const CMPIContext * ctx, 
+					      CMPIBoolean terminate) { 
   if( _debug )
     fprintf( stderr, "--- %s : %s CMPI Cleanup()\n", _FILENAME, _ClassName );
   releaseMetricDefClasses();
@@ -85,9 +89,9 @@ CMPIStatus OSBase_MetricValueProviderCleanup( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricValueProviderEnumInstanceNames( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref) { 
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref) { 
   CMPIStatus       rc = {CMPI_RC_OK, NULL};
   int              rdefnum;
   RepositoryPluginDefinition *rdef;
@@ -118,10 +122,10 @@ CMPIStatus OSBase_MetricValueProviderEnumInstanceNames( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricValueProviderEnumInstances( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref, 
-           char ** properties) { 
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref, 
+           const char ** properties) { 
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
   int              rdefnum;
   RepositoryPluginDefinition *rdef;
@@ -152,10 +156,10 @@ CMPIStatus OSBase_MetricValueProviderEnumInstances( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop, 
-           char ** properties) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop, 
+           const char ** properties) {
   CMPIInstance * ci = NULL;
   CMPIStatus     rc = {CMPI_RC_OK, NULL};
   ValueRequest     vr;
@@ -225,10 +229,10 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricValueProviderCreateInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop, 
-           CMPIInstance * ci) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop, 
+           const CMPIInstance * ci) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -240,11 +244,11 @@ CMPIStatus OSBase_MetricValueProviderCreateInstance( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricValueProviderSetInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop,
-           CMPIInstance * ci, 
-           char **properties) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop,
+           const CMPIInstance * ci, 
+           const char **properties) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -256,9 +260,9 @@ CMPIStatus OSBase_MetricValueProviderSetInstance( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricValueProviderDeleteInstance( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * cop) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * cop) {
   CMPIStatus rc = {CMPI_RC_OK, NULL}; 
 
   if( _debug )
@@ -270,11 +274,11 @@ CMPIStatus OSBase_MetricValueProviderDeleteInstance( CMPIInstanceMI * mi,
 }
 
 CMPIStatus OSBase_MetricValueProviderExecQuery( CMPIInstanceMI * mi, 
-           CMPIContext * ctx, 
-           CMPIResult * rslt, 
-           CMPIObjectPath * ref, 
-           char * lang, 
-           char * query) {
+           const CMPIContext * ctx, 
+           const CMPIResult * rslt, 
+           const CMPIObjectPath * ref, 
+           const char * lang, 
+           const char * query) {
   CMPIStatus rc = {CMPI_RC_OK, NULL};
 
   if( _debug )
@@ -301,7 +305,7 @@ CMInstanceMIStub( OSBase_MetricValueProvider,
 /* ---------------------------------------------------------------------------*/
 
 
-static char * metricValueName(CMPIObjectPath *path)
+static char * metricValueName(const CMPIObjectPath *path)
 {
   CMPIData clsname = CMGetKey(path,"InstanceId",NULL);
   if (clsname.value.string)
@@ -310,13 +314,13 @@ static char * metricValueName(CMPIObjectPath *path)
     return NULL;
 }
 
-static void returnPathes(CMPIBroker *_broker,
-			 CMPIContext *ctx,
+static void returnPathes(const CMPIBroker *_broker,
+			 const CMPIContext *ctx,
 			 RepositoryPluginDefinition *rdef,
 			 int rdefnum,
 			 COMMHEAP *ch,
-			 CMPIObjectPath *ref,
-			 CMPIResult *rslt,
+			 const CMPIObjectPath *ref,
+			 const CMPIResult *rslt,
 			 CMPIStatus *rc)
 {
   int i,j;
@@ -352,13 +356,13 @@ static void returnPathes(CMPIBroker *_broker,
   }
 }
 
-static void returnInstances(CMPIBroker *_broker,
-			    CMPIContext *ctx,
+static void returnInstances(const CMPIBroker *_broker,
+			    const CMPIContext *ctx,
 			    RepositoryPluginDefinition *rdef,
 			    int rdefnum,
 			    COMMHEAP *ch,
-			    CMPIObjectPath *ref,
-			    CMPIResult *rslt,
+			    const CMPIObjectPath *ref,
+			    const CMPIResult *rslt,
 			    CMPIStatus *rc)
 {
   int i,j;

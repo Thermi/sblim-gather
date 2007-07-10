@@ -1,7 +1,7 @@
 /*
- * $Id: cimplug.h,v 1.3 2007/07/10 13:23:28 mihajlov Exp $
+ * $Id: cimplug.h,v 1.4 2007/07/10 13:42:30 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2003, 2004
+ * © Copyright IBM Corp. 2003, 2007
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -46,7 +46,7 @@
  */
 
 typedef CMPIObjectPath* (CimObjectPathFromValueId)
-     (CMPIBroker *broker, const char* id, const char* systemid);
+     (const CMPIBroker *broker, const char* id, const char* systemid);
 
 /* 
  * construct a metric definition or metric value id from an object path.
@@ -56,7 +56,7 @@ typedef CMPIObjectPath* (CimObjectPathFromValueId)
  */
 
 typedef int (ValueIdFromCimObjectPath)
-     (CMPIObjectPath* cop, 
+     (const CMPIObjectPath* cop, 
       char* id, size_t idlen, char* systemid, size_t systemidlen);
 
 

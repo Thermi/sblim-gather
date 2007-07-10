@@ -1,5 +1,17 @@
 2007-07-10  Viktor Mihajlovski  <mihajlov@dyn-9-152-210-57.boeblingen.de.ibm.com>
 
+	* cimplug.h, configure.ac, provider/OSBase_MetricDefForMEProvider.c,
+	provider/OSBase_MetricDefinitionProvider.c,
+	provider/OSBase_MetricForMEProvider.c,
+	provider/OSBase_MetricGathererProvider.c,
+	provider/OSBase_MetricIndicationProvider.c,
+	provider/OSBase_MetricInstanceProvider.c,
+	provider/OSBase_MetricRepositoryServiceProvider.c,
+	provider/OSBase_MetricUtil.c, provider/OSBase_MetricUtil.h,
+	provider/OSBase_MetricValueProvider.c:
+	Fixed 1751133: gather indication provider not working properly.
+
+
 	* acinclude.m4, cimplug.h, provider/OSBase_MetricForMEProvider.c,
 	provider/OSBase_MetricIndicationProvider.c: 
 	Fixed 1744262: Compilation problems with tog-pegasus 2.6 CMPI
