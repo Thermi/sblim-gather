@@ -5,6 +5,7 @@ Bugs fixed:
 - 1736593 Fixed XEN gatherd is not running
 - 1744262 Fixed compilation problems with tog-pegasus headers
 - 1751133 Fixed gather indication provider not working properly
+- 1751173 Fixed potential memory problem in Xen plugin
 
 Changes in Version 2.1.3
 ========================

@@ -1,7 +1,7 @@
 /*
- * $Id: metricXen.c,v 1.9 2007/06/21 21:25:07 tyreld Exp $
+ * $Id: metricXen.c,v 1.10 2007/07/10 14:08:15 mihajlov Exp $
  *
- * (C) Copyright IBM Corp. 2006
+ * © Copyright IBM Corp. 2006, 2007
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -705,7 +705,7 @@ int parseXmInfo()
       if (EOF == (signed char)(*buf_current++ = fgetc(fp)))
 	    break;
     }
-    *buf_current = "\0";
+    *buf_current = '\0';
 
     if (0 == strlen(buffer)) {
 	perror("fgets");
