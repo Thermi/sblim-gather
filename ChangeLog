@@ -17,9 +17,13 @@
 
 
 	* acinclude.m4, cimplug.h, provider/OSBase_MetricForMEProvider.c,
-	provider/OSBase_MetricIndicationProvider.c: 
+	provider/OSBase_MetricIndicationProvider.c,
+	provider/indicationtest/PegasusCreateFilter.xml,
+	provider/indicationtest/PegasusDeleteFilter.xml,
+	provider/indicationtest/PegasusDeleteFilter2.xml,
+	provider/indicationtest/PegasusDeleteHandler.xml: 
 	Fixed 1744262: Compilation problems with tog-pegasus 2.6 CMPI
-	headers.
+	headers and corrected indication handling.
 
 2007-06-21  Tyrel Datwyler  <tyreld@us.ibm.com>
 
