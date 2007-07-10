@@ -1,5 +1,5 @@
 /*
- * $Id: cimplug.h,v 1.2 2004/12/22 16:45:52 mihajlov Exp $
+ * $Id: cimplug.h,v 1.3 2007/07/10 13:23:28 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -24,6 +24,7 @@
 #include <cmpift.h>
 #include <cmpimacs.h>
 
+#include <stddef.h>
 
 /* entry point names */
 

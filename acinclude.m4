@@ -1,5 +1,5 @@
 dnl
-dnl $Id: acinclude.m4,v 1.2 2006/02/22 14:11:59 mihajlov Exp $
+dnl $Id: acinclude.m4,v 1.3 2007/07/10 13:23:28 mihajlov Exp $
 dnl
  dnl 
  dnl (C) Copyright IBM Corp. 2004, 2005
@@ -75,6 +75,7 @@ AC_DEFUN([_CHECK_CMPI],
 		#include <cmpimacs.h>
 		#include <cmpidt.h>
 		#include <cmpift.h>
+		#include <stdio.h>
 	],
 	[
 		CMPIBroker broker;

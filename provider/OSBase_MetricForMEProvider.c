@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricForMEProvider.c,v 1.6 2004/12/23 14:37:39 mihajlov Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.7 2007/07/10 13:23:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -22,6 +22,9 @@
 #include <cmpidt.h>
 #include <cmpift.h>
 #include <cmpimacs.h>
+
+#include <stdio.h>
+
 #include <rrepos.h>
 #include "OSBase_MetricUtil.h"
 

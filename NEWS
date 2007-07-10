@@ -3,6 +3,7 @@ Changes in Version 2.1.4
 
 Bugs fixed:
 - 1736593 Fixed XEN gatherd is not running
+- 1744262 Fixed compilation problems with tog-pegasus headers
 
 Changes in Version 2.1.3
 ========================

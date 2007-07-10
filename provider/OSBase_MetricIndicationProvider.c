@@ -1,6 +1,6 @@
 
 /*
- * $Id: OSBase_MetricIndicationProvider.c,v 1.4 2005/06/24 12:04:56 mihajlov Exp $
+ * $Id: OSBase_MetricIndicationProvider.c,v 1.5 2007/07/10 13:23:33 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -33,6 +33,7 @@
 #include "cmpimacs.h"
 
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
