@@ -22,7 +22,7 @@
               <VALUE>MetricFilter0</VALUE>
             </PROPERTY>
             <PROPERTY NAME="Query" TYPE="string"> 
-              <VALUE> SELECT * FROM Linux_MetricIndication WHERE MetricId = "AvailableSpace.163" AND MetricValue = "0"
+              <VALUE> SELECT * FROM Linux_MetricIndication WHERE MetricId = "TotalCPUTimePercentage.154" AND MetricValue != "0"
               </VALUE>
             </PROPERTY>
             <PROPERTY NAME="QueryLanguage" TYPE="string"> 

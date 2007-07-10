@@ -1,6 +1,6 @@
 
 /*
- * $Id: OSBase_MetricIndicationProvider.c,v 1.6 2007/07/10 13:42:30 mihajlov Exp $
+ * $Id: OSBase_MetricIndicationProvider.c,v 1.7 2007/07/10 14:38:21 mihajlov Exp $
  *
  * © Copyright IBM Corp. 2003, 2007
  *
@@ -134,12 +134,16 @@ CMPIStatus OSBase_MetricIndicationProviderAuthorizeFilter
       fprintf(stderr,"*** successfully authorized filter for %s\n", _ClassName);
 #ifndef CMPI_VER_100
     CMReturnData(res, &_true, CMPI_boolean);
+#else
+    CMReturn(CMPI_RC_OK);
 #endif
   } else {
     if( _debug )
       fprintf(stderr,"*** refused to authorize filter for %s\n", _ClassName);
 #ifndef CMPI_VER_100
     CMReturnData(res, &_false, CMPI_boolean);
+#else
+  CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
 #endif
   }
 #ifndef CMPI_VER_100

@@ -18,7 +18,7 @@
             <KEYBINDING NAME="CreationClassName"> 
               <KEYVALUE>CIM_IndicationFilter</KEYVALUE>
             </KEYBINDING>
-            <KEYBINDING NAME="Name" TYPE="string"> 
+            <KEYBINDING NAME="Name"> 
               <KEYVALUE>MetricFilter1</KEYVALUE>
             </KEYBINDING>
           </INSTANCENAME>
