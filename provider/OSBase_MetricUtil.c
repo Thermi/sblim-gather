@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.16 2007/07/10 13:42:30 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.17 2007/10/05 11:22:03 mihajlov Exp $
  *
  * © Copyright IBM Corp. 2004, 2007
  *
@@ -858,6 +858,7 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
   CMPIObjectPath * co;
   CMPIInstance   * ci = NULL;
   char             instid[1000];
+  char             defidstr[1000];
   char             valclsname[1000];
   char           * namesp;
   CMPIDateTime   * datetime;
@@ -877,7 +878,8 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
 				      val->viSystemId,
 				      val->viCaptureTime),
 		    CMPI_chars);
-      CMSetProperty(ci,"MetricDefinitionId",defname,CMPI_chars);
+      CMSetProperty(ci,"MetricDefinitionId",makeMetricDefId(defidstr,defname,defid),
+		    CMPI_chars);
       CMSetProperty(ci,"MeasuredElementName",val->viResource,CMPI_chars);
       datetime = 
 	CMNewDateTimeFromBinary(broker,

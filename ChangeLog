@@ -1,3 +1,9 @@
+2007-10-05  Viktor Mihajlovski  <mihajlov@localhost.localdomain>
+
+	* Makefile.am, provider/OSBase_MetricUtil.c, 
+	provider/mof/Linux_Metric.registration: 
+	Fixed 1808017: Added Lifecycle Indication Support.
+
 2007-07-10  Viktor Mihajlovski  <mihajlov@dyn-9-152-210-57.boeblingen.de.ibm.com>
 
 	* plugin/metricXen.c: 

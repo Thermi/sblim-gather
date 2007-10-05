@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.8 2006/07/03 15:27:37 mihajlov Exp $
+# $Id: Makefile.am,v 1.9 2007/10/05 11:22:03 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -85,7 +85,8 @@ provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \
 	libOSBase_MetricForMEProvider.la \
 	libOSBase_MetricDefForMEProvider.la \
 	libOSBase_MetricInstanceProvider.la \
-	libOSBase_MetricIndicationProvider.la
+	libOSBase_MetricIndicationProvider.la \
+	libOSBase_MetricLifeCycleProvider.la
 
 libOSBase_MetricDefinitionProvider_la_SOURCES = OSBase_MetricDefinitionProvider.c
 libOSBase_MetricDefinitionProvider_la_LIBADD = -lOSBase_MetricUtil
@@ -118,6 +119,10 @@ libOSBase_MetricInstanceProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 libOSBase_MetricIndicationProvider_la_SOURCES = OSBase_MetricIndicationProvider.c
 libOSBase_MetricIndicationProvider_la_LIBADD = -lOSBase_MetricUtil
 libOSBase_MetricIndicationProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
+
+libOSBase_MetricLifeCycleProvider_la_SOURCES = OSBase_MetricLifeCycleProvider.c
+libOSBase_MetricLifeCycleProvider_la_LIBADD = -lOSBase_MetricUtil
+libOSBase_MetricLifeCycleProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 #
 # Automake instructions for ./mof subdir
