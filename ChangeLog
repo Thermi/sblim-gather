@@ -1,5 +1,8 @@
 2007-10-05  Viktor Mihajlovski  <mihajlov@localhost.localdomain>
 
+	* provider/test/test-gather.sh: 
+	Fixed 1808022: False test script failure.
+
 	* Makefile.am, provider/OSBase_MetricUtil.c, 
 	provider/mof/Linux_Metric.registration: 
 	Fixed 1808017: Added Lifecycle Indication Support.

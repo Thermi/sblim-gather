@@ -69,16 +69,20 @@ wbemcm $WBEMCLI_OPTS ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GAT
 wbemcm $WBEMCLI_OPTS ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER StopService > /dev/null
 
 wbemcm $WBEMCLI_OPTS ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER StartService > /dev/null
-SAMPLING=`wbemcm $WBEMCLI_OPTS ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER StartSampling`
-if ! echo $SAMPLING | grep -i TRUE > /dev/null
+SAMPLING=`wbemgi $WBEMCLI_OPTS ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER`
+if ! echo $SAMPLING | grep -i "Sampling=TRUE" > /dev/null
 then
+  SAMPLING=`wbemcm $WBEMCLI_OPTS ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}$GATHER StartSampling`
+  if ! echo $SAMPLING | grep -i TRUE > /dev/null
+  then
     echo "The Metric Gather is not sampling - have to quit"
     exit -1
+  fi
 fi
 
 # Initialize Repository Service 
-#echo k | reposctl
-#echo d | reposctl
+echo k | reposctl
+echo d | reposctl
 REPOS=`wbemein $WBEMCLI_OPTS ${SBLIM_TESTSUITE_PROTOCOL}://${SBLIM_TESTSUITE_ACCESS}localhost/root/cimv2:Linux_MetricRepositoryService 2>&1`
 if echo $REPOS | grep -v Linux_MetricRepositoryService > /dev/null
 then
