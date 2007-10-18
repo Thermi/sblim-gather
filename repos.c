@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.25 2006/04/05 11:45:39 mihajlov Exp $
+ * $Id: repos.c,v 1.26 2007/10/18 10:45:32 mihajlov Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -328,7 +328,10 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	   || (mc->mcMetricType&MD_RATE) 
 	   || (mc->mcMetricType&MD_AVERAGE) ) {
 	useIntervals=1;
-	intervalnum=2;
+	if (vs->vsFrom == vs->vsTo) {
+	  /* make sure we get at least one interval */
+	  intervalnum=2;
+	}
       } else if (vs->vsNumValues>0) {
 	/* client specified number of values per resource */
 	intervalnum=vs->vsNumValues;
@@ -345,8 +348,8 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	  /* here the interval-type metrics are computed - by resource */
 	  vs->vsNumValues=resnum; /* one per resource */
 	  for (j=0; j < resnum; j++) {
-	    if (numv[j]<intervalnum) {
-	      numv[j] = 0;  /* this value cannot be computed */
+	    if (numv[j]<2) {
+	      numv[j] = 0;  /* this value cannot be computed, needs at least 2 raw values */
 	    }
 	    if (numv[j]==0) {
 	      vs->vsNumValues-=1; 

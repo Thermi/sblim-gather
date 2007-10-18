@@ -1,3 +1,9 @@
+2007-10-18  Viktor Mihajlovski  <mihajlov@dyn-9-152-210-82.boeblingen.de.ibm.com>
+
+	* repos.c: 
+	Fixed 1810856: gather metric retrieval issue with variable intervals.
+	Enabled the retrieval of metric data for non-standard intervals.
+
 2007-10-05  Viktor Mihajlovski  <mihajlov@localhost.localdomain>
 
 	* provider/test/test-gather.sh: 
