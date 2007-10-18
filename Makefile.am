@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.10 2006/07/03 15:27:35 mihajlov Exp $
+# $Id: Makefile.am,v 1.11 2007/10/18 11:04:19 mihajlov Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -36,7 +36,7 @@ pkgincludedir=$(includedir)/gather
 #
 # Automake instructions for documentation
 #
-doc_DATA=README AUTHORS COPYING README.TEST
+doc_DATA=README AUTHORS COPYING README.TEST reposd2csv.pl
 
 # ADD EXTRA DOC FILES IF PRESENT
 doc_DATA+=plugin/metricIPProtocolEndpoint.readme \
@@ -137,7 +137,7 @@ reposd_LDADD = -lrepos -lmcserv -lrcserv
 reposd_DEPENDENCIES = librepos.la libmcserv.la librcserv.la
 
 # Gather CLIs
-bin_PROGRAMS = gatherctl reposctl
+bin_PROGRAMS = gatherctl reposctl reposdump
 
 gatherctl_SOURCES = gatherctl.c
 gatherctl_LDADD = -lrgather
@@ -147,6 +147,10 @@ reposctl_SOURCES = reposctl.c
 reposctl_LDADD = -lrrepos
 reposctl_DEPENDENCIES = librrepos.la
 
+reposdump_SOURCES = reposdump.c
+reposdump_CPPFLAGS = $(AM_CPPFLAGS) -DREPOS_PLUGINDIR=\"$(reposplugindir)\"
+reposdump_LDADD = -lgatherutil -lrrepos
+reposdump_DEPENDENCIES = libgatherutil.la librrepos.la
 
 # Gatherer Plugins
 metricplugin_LTLIBRARIES = libmetricOperatingSystem.la \

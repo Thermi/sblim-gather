@@ -1,5 +1,8 @@
 2007-10-18  Viktor Mihajlovski  <mihajlov@dyn-9-152-210-82.boeblingen.de.ibm.com>
 
+	* Makefile.am, README, reposd2csv.pl, reposdump.c: 
+	Fixed 1815686: added reposdump utility to offload historical data.
+
 	* repos.c: 
 	Fixed 1810856: gather metric retrieval issue with variable intervals.
 	Enabled the retrieval of metric data for non-standard intervals.

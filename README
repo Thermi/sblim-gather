@@ -93,3 +93,27 @@ StartSampling have to be called in order to start gatherer processing.
 Once started it is possible to enumerate instances of CIM_BaseMetricDefinition
 and CIM_BaseMetricValue to get information about the system using a CIM
 client application.
+
+Dumping the Repository
+----------------------
+
+The repository of the Gatherer is not persistent. If historical data needs
+to be maintained, it is necessary to regularly retrieve all metric data
+from the repository. One possibility is to regularly retrieve all metric 
+values via the WBEM interface. One disadvantage thereof is that, depending 
+on the amount of metrics, this can lead to noticeable machine load. Further, 
+it is not possible to retrieve the metric data in a condensed fashion
+as it is often required for historical performance data.
+
+For the purpose of unloading the repository, the package ships with a
+utility called "reposdump". It will export metrics into a text file.
+The text file contains sections separated by lines of the format
+===metricdefs <pluginname>===
+and 
+===metricvals <pluginname>===
+followed by a list of comma-separated records containing the defined
+metrics or the metric values.
+
+A sample perl script reposd2csv.pl is included, which demonstrates how to
+convert the dump output to a comma separated value list (CSV) suitable for 
+import into a spreadsheet. 

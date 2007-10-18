@@ -5,6 +5,7 @@ Bugs fixed:
 - 1808017 Added Lifecycle Indication Support
 - 1808022 Fixed false test script failure report
 - 1810856 Fixed data retrieval issue with variable intervals
+- 1815686 Added reposdump utility to offload historical data
 
 Changes in Version 2.1.4
 ========================
