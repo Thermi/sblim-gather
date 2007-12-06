@@ -1,3 +1,8 @@
+2007-12-06  Viktor Mihajlovski  <mihajlov@localhost.localdomain>
+
+	* reposdump.c: 
+	Fixed 1845491: reposdump segfault without arguments.
+
 2007-10-18  Viktor Mihajlovski  <mihajlov@dyn-9-152-210-82.boeblingen.de.ibm.com>
 
 	* Makefile.am, README, reposd2csv.pl, reposdump.c: 
