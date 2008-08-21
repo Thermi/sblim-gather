@@ -1,3 +1,9 @@
+2008-08-21  Tyrel Datwyler  <tyreld@us.ibm.com>
+
+   * provider/OSBase_MetricGathererProvider.c,
+     provider/OSBase_MetricRepositoryServiceProvider.c:
+   Fixed 2065755: getInstance always reports zero plugins
+   
 2007-12-06  Viktor Mihajlovski  <mihajlov@localhost.localdomain>
 
 	* reposdump.c: 

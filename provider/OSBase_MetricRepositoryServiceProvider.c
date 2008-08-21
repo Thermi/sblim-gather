@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.7 2007/07/10 13:42:30 mihajlov Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.8 2008/08/21 22:04:45 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007
  *
@@ -199,7 +199,7 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderGetInstance( CMPIInstanceMI * m
 	ival=0;
       CMSetProperty(ci,"EnabledState",&ival,CMPI_uint16);
       nump = rs.rsNumPlugins;
-      CMSetProperty(ci,"NumberOfPlugins",&numm,CMPI_uint16);
+      CMSetProperty(ci,"NumberOfPlugins",&nump,CMPI_uint16);
       numm = rs.rsNumMetrics;
       CMSetProperty(ci,"NumberOfMetrics",&numm,CMPI_uint16);
       if (rrepos_getglobalfilter(&limit,&ascending)==0) {

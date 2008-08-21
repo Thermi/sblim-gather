@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricGathererProvider.c,v 1.8 2007/07/10 13:42:30 mihajlov Exp $
+ * $Id: OSBase_MetricGathererProvider.c,v 1.9 2008/08/21 22:04:45 tyreld Exp $
  *
  * © Copyright IBM Corp. 2003, 2007
  *
@@ -194,7 +194,7 @@ CMPIStatus OSBase_MetricGathererProviderGetInstance( CMPIInstanceMI * mi,
       boolval=gs.gsSampling;
       CMSetProperty(ci,"Sampling",&boolval,CMPI_boolean);
       nump = gs.gsNumPlugins;
-      CMSetProperty(ci,"NumberOfPlugins",&numm,CMPI_uint16);
+      CMSetProperty(ci,"NumberOfPlugins",&nump,CMPI_uint16);
       numm = gs.gsNumMetrics;
       CMSetProperty(ci,"NumberOfMetrics",&numm,CMPI_uint16);
     }
