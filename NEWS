@@ -1,5 +1,6 @@
 Bugs fixed:
 - 2065755 Fixed getInstance always reports zero plugins
+- 2172899 Fixed xenMetric segfaults on non-running DomU's
 
 Changes in Version 2.1.6
 ========================

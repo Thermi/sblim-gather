@@ -1,3 +1,8 @@
+2008-10-16  Tyrel Datwyler  <tyreld@us.ibm.com>
+
+   * plugin/metricXen.c:
+   Fixed 2172899: xenMetric segfaults on non-running DomU's
+
 2008-08-21  Tyrel Datwyler  <tyreld@us.ibm.com>
 
    * provider/OSBase_MetricGathererProvider.c,

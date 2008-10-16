@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.10 2007/07/10 14:08:15 mihajlov Exp $
+ * $Id: metricXen.c,v 1.11 2008/10/16 22:59:59 tyreld Exp $
  *
  * © Copyright IBM Corp. 2006, 2007
  *
@@ -595,9 +595,10 @@ int parseXm()
 
     // parse result of "xm list" command above
     while (NULL != (xm_current = strstr(xm_result, "(domain"))) {
-	xm_result = strstr(xm_current, "(domid ") + strlen("(domid ");
+	xm_result = strstr(xm_current, "(domid ");
 	if (NULL == xm_result)
 	    return -1;
+   xm_result += strlen("(domid ");
 	xm_endp = strstr(xm_result, ")");
 	xen_statistics.domain_id[num_domains]
 	    = strtol(xm_result, &xm_endp, 10);
