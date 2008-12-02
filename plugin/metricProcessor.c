@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.c,v 1.8 2008/12/02 07:23:29 tyreld Exp $
+ * $Id: metricProcessor.c,v 1.9 2008/12/02 07:33:12 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -149,29 +149,29 @@ int metricRetrCPUTimePerc( int mid,
       bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
       buf[bytes_read] = 0; /* safeguard end of buffer */
       if( bytes_read > 0 ) {
-	for(;i<_enum_size;i++) {
-	  ptr = strchr(buf,'\n')+1;
-	  sscanf(ptr,"%*s %f %f %f %f",&val1,&val2,&val3,&val4);
-	  size = ((val1+val2+val3)*100) / (val1+val2+val3+val4);
-	  proc = _enum_proc + (i*64);	  
-	  /*fprintf(stderr,"[%i] proc: %s ... size : %f\n",i,proc,size);*/
+         ptr = buf;
+	      for(;i<_enum_size;i++) {
+	         ptr = strchr(ptr,'\n')+1;
+	         sscanf(ptr,"%*s %f %f %f %f",&val1,&val2,&val3,&val4);
+	         size = ((val1+val2+val3)*100) / (val1+val2+val3+val4);
+	         proc = _enum_proc + (i*64);	  
+	         /*fprintf(stderr,"[%i] proc: %s ... size : %f\n",i,proc,size);*/
 
-	  mv = calloc(1, sizeof(MetricValue) + 
-		         sizeof(float) + 
-		         (strlen(proc)+1) );
-	  if (mv) {
-	    mv->mvId = mid;
-	    mv->mvTimeStamp = time(NULL);
-	    mv->mvDataType = MD_FLOAT32;
-	    mv->mvDataLength = sizeof(float);
-	    mv->mvData = (char*)mv + sizeof(MetricValue);
-	    *(float*)mv->mvData = htonf(size);
-	    mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(float);
-	    strcpy(mv->mvResource,proc);
-	    mret(mv);
-	  }  
-	  ptr = end+1;
-	}
+	         mv = calloc(1, sizeof(MetricValue) + 
+		                  sizeof(float) + 
+		                  (strlen(proc)+1) );
+	         if (mv) {
+	            mv->mvId = mid;
+	            mv->mvTimeStamp = time(NULL);
+	            mv->mvDataType = MD_FLOAT32;
+	            mv->mvDataLength = sizeof(float);
+	            mv->mvData = (char*)mv + sizeof(MetricValue);
+	            *(float *)mv->mvData = htonf(size);
+	            mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(float);
+	            strcpy(mv->mvResource,proc);
+	            mret(mv);
+	         }  
+	      }
       }
       fclose(fhd);
       return _enum_size;
