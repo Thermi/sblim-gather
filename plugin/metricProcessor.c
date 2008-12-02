@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.c,v 1.7 2005/06/24 12:09:37 mihajlov Exp $
+ * $Id: metricProcessor.c,v 1.8 2008/12/02 07:23:29 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -36,6 +36,10 @@ static MetricDefinition metricDef[1];
 
 /* --- TotalCPUTimePercentage --- */
 static MetricRetriever  metricRetrCPUTimePerc;
+
+/* ---------------------------------------------------------------------------*/
+
+static const char *resource = "Processor";
 
 /* ---------------------------------------------------------------------------*/
 
@@ -255,19 +259,21 @@ int enum_all_proc() {
       ptr = strchr(ptr,':');
       
 #if defined (S390)
-      while( (ptr=strchr(ptr,' ')) != NULL) { 
-	if( ptr > str) { break; }
-	id = ptr+1; 
-	ptr++;
-      }
-      end = str;
-#else
-      id = ptr-1;
       end = ptr;
+      ptr = buf;
+      while( (ptr=strchr(ptr,' ')) != NULL) { 
+         if( ptr > end) { break; }
+	      id = ptr+1; 
+	      ptr++;
+      }
+#else
+      id = ptr+2;
+      end = str;
 #endif
       
       proc = _enum_proc + (i*64);
-      strncpy(proc, id, strlen(id)-strlen(end));      
+      strcpy(proc, resource);
+      strncpy(proc + strlen(resource), id, strlen(id)-strlen(end));      
       ptr = str+1;
     }
   }

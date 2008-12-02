@@ -1,3 +1,8 @@
+2008-11-02  Tyrel Datwyler  <tyreld@us.ibm.com>
+
+   * plugin/metricProcessor.c:
+   Fixed 2347308: processor metric assigns bad measureElementName
+
 2008-10-16  Tyrel Datwyler  <tyreld@us.ibm.com>
 
    * plugin/metricXen.c:
