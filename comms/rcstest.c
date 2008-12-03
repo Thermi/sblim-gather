@@ -1,5 +1,5 @@
 /*
- * $Id: rcstest.c,v 1.4 2004/10/15 13:45:49 heidineu Exp $
+ * $Id: rcstest.c,v 1.5 2008/12/03 23:32:31 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -35,33 +35,35 @@ static pthread_mutex_t connect_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* ---------------------------------------------------------------------------*/
 
-static void * _get_request(void * hdl)
+static void * _get_request(void *hdl)
 {
+  long   rhdl;
   int    i = 0;
   char   buf[500];
   size_t buflen;
 
-  //fprintf(stderr,"--- start thread on socket %i\n",(int)hdl);
+  rhdl = (long)hdl;
+  fprintf(stderr,"--- start thread on socket %i\n",(int)rhdl);
   
   while (1) {
     buflen = sizeof(buf);
-    if (rcs_getrequest((int)hdl,buf,&buflen) == -1) {
-      //fprintf(stderr,"--- time out on socket %i\n",(int)hdl);
+    if (rcs_getrequest((int)rhdl,buf,&buflen) == -1) {
+      fprintf(stderr,"--- time out on socket %i\n",(int)rhdl);
       break;
     }
-    fprintf(stderr,"---- received on socket %i: %s\n",(int)hdl,buf);
+    fprintf(stderr,"---- received on socket %i: %s\n",(int)rhdl,buf);
   }
 
   pthread_mutex_lock(&connect_mutex);
   for(i=0;i<MAXCONN;i++) {
-    if (clthdl[i] == (int)hdl) {
+    if (clthdl[i] == (int)rhdl) {
       clthdl[i] = -1;
       connects--;
       break;
     }
   }
   pthread_mutex_unlock(&connect_mutex);
-  //fprintf(stderr,"--- exit thread on socket %i\n",(int)hdl);
+  fprintf(stderr,"--- exit thread on socket %i\n",(int)rhdl);
   return NULL;
 }
 
@@ -71,6 +73,7 @@ static void * _get_request(void * hdl)
 int main()
 {
   int hdl             = -1;
+  long thdl           = -1;
   int port            = 6363;
   int i               = 0;
   struct timespec req = {0,0};
@@ -93,12 +96,13 @@ int main()
 	break;
       } 
     }
-    if (pthread_create(&thread_id[i],NULL,_get_request,(void*)hdl) != 0) {
+    thdl = hdl;
+    if (pthread_create(&thread_id[i],NULL,_get_request,(void *)thdl) != 0) {
       perror("create thread");
       return -1;
     }
     hdl = -1;
-    //fprintf(stderr,"thread_id [%i] : %ld\n",i,thread_id[i]);
+    fprintf(stderr,"thread_id [%i] : %ld\n",i,thread_id[i]);
     if (connects<(MAXCONN-1)) { connects++; }
     else {
       pthread_mutex_unlock(&connect_mutex);

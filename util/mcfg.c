@@ -1,5 +1,5 @@
 /*
- * $Id: mcfg.c,v 1.4 2006/03/15 13:58:23 mihajlov Exp $
+ * $Id: mcfg.c,v 1.5 2008/12/03 23:32:31 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -106,7 +106,7 @@ int set_configfile(const char * filename, const char ** keys)
 int get_configitem(int handle, const char * key, char *value, size_t maxlen)
 {
   int i=0;
-  if (CfgRoot && handle > 0 && handle < CFG_MAXHANDLE && CfgRoot[handle] && key && value) {
+  if (handle > 0 && handle < CFG_MAXHANDLE && CfgRoot[handle] && key && value) {
     while (CfgRoot[handle][i].ci_key) {
       if (strcasecmp(CfgRoot[handle][i].ci_key,key)==0 && 
 	  strlen(CfgRoot[handle][i].ci_value) < maxlen) {

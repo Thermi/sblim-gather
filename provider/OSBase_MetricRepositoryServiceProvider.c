@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.8 2008/08/21 22:04:45 tyreld Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.9 2008/12/03 23:32:31 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007
  *
@@ -111,7 +111,7 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstances( CMPIInstanceMI *
   short          nump;
   short          numm;
   char           boolval;
-  unsigned       limit;
+  size_t         limit;
   int            ascending;
     
   if( _debug )

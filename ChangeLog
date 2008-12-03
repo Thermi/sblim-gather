@@ -1,5 +1,11 @@
 2008-12-03  Tyrel Datwyler <tyreld@us.ibm.com>
 
+   * reposdump.c, plugin/sysfswrapper.c, comms/rcstest.c, util/mcfg.c,
+   provider/OSBase_RepositoryServiceProvider.c:
+   Fixed 2385101: remove compile warnings
+
+2008-12-03  Tyrel Datwyler <tyreld@us.ibm.com>
+
    * plugin/metricOperatingSystem.c:
    Fixed 2384020: incorrect process count
    Patch by Narasimha Sharoff <nsharoff@us.ibm.com>

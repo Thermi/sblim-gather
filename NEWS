@@ -3,6 +3,7 @@ Bugs fixed:
 - 2375829 Fixed raw processor metric identical across multipe cpus
 - 2322593 Fixed TotalCPUTimePerc should be based on metric interval
 - 2384020 Fixed incorrect process count
+- 2385101 Removed compile warnings
 
 Changes in Version 2.1.7
 ========================

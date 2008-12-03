@@ -1,5 +1,5 @@
 /*
- * $Id: reposdump.c,v 1.1 2007/10/18 11:04:19 mihajlov Exp $
+ * $Id: reposdump.c,v 1.2 2008/12/03 23:32:31 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2007
  *
@@ -50,7 +50,7 @@ int main(int argc, char * argv[])
   /* argument and setting handling */
   char plugindir[300];
   char expiration_str[300];
-  int expiration;
+  int expiration = 0;
   int dumpage;
   /* output file handling */
   char fname[400];
