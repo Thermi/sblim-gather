@@ -1,3 +1,9 @@
+2008-11-03  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * plugin/metricOperatingSystem.c:
+   Fixed 2384020: incorrect process count
+   Patch by Narasimha Sharoff <nsharoff@us.ibm.com>
+
 2008-11-02  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * plugin/metricProcessor.c, plugin/metricProcessor.readme,
