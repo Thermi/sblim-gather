@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.16 2006/12/11 14:31:15 mihajlov Exp $
+ * $Id: metricOperatingSystem.c,v 1.17 2008/12/03 19:36:39 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -272,10 +272,13 @@ int metricRetrNumOfUser( int mid,
 int metricRetrNumOfProc( int mid, 
 			 MetricReturner mret ) {
   MetricValue   * mv    = NULL;
-  char          * value = NULL;
-  char          * ptr   = NULL;
-  unsigned long   nop   = 0;
-  FILE          * fhd   = NULL;
+  int fd_out[2];
+  int fd_err[2];
+  int fd_stdout;
+  int fd_stderr;
+  char str[255];
+  int rc = 0;
+
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving NumberOfProcesses\n",
@@ -287,17 +290,30 @@ int metricRetrNumOfProc( int mid,
     fprintf(stderr,"--- %s(%i) : Sampling for metric NumberOfProcesses ID %d\n",
 	    __FILE__,__LINE__,mid);
 #endif
+
     /* get number of processes */
-    if ( (fhd=fopen("/proc/loadavg","r")) != NULL ) {
-      value = calloc(1,256);
-      fscanf(fhd, 
-	     "%*s %*s %*s %s",
-	     value);
-      fclose(fhd);
-      ptr = strchr(value,'/');
-      ptr++;
-      nop = atol(ptr);
-      if(value) { free(value); }
+	if (pipe(fd_out)==0 && pipe(fd_err)==0) {
+		memset(str, 0, sizeof(str));
+
+        fd_stdout = dup( fileno(stdout) );
+        dup2( fd_out[1], fileno(stdout) );
+
+        fd_stderr = dup( fileno(stderr) );
+        dup2( fd_err[1], fileno(stderr) );
+
+        rc = system("ps -ef | wc -l");
+        if (rc == 0) { read( fd_out[0], str, sizeof(str) - 1); }
+        else         { read( fd_err[1], str, sizeof(str) - 1); }
+
+        close(fd_out[1]);
+        dup2( fd_stdout, fileno(stdout) );
+        close(fd_out[0]);
+        close(fd_stdout);
+
+        close(fd_err[1]);
+        dup2( fd_stderr, fileno(stderr) );
+        close(fd_err[0]);
+        close(fd_stderr);
     }
     else { return -1; }
 
@@ -310,7 +326,7 @@ int metricRetrNumOfProc( int mid,
       mv->mvDataType = MD_UINT32;
       mv->mvDataLength = sizeof(unsigned);
       mv->mvData = (char*)mv + sizeof(MetricValue);
-      *(unsigned*)mv->mvData = htonl(nop);
+      *(unsigned*)mv->mvData = htonl(atol(str));
       mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(unsigned);
       strcpy(mv->mvResource,resource);
       mret(mv);
