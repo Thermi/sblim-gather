@@ -1,21 +1,21 @@
-2008-11-03  Tyrel Datwyler <tyreld@us.ibm.com>
+2008-12-03  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * plugin/metricOperatingSystem.c:
    Fixed 2384020: incorrect process count
    Patch by Narasimha Sharoff <nsharoff@us.ibm.com>
 
-2008-11-02  Tyrel Datwyler <tyreld@us.ibm.com>
+2008-12-02  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * plugin/metricProcessor.c, plugin/metricProcessor.readme,
    plugin/repositoryProcessor.c:
    Fixed 2322593: TotalCPUTimePerc should be based on metric interval
 
-2008-11-02  Tyrel Datwyler  <tyreld@us.ibm.com>
+2008-12-02  Tyrel Datwyler  <tyreld@us.ibm.com>
 
    * plugin/metricProcessor.c:
    Fixed 2375829: raw processor metric identical across multipe cpus
 
-2008-11-02  Tyrel Datwyler  <tyreld@us.ibm.com>
+2008-12-02  Tyrel Datwyler  <tyreld@us.ibm.com>
 
    * plugin/metricProcessor.c:
    Fixed 2347308: processor metric assigns bad measureElementName
