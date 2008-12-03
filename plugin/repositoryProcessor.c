@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryProcessor.c,v 1.4 2004/12/22 15:43:36 mihajlov Exp $
+ * $Id: repositoryProcessor.c,v 1.5 2008/12/03 06:33:58 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -30,14 +30,21 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[1];
+static MetricCalculationDefinition metricCalcDef[2];
 
 /* --- TotalCPUTimePercentage --- */
 static MetricCalculator  metricCalcCPUTimePerc;
 
+/* --- CPUTime --- */
+static MetricCalculator  metricCalcCPUTime;
+
 /* unit definitions */
 static char * muPercent = "Percent";
+static char * muNa = "N/A";
 
+struct cpu_times {
+   unsigned long long ut, un, kt, it;
+};
 
 /* ---------------------------------------------------------------------------*/
 
@@ -55,47 +62,91 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   }
 
   metricCalcDef[0].mcVersion=MD_VERSION;
-  metricCalcDef[0].mcName="TotalCPUTimePercentage";
+  metricCalcDef[0].mcName="CPUTime";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
-  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_AVERAGE;
-  metricCalcDef[0].mcChangeType=MD_GAUGE;
-  metricCalcDef[0].mcIsContinuous=MD_TRUE;
-  metricCalcDef[0].mcCalculable=MD_NONSUMMABLE;
-  metricCalcDef[0].mcDataType=MD_FLOAT32;
-  metricCalcDef[0].mcCalc=metricCalcCPUTimePerc;
-  metricCalcDef[0].mcUnits=muPercent;
+  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[0].mcIsContinuous=MD_FALSE;
+  metricCalcDef[0].mcCalculable=MD_NONCALCULABLE;
+  metricCalcDef[0].mcDataType=MD_STRING;
+  metricCalcDef[0].mcCalc=metricCalcCPUTime;
+  metricCalcDef[0].mcUnits=muNa;
 
-  *mcnum=1;
+  metricCalcDef[1].mcVersion=MD_VERSION;
+  metricCalcDef[1].mcName="TotalCPUTimePercentage";
+  metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
+  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[1].mcChangeType=MD_GAUGE;
+  metricCalcDef[1].mcIsContinuous=MD_TRUE;
+  metricCalcDef[1].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[1].mcDataType=MD_FLOAT32;
+  metricCalcDef[1].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[1].mcCalc=metricCalcCPUTimePerc;
+  metricCalcDef[1].mcUnits=muPercent;
+   
+  *mcnum=2;
   *mc=metricCalcDef;
   return 0;
 }
 
+/* ---------------------------------------------------------------------------*/
+/* CPUTime                                                                    */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcCPUTime(MetricValue *mv, int mnum, void *v, size_t vlen) {
+
+#ifdef DEBUG
+   fprintf(stderr,"--- %s(%i) : Calculate CPUTime\n",
+         __FILE__,__LINE__);
+#endif
+
+   if (mv && (vlen >= mv->mvDataLength) && (mnum==1)) {
+      memcpy(v, mv->mvData, mv->mvDataLength);
+      return mv->mvDataLength;
+   }
+   return -1;
+}
 
 /* ---------------------------------------------------------------------------*/
 /* TotalCPUTimePercentage                                                     */
 /* ---------------------------------------------------------------------------*/
 
-size_t metricCalcCPUTimePerc( MetricValue *mv,   
-			      int mnum,
-			      void *v, 
-			      size_t vlen ) {
-  float total = 0;
-  float sum   = 0;
-  int i     = 0;
+size_t metricCalcCPUTimePerc(MetricValue *mv, int mnum, void *v, size_t vlen) {
+
+   struct cpu_times times[2];
+   float stotal = 0;
+   float etotal = 0;
+   float scale = 0;
+   unsigned long long idle = 0;
+   float tp;
 
 #ifdef DEBUG
-  fprintf(stderr,"--- %s(%i) : Calculate TotalCPUTimePercentage\n",
-	  __FILE__,__LINE__);
+   fprintf(stderr,"--- %s(%i) : Calculate TotalCPUTimePercentage\n",
+         __FILE__,__LINE__);
 #endif
-  if ( mv && (vlen>=mv->mvDataLength)) {
-    for(;i<mnum;i++) { sum = sum + ntohf(*(float*)mv->mvData); }
-    total = sum / mnum;
-    memcpy(v, &total, sizeof(float));
-    return sizeof(float);
-  }
-  return -1;
-}
 
+   if (mv && (vlen >= sizeof(float)) && (mnum >= 1)) {
+      sscanf(mv[0].mvData, "cpu%*d:%Lu:%Lu:%Lu:%Lu", &times[0].ut, 
+            &times[0].un, &times[0].kt, &times[0].it);
+      etotal = (float) (times[0].ut + times[0].un + times[0].kt + times[0].it);
+
+      if (mnum > 1) {
+         sscanf(mv[mnum - 1].mvData, "cpu%*d:%Lu:%Lu:%Lu:%Lu", &times[1].ut,
+               &times[1].un, &times[1].kt, &times[1].it);
+         
+         stotal = (float) (times[1].ut + times[1].un + times[1].kt + times[1].it);
+      }
+
+      scale = 100.0 / (float) (etotal - stotal);
+      idle = times[0].it - times[1].it;
+      
+      tp = 100.0 - ((float) idle * scale);
+
+      memcpy(v, &tp, sizeof(float));
+      return sizeof(float);
+   }
+
+   return -1;
+}
 
 /* ---------------------------------------------------------------------------*/
 /*                         end of repositoryProcessor.c                       */

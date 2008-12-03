@@ -1,3 +1,9 @@
+2008-11-02  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * plugin/metricProcessor.c, plugin/metricProcessor.readme,
+   plugin/repositoryProcessor.c:
+   Fixed 2322593: TotalCPUTimePerc should be based on metric interval
+
 2008-11-02  Tyrel Datwyler  <tyreld@us.ibm.com>
 
    * plugin/metricProcessor.c:

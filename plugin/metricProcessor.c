@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.c,v 1.9 2008/12/02 07:33:12 tyreld Exp $
+ * $Id: metricProcessor.c,v 1.10 2008/12/03 06:33:58 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -34,8 +34,8 @@
 
 static MetricDefinition metricDef[1];
 
-/* --- TotalCPUTimePercentage --- */
-static MetricRetriever  metricRetrCPUTimePerc;
+/* --- CPUTime --- */
+static MetricRetriever  metricRetrCPUTime;
 
 /* ---------------------------------------------------------------------------*/
 
@@ -44,14 +44,6 @@ static const char *resource = "Processor";
 /* ---------------------------------------------------------------------------*/
 
 #define CPUINFO "/proc/cpuinfo"
-//#define CPUINFO "/home/heidineu/sblim/src/cmpi-base-cpuinfo/2x86_ibm_xSeries"
-//#define CPUINFO "/home/heidineu/sblim/src/cmpi-base-cpuinfo/4x86_ibm_xSeries"
-//#define CPUINFO "/home/heidineu/sblim/src/cmpi-base-cpuinfo/power_ibm_iSeries"
-//#define CPUINFO "/home/heidineu/sblim/src/cmpi-base-cpuinfo/power_ibm_iSeries_2x"
-//#define CPUINFO "/home/heidineu/sblim/src/cmpi-base-cpuinfo/power_ibm_pSeries"
-//#define CPUINFO "/home/heidineu/sblim/src/cmpi-base-cpuinfo/power_ibm_pSeries_2x"
-//#define CPUINFO "/home/heidineu/sblim/src/cmpi-base-cpuinfo/s390_ibm_s390"
-//#define CPUINFO "/home/heidineu/sblim/src/cmpi-base-cpuinfo/s390_ibm_s390_2x"
 
 static char * _enum_proc = NULL;
 static int    _enum_size = 0;
@@ -73,13 +65,13 @@ int _DefinedMetrics( MetricRegisterId *mr,
     fprintf(stderr,"--- %s(%i) : invalid parameter list\n",__FILE__,__LINE__);
     return -1;
   }
-
+  
   metricDef[0].mdVersion=MD_VERSION;
-  metricDef[0].mdName="TotalCPUTimePercentage";
+  metricDef[0].mdName="CPUTime";
   metricDef[0].mdReposPluginName="librepositoryProcessor.so";
   metricDef[0].mdId=mr(pluginname,metricDef[0].mdName);
   metricDef[0].mdSampleInterval=60;
-  metricDef[0].mproc=metricRetrCPUTimePerc;
+  metricDef[0].mproc=metricRetrCPUTime;
   metricDef[0].mdeal=free;
 
   *mdnum=1;
@@ -112,72 +104,74 @@ int _StartStopMetrics (int starting) {
   return 0;
 }
 
-
 /* ---------------------------------------------------------------------------*/
-/* TotalCPUTimePercentage                                                     */
+/* CPUTime                                                                    */
 /* ---------------------------------------------------------------------------*/
+int metricRetrCPUTime( int mid,
+                       MetricReturner mret ) {
 
-int metricRetrCPUTimePerc( int mid, 
-			   MetricReturner mret ) {  
-  MetricValue * mv  = NULL;
-  FILE * fhd        = NULL;
-  char * ptr        = NULL;
-  char * end        = NULL;
-  char * proc       = NULL;
-  char   buf[60000];
-  size_t bytes_read = 0;
-  int    i          = 0;
-  float size = 0;
-  float val1 = 0;
-  float val2 = 0;
-  float val3 = 0;
-  float val4 = 0;
+   MetricValue * mv  = NULL;
+   FILE * fhd        = NULL;
+   char * ptr        = NULL;
+   char * end        = NULL;
+   char * hlp        = NULL;
+   char * proc       = NULL;
+   char   buf[60000];
+   size_t bytes_read = 0;
+   int i             = 0;
 
 #ifdef DEBUG
-  fprintf(stderr,"--- %s(%i) : Retrieving TotalCPUTimePercentage\n",
-	  __FILE__,__LINE__);
-#endif  
-  if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
-  else {
-
-#ifdef DEBUG
-    fprintf(stderr,"--- %s(%i) : Sampling for metric TotalCPUTimePercentage ID %d\n",
-	    __FILE__,__LINE__,mid); 
+   fprintf(stderr,"--- %s(%i) : Retrieving CPUTime\n",
+         __FILE__,__LINE__);
 #endif
-    if( (fhd = fopen("/proc/stat","r")) != NULL ) {
 
-      bytes_read = fread(buf, 1, sizeof(buf)-1, fhd);
-      buf[bytes_read] = 0; /* safeguard end of buffer */
-      if( bytes_read > 0 ) {
-         ptr = buf;
-	      for(;i<_enum_size;i++) {
-	         ptr = strchr(ptr,'\n')+1;
-	         sscanf(ptr,"%*s %f %f %f %f",&val1,&val2,&val3,&val4);
-	         size = ((val1+val2+val3)*100) / (val1+val2+val3+val4);
-	         proc = _enum_proc + (i*64);	  
-	         /*fprintf(stderr,"[%i] proc: %s ... size : %f\n",i,proc,size);*/
+   if (mret==NULL) { fprintf(stderr,"Returner pointer is NULL\n"); }
+   else {
 
-	         mv = calloc(1, sizeof(MetricValue) + 
-		                  sizeof(float) + 
-		                  (strlen(proc)+1) );
-	         if (mv) {
-	            mv->mvId = mid;
-	            mv->mvTimeStamp = time(NULL);
-	            mv->mvDataType = MD_FLOAT32;
-	            mv->mvDataLength = sizeof(float);
-	            mv->mvData = (char*)mv + sizeof(MetricValue);
-	            *(float *)mv->mvData = htonf(size);
-	            mv->mvResource = (char*)mv + sizeof(MetricValue) + sizeof(float);
-	            strcpy(mv->mvResource,proc);
-	            mret(mv);
-	         }  
-	      }
+#ifdef DEBUG
+      fprintf(stderr,"--- %s(%i) : Sampling for metric CPUTime ID %d\n",
+            __FILE__,__LINE__,mid);
+#endif
+
+      if ( (fhd = fopen("/proc/stat","r")) != NULL) {
+         bytes_read = fread(buf, 1, sizeof(buf) - 1, fhd);
+         buf[bytes_read] = 0; /* safeguard end of buffer */
+         if ( bytes_read > 0 ) {
+            ptr = buf;
+            for ( ; i < _enum_size; i++) {
+               ptr = strchr(ptr, '\n')+1;
+               end = strchr(ptr, '\n');
+
+               hlp = ptr;
+               while ((hlp = strchr(hlp, ' ')) && (hlp < end)) {
+                  *hlp = ':';
+               }
+
+               proc = _enum_proc + (i*64);
+
+               mv = calloc(1, sizeof(MetricValue) +
+                     (strlen(ptr) - strlen(end) + 1) +
+                     (strlen(proc) + 1));
+
+               if (mv) {
+                  mv->mvId = mid;
+                  mv->mvTimeStamp = time(NULL);
+                  mv->mvDataType = MD_STRING;
+                  mv->mvDataLength = (strlen(ptr) - strlen(end) + 1);
+                  mv->mvData = (char *)mv + sizeof(MetricValue);
+                  strncpy( mv->mvData, ptr, (strlen(ptr) - strlen(end)));
+                  mv->mvResource = (char *)mv + sizeof(MetricValue) +
+                     ((strlen(ptr) - strlen(end)) + 1);
+                  strcpy(mv->mvResource, proc);
+                  mret(mv);
+               }
+            }
+         }
+         fclose(fhd);
+         return _enum_size;
       }
-      fclose(fhd);
-      return _enum_size;
-    }
-  }
-  return -1;
+   }
+   return -1;
 }
 
 

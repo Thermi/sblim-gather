@@ -1,5 +1,5 @@
 /*
- * $Id: metricProcessor.readme,v 1.2 2004/08/04 09:04:02 heidineu Exp $
+ * $Id: metricProcessor.readme,v 1.3 2008/12/03 06:33:58 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -23,21 +23,22 @@
 The Plugin offers the following metrics :
 
 
-- TotalCPUTimePercentage
+- CPUTime
 
 
 /* ---------------------------------------------------------------------------*/
 
-TotalCPUTimePercentage
-----------------------
+CPUTime
+-------
 
-Metric Type     : Average
+Metric Type     : Point 
 Sample Interval : 60 sec
-CIM Data Type   : uint8
-Units           : percent
+CIM Data Type   : string
+Units           : Jiffies (1/100ths of a second)
 
 Value Source    : the corresponding line of /proc/stat contains the CPU times
                   of this processor and are base for the calculation
 
+Syntax         : cpuid:<user>:<nice>:<system>:<idle>:<iowait>:<hirq>:<sirq>:<steal>:<guest>
 
 /* ---------------------------------------------------------------------------*/
