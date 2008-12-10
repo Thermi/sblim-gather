@@ -1,3 +1,6 @@
+Changes in Version 2.1.8
+========================
+
 Bugs fixed:
 - 2347308 Fixed processor metric assigns bad measureElementName
 - 2375829 Fixed raw processor metric identical across multipe cpus
