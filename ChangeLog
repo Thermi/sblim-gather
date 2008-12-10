@@ -1,3 +1,9 @@
+2008-12-10  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * provider/OSBase_MetricUtil.c:
+   Fixed 2414836: replace vendor defined timescope with point
+   Patch by Viktor Mihajlvoski <mihajlov@de.ibm.com>
+
 2008-12-03  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * reposdump.c, plugin/sysfswrapper.c, comms/rcstest.c, util/mcfg.c,

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.17 2007/10/05 11:22:03 mihajlov Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.18 2008/12/10 21:05:22 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007
  *
@@ -973,8 +973,8 @@ static int mapmetrictypetable[] = {
   2,
   3,
   4,
-  32768,
-  32769,
+  3,
+  3,
 };
 
 static int changetypetable[] = {

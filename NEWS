@@ -4,6 +4,7 @@ Bugs fixed:
 - 2322593 Fixed TotalCPUTimePerc should be based on metric interval
 - 2384020 Fixed incorrect process count
 - 2385101 Removed compile warnings
+- 2414836 Replaced vendor defined timescope with point
 
 Changes in Version 2.1.7
 ========================
