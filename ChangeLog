@@ -1,3 +1,9 @@
+2009-01-14  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * provider/OSBase_MetricIndicationProvider.c, 
+   provider/OSBase_MetricLifeCycleProvider.c:
+   Fixed 2508615: add CMPIStatus to indication function return
+
 2008-12-10  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * provider/OSBase_MetricUtil.c:

@@ -1,3 +1,6 @@
+Bugs fixed:
+- 2508615 Fixed add CMPIStatus to indication function return
+
 Changes in Version 2.1.8
 ========================
 
