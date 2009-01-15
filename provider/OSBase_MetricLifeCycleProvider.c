@@ -1,6 +1,6 @@
 
 /*
- * $Id: OSBase_MetricLifeCycleProvider.c,v 1.1 2007/10/05 11:22:03 mihajlov Exp $
+ * $Id: OSBase_MetricLifeCycleProvider.c,v 1.2 2009/01/15 01:47:13 tyreld Exp $
  *
  * © Copyright IBM Corp. 2003, 2007
  *
@@ -212,20 +212,22 @@ CMPIStatus OSBase_MetricLifeCycleProviderDeActivateFilter
   }
 }
 
-void OSBase_MetricLifeCycleProviderEnableIndications
+CMPIStatus OSBase_MetricLifeCycleProviderEnableIndications
 (CMPIIndicationMI * mi, const CMPIContext * ctx)
 {
   enableFilters();
   if( _debug )
     fprintf(stderr,"*** successfully enabled indications for %s\n", _ClassName);
+  CMReturn(CMPI_RC_OK);
 }
 
-void OSBase_MetricLifeCycleProviderDisableIndications
+CMPIStatus OSBase_MetricLifeCycleProviderDisableIndications
 (CMPIIndicationMI * mi, const CMPIContext * ctx)
 {
   disableFilters();
   if( _debug )
     fprintf(stderr,"*** successfully disabled indications for %s\n", _ClassName);
+  CMReturn(CMPI_RC_OK);
 }
 
 
