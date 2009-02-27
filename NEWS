@@ -1,5 +1,6 @@
 Bugs fixed:
 - 2508615 Fixed add CMPIStatus to indication function return
+- 1942072 sblim-gather doesn't build with glibc-2.8
 
 Changes in Version 2.1.8
 ========================

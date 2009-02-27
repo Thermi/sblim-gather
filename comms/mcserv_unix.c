@@ -1,5 +1,5 @@
 /*
- * $Id: mcserv_unix.c,v 1.9 2006/03/20 17:07:53 mihajlov Exp $
+ * $Id: mcserv_unix.c,v 1.10 2009/02/27 22:15:54 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <errno.h>
+#include <limits.h>
 
 static int _sigpipe_h_installed = 0;
 static int _sigpipe_h_received = 0;

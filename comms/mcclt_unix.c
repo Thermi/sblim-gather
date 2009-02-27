@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.13 2006/03/20 17:07:53 mihajlov Exp $
+ * $Id: mcclt_unix.c,v 1.14 2009/02/27 22:15:54 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004
  *
@@ -30,6 +30,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <errno.h>
+#include <limits.h>
 
 #define MAXCONN 10
 
