@@ -1,6 +1,11 @@
+Changes in Version 2.1.9
+========================
+
 Bugs fixed:
 - 2508615 Fixed add CMPIStatus to indication function return
 - 1942072 sblim-gather doesn't build with glibc-2.8
+- 2655431 Added <stdio.h> to cimplugLocalFilesystem
+- 2655422 Fixed metricOS plugin reads from wrong end of stderr pipe
 
 Changes in Version 2.1.8
 ========================

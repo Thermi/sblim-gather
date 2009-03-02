@@ -1,5 +1,5 @@
 /*
- * $Id: cimplugLocalFileSystem.c,v 1.2 2004/12/22 16:45:53 mihajlov Exp $
+ * $Id: cimplugLocalFileSystem.c,v 1.3 2009/03/02 20:44:50 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004
  *
@@ -20,6 +20,7 @@
 #include <cimplug.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 
 CMPIObjectPath* COP4VALID (CMPIBroker *broker, const char *id, 

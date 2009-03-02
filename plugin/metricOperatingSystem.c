@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.17 2008/12/03 19:36:39 tyreld Exp $
+ * $Id: metricOperatingSystem.c,v 1.18 2009/03/02 20:44:50 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003
  *
@@ -303,7 +303,7 @@ int metricRetrNumOfProc( int mid,
 
         rc = system("ps -ef | wc -l");
         if (rc == 0) { read( fd_out[0], str, sizeof(str) - 1); }
-        else         { read( fd_err[1], str, sizeof(str) - 1); }
+        else         { read( fd_err[0], str, sizeof(str) - 1); }
 
         close(fd_out[1]);
         dup2( fd_stdout, fileno(stdout) );
