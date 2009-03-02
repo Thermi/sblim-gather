@@ -1,5 +1,10 @@
 2009-03-02  Tyrel Datwyler <tyreld@us.ibm.com>
 
+   * configure.ac:
+   Fixed 2655459: Need AM_PROG_CC_C_O for reposdump.c
+
+2009-03-02  Tyrel Datwyler <tyreld@us.ibm.com>
+
    * plugin/metricOperatingSystem.h:
    Fixed 2655422: metricOS plugin reads from wrong end of stderr pipe
    Patch by Narasimha Sharoff <nsharoff@us.ibm.com>
