@@ -1,3 +1,8 @@
+2009-03-05  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   plugin/metricXen.readme:
+   Fixed 2666450: update metricXen.readme with correct metrics
+
 2009-03-02  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * configure.ac:
