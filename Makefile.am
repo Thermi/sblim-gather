@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.11 2007/10/18 11:04:19 mihajlov Exp $
+# $Id: Makefile.am,v 1.12 2009/05/06 07:16:33 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -179,8 +179,8 @@ libmetricProcessor_la_SOURCES=plugin/metricProcessor.c
 libmetricProcessor_la_LIBADD=-lgatherutil
 libmetricProcessor_la_DEPENDENCIES=libgatherutil.la
 
-libmetricXen_la_SOURCES=plugin/metricXen.c
-libmetricXen_la_LIBADD=-lgatherutil
+libmetricXen_la_SOURCES=plugin/metricXenV2.c plugin/metricVirt.c
+libmetricXen_la_LIBADD=-lgatherutil -lvirt
 libmetricXen_la_DEPENDENCIES=libgatherutil.la
 
 libmetricNetworkPort_la_SOURCES=plugin/metricNetworkPort.c

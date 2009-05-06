@@ -1,6 +1,9 @@
 Bugs fixed:
 - 2666450 Updated metricXen.readme with correct metrics
 
+Features added:
+- 2787610 ported Xen metrics to libvirt API
+
 Changes in Version 2.1.9
 ========================
 
