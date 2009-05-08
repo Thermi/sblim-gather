@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.2 2009/05/08 04:44:07 tyreld Exp $
+ * $Id: metricVirt.c,v 1.3 2009/05/08 23:09:02 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -403,6 +403,7 @@ int virtMetricRetrInternalMemory(int mid, MetricReturner mret)
 int virtMetricRetrHostFreePhysicalMemory(int mid, MetricReturner mret)
 {
     MetricValue *mv = NULL;
+    int len;
 
 #ifdef DEBUG
     fprintf(stderr,
@@ -417,9 +418,15 @@ int virtMetricRetrHostFreePhysicalMemory(int mid, MetricReturner mret)
 	fprintf(stderr, "Returner pointer is NULL\n");
 #endif
     } else {
+    if	(hyp_type == XEN_HYP) {
+    	len = strlen(domain_statistics.domain_name[0]) + 1;
+    } else {
+    	len = 16;
+    }
+    
 	mv = calloc(1, sizeof(MetricValue) +
 		    sizeof(unsigned long long) +
-		    strlen(domain_statistics.domain_name[0]) + 1);
+		    len);
 
 	if (mv) {
 	    mv->mvId = mid;
@@ -431,7 +438,11 @@ int virtMetricRetrHostFreePhysicalMemory(int mid, MetricReturner mret)
 
 	    mv->mvResource = (char *) mv + sizeof(MetricValue)
 		+ sizeof(unsigned long long);
-	    strcpy(mv->mvResource, domain_statistics.domain_name[0]);
+		if (hyp_type == XEN_HYP) {
+	    	strcpy(mv->mvResource, domain_statistics.domain_name[0]);
+	    } else {
+	    	strcpy(mv->mvResource, "OperatingSystem");
+	    }
 	    mret(mv);
 	}
 	return 1;

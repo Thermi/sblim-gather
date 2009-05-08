@@ -1,9 +1,10 @@
 Bugs fixed:
 - 2666450 Updated metricXen.readme with correct metrics
+- 2789260 KVM HostFreePhysicalMemory uses first domain name
 
 Features added:
 - 2787610 ported Xen metrics to libvirt API
-- 2787612 added KVM metric support
+- 2787612 KVM metric support
 
 Changes in Version 2.1.9
 ========================

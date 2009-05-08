@@ -1,3 +1,8 @@
+2009-05-08  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * plugin/metricVirt.c:
+   Fixed 2789260: KVM HostFreePhysicalMemory uses first domain name
+
 2009-05-07  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * Makefile.am, provider/mof/Linux_KVMMetric.mof,
