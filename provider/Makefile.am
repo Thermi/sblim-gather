@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.9 2007/10/05 11:22:03 mihajlov Exp $
+# $Id: Makefile.am,v 1.10 2009/05/08 04:44:08 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -52,6 +52,7 @@ cimplugin_LTLIBRARIES = libcimplugOperatingSystem.la \
 	libcimplugUnixProcess.la \
 	libcimplugProcessor.la \
 	libcimplugXen.la \
+   libcimplugKvm.la \
 	libcimplugNetworkPort.la \
 	libcimplugIPProtocolEndpoint.la \
 	libcimplugzECKD.la \
@@ -64,6 +65,7 @@ libcimplugLocalFileSystem_la_SOURCES=$(srcdir)/../plugin/cimplugLocalFileSystem.
 libcimplugUnixProcess_la_SOURCES=$(srcdir)/../plugin/cimplugUnixProcess.c
 libcimplugProcessor_la_SOURCES=$(srcdir)/../plugin/cimplugProcessor.c
 libcimplugXen_la_SOURCES=$(srcdir)/../plugin/cimplugXen.c
+libcimplugKvm_la_SOURCES=$(srcdir)/../plugin/cimplugKvm.c
 libcimplugNetworkPort_la_SOURCES=$(srcdir)/../plugin/cimplugNetworkPort.c
 libcimplugIPProtocolEndpoint_la_SOURCES=$(srcdir)/../plugin/cimplugIPProtocolEndpoint.c
 libcimplugzECKD_la_SOURCES=$(srcdir)/../plugin/cimplugzECKD.c
@@ -134,6 +136,7 @@ MOFS=	$(srcdir)/mof/Linux_Metric.mof \
 	$(srcdir)/mof/Linux_OperatingSystemMetric.mof \
 	$(srcdir)/mof/Linux_ProcessorMetric.mof \
 	$(srcdir)/mof/Linux_XenMetric.mof \
+   $(srcdir)/mof/Linux_KVMMetric.mof \
 	$(srcdir)/mof/Linux_UnixProcessMetric.mof \
 	$(srcdir)/mof/Linux_zECKDMetric.mof \
 	$(srcdir)/mof/Linux_zCECMetric.mof \
@@ -146,6 +149,7 @@ REGS=	$(srcdir)/mof/Linux_IPProtocolEndpointMetric.registration \
 	$(srcdir)/mof/Linux_OperatingSystemMetric.registration \
 	$(srcdir)/mof/Linux_ProcessorMetric.registration \
 	$(srcdir)/mof/Linux_XenMetric.registration \
+   $(srcdir)/mof/Linux_KVMMetric.registration \
 	$(srcdir)/mof/Linux_UnixProcessMetric.registration \
 	$(srcdir)/mof/Linux_zECKDMetric.registration \
 	$(srcdir)/mof/Linux_zCECMetric.registration \

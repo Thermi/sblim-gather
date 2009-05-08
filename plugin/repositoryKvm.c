@@ -1,7 +1,7 @@
 /*
- * $Id: repositoryXen.c,v 1.6 2009/05/08 04:44:08 tyreld Exp $
+ * $Id: repositoryKvm.c,v 1.1 2009/05/08 04:44:08 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2006
+ * (C) Copyright IBM Corp. 2009
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -10,11 +10,11 @@
  * You can obtain a current copy of the Common Public License from
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
- * Author:       Oliver Benke (benke@de.ibm.com)
+ * Author:       Tyrel Datwyler	<tyreld@us.ibm.com>
  * Contributors: 
  *
  * Description:
- * Repository Plugin of the following Xen specific metrics :
+ * Repository Plugin of the following KVM specific metrics :
  * 
  *    TotalCPUTime
  *    ActiveVirtualProcessors
@@ -23,6 +23,8 @@
  *    HostFreePhysicalMemory
  *    PhysicalMemoryAllocatedToVirtualSystemPercentage
  *    HostMemoryPercentage
+ *    TenMinuteTotalCPUTime
+ *	  TenMinuteExternalViewTotalCPUTimePercentage
  * 
  * plus the following metrics which are only intended for internal usage:
  *    _Internal_CPUTime
@@ -596,9 +598,6 @@ size_t metricCalcHostMemoryPercentage(MetricValue * mv,
     return -1;
 }
 
-
-
-
 /* ---------------------------------------------------------------------------*/
-/*                   end of repositoryOperatingSystem.c                       */
+/*                   end of repositoryKvm.c                       			  */
 /* ---------------------------------------------------------------------------*/

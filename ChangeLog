@@ -1,3 +1,12 @@
+2009-05-07  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * Makefile.am, provider/mof/Linux_KVMMetric.mof,
+   provider/mof/Linux_KVMMetric.registration, plugin/cimplugKvm.c,
+   plugin/metricKvm.c, plugin/metricKvm.readme, plugin/repositoryKvm.c,
+   plugin/metricVirt.c, plugin/metricVirt.h, plugin/metricXenV2.c,
+   plugin/metricXen.readme, provider/Makefile.am:
+   Fixed 2787612: add KVM metric support
+
 2009-05-06  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * Makefile.am, plugin/metricXenV2.c, plugin/metricVirt.c, 

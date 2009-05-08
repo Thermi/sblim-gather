@@ -1,4 +1,24 @@
-#define DEBUG
+/*
+ * $Id: metricVirt.c,v 1.2 2009/05/08 04:44:07 tyreld Exp $
+ *
+ * (C) Copyright IBM Corp. 2009
+ *
+ * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+ * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+ * CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+ *
+ * You can obtain a current copy of the Common Public License from
+ * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
+ *
+ * Author:       Tyrel Datwyler  <tyreld@us.ibm.com>
+ * Contributors: 
+ *
+ * Description:
+ * Plugin helper API for collecting Virtualization Metrics via Libvirt
+ *
+ */
+
+// #define DEBUG
 
 #include "metricVirt.h"
 
@@ -11,11 +31,13 @@
 #include <string.h>
 
 static virConnectPtr conn;
+static int hyp_type;
 
 static time_t last_time_sampled;
 
 int connectHypervisor(int type)
 {
+	virConnectPtr tconn;
 	const char * uri;
 	
 	switch (type) {
@@ -23,18 +45,49 @@ int connectHypervisor(int type)
 		uri = "xen:///";
 		break;
 	case KVM_HYP:
-		uri = "qemu://localhost/system";
+		uri = "qemu:///system";
 		break;
 	default:
 		return 0;
 	}
 	
-	conn = virConnectOpen(uri);
+	tconn = virConnectOpen(uri);
 	
-	return (conn ? 1 : 0);
+	if (tconn) {
+		conn = tconn;
+		hyp_type = type;
+	}
+	
+	return (tconn ? 1 : 0);
 }
 
-int collectDomainStats()
+static int collectNodeStats()
+{
+	virNodeInfo ninfo;
+
+#ifdef DEBUG
+	fprintf(stderr, "collectNodeStats()\n");
+#endif
+
+	node_statistics.num_domains = virConnectNumOfDomains(conn);
+	if (node_statistics.num_domains < 0)
+		return -1;
+
+	node_statistics.free_memory = virNodeGetFreeMemory(conn) / 1024;
+	if (virNodeGetInfo(conn, &ninfo)) {
+		return -1;
+	}
+	node_statistics.total_memory = ninfo.memory;
+
+#ifdef DEBUG
+    fprintf(stderr, "--- %s(%i) : total_memory %lld   free_memory %lld\n",
+	    __FILE__, __LINE__, node_statistics.total_memory, node_statistics.free_memory);
+#endif	
+
+	return 0;	
+}
+
+static int collectDomainStats()
 {
 	virDomainPtr domain;
 	virDomainInfo dinfo;
@@ -56,8 +109,7 @@ int collectDomainStats()
 		last_time_sampled = time(NULL);
     }
 
-	node_statistics.num_domains = virConnectNumOfDomains(conn);
-	if (node_statistics.num_domains < 1)
+	if (collectNodeStats())
 		return -1;
 		
 	ids = malloc(sizeof(ids) * node_statistics.num_domains);
@@ -90,32 +142,7 @@ int collectDomainStats()
 		virDomainFree(domain);
 	}
 	
-	if (collectNodeStats())
-		return -1;
-	
 	return 0;
-}
-
-int collectNodeStats()
-{
-	virNodeInfo ninfo;
-
-#ifdef DEBUG
-	fprintf(stderr, "collectNodeStats()\n");
-#endif
-
-	node_statistics.free_memory = virNodeGetFreeMemory(conn) / 1024;
-	if (virNodeGetInfo(conn, &ninfo)) {
-		return -1;
-	}
-	node_statistics.total_memory = ninfo.memory;
-
-#ifdef DEBUG
-    fprintf(stderr, "--- %s(%i) : total_memory %lld   free_memory %lld\n",
-	    __FILE__, __LINE__, node_statistics.total_memory, node_statistics.free_memory);
-#endif	
-
-	return 0;	
 }
 
 /* ---------------------------------------------------------------------------*/

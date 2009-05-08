@@ -1,3 +1,23 @@
+/*
+ * $Id: metricVirt.h,v 1.2 2009/05/08 04:44:07 tyreld Exp $
+ *
+ * (C) Copyright IBM Corp. 2009
+ *
+ * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+ * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+ * CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+ *
+ * You can obtain a current copy of the Common Public License from
+ * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
+ *
+ * Author:       Tyrel Datwyler  <tyreld@us.ibm.com>
+ * Contributors: 
+ *
+ * Description:
+ * Plugin helper API for collecting Virtualization Metrics via Libvirt
+ *
+ */
+
 #ifndef METRICVIRT_H
 #define METRICVIRT_H
 
@@ -24,9 +44,6 @@ struct domain_statistics_type {
 } domain_statistics;
 
 int connectHypervisor(int type);
-
-int collectNodeStats();
-int collectDomainStats();
 
 MetricRetriever virtMetricRetrCPUTime;
 MetricRetriever virtMetricRetrTotalCPUTime;

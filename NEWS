@@ -3,6 +3,7 @@ Bugs fixed:
 
 Features added:
 - 2787610 ported Xen metrics to libvirt API
+- 2787612 added KVM metric support
 
 Changes in Version 2.1.9
 ========================

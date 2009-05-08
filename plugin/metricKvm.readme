@@ -1,7 +1,7 @@
 /*
- * $Id: metricXen.readme,v 1.6 2009/05/08 04:44:07 tyreld Exp $
+ * $Id: metricKvm.readme,v 1.1 2009/05/08 04:44:07 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2006
+ * (C) Copyright IBM Corp. 2009
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -10,11 +10,11 @@
  * You can obtain a current copy of the Common Public License from
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
- * Author:       Oliver Benke (benke@de.ibm.com)
+ * Author:       Tyrel Datwyler  <tyreld@us.ibm.com>
  * Contributors: 
  *
  * Description:
- * README to Gatherer Plugin for Xen Metrics
+ * README to Gatherer Plugin for KVM Metrics
  *
  */
 
@@ -49,8 +49,6 @@ Sample Interval : 30 sec
 CIM Data Type   : uint64
 Units           : MilliSeconds
 
-Value Source    : "xm list --long"
-
 
 TenMinuteTotalCPUTime
 ---------------------
@@ -59,8 +57,6 @@ Metric Type     : Interval
 Sample Interval : 10 min
 CIM Data Type   : uint64
 Units           : MilliSeconds
-
-Value Source    : like TotalCPUTime
 
 
 ActiveVirtualProcessors
@@ -71,8 +67,6 @@ Sample Interval : 30 sec
 CIM Data Type   : real32
 Units           : MilliSeconds
 
-Value Source    : "xm list --long"
-
 
 ExternalViewTotalCPUPercentage
 ------------------------------
@@ -81,8 +75,6 @@ Metric Type     : Interval
 Sample Interval : 30 sec
 CIM Data Type   : real32
 Units           : Percent
-
-Value Source    : "xm list --long"
 
 
 TenMinuteExternalViewTotalCPUPercentage
@@ -93,8 +85,6 @@ Sample Interval : 10 min
 CIM Data Type   : real32
 Units           : Percent
 
-Value Source    : like ExternalViewTotalCPUPercentage
-
 
 /* ---------------------------------------------------------------------------*/
 
@@ -104,9 +94,7 @@ PhysicalMemoryAllocatedToVirtualSystem
 Metric Type     : Point   
 Sample Interval : 30 sec
 CIM Data Type   : uint64
-Units           : KiloBytes
-
-Value Source    : "xm list --long"                         
+Units           : KiloBytes                       
 
 
 HostFreePhysicalMemory
@@ -117,8 +105,6 @@ Sample Interval : 30 sec
 CIM Data Type   : uint64
 Units           : KiloBytes
 
-Value Source    : "xm info"
-
 
 PhysicalMemoryAllocatedToVirtualSystemPercentage
 ----------------------                  
@@ -128,8 +114,6 @@ Sample Interval : 30 sec
 CIM Data Type   : uint64
 Units           : KiloBytes
 
-Value Source    : "xm list --long"
-
 
 HostMemoryPercentage
 --------------------                  
@@ -138,7 +122,5 @@ Metric Type     : Point
 Sample Interval : 30 sec
 CIM Data Type   : real32
 Units           : Percent 
-
-Value Source    : "xm list --long" and "xm info"
 
 

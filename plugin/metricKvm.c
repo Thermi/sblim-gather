@@ -1,7 +1,7 @@
 /*
- * $Id: metricXenV2.c,v 1.2 2009/05/08 04:44:08 tyreld Exp $
+ * $Id: metricKvm.c,v 1.1 2009/05/08 04:44:07 tyreld Exp $
  *
- * © Copyright IBM Corp. 2009
+ * (C) Copyright IBM Corp. 2009
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -10,12 +10,12 @@
  * You can obtain a current copy of the Common Public License from
  * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
  *
- * Author:       Tyrel Datwyler <tyreld@us.ibm.com>
+ * Author:       Tyrel Datwyler	<tyreld@us.ibm.com>
  * Contributors: 
  *
  * Description:
- * Metrics gatherer plugin for the following Xen specific metrics:
- *
+ * Metrics gatherer Plugin of the following KVM specific metrics :
+ * 
  *    ActiveVirtualProcessors
  *    HostFreePhysicalMemory
  * 
@@ -26,7 +26,8 @@
  *    _Internal10m_CPUTime
  *    _Internal10m_TotalCPUTime
  *
- */
+*/
+
 
 // #define DEBUG
 
@@ -56,7 +57,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
     fprintf(stderr, "retrieving metric definitions\n");
 #endif
 	
-	conn = connectHypervisor(XEN_HYP);
+	conn = connectHypervisor(KVM_HYP);
 	
 #ifdef DEBUG
     fprintf(stderr, "--- %s(%i) : Xen is %s\n",
@@ -77,7 +78,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
     if (conn) {
 	metricDef[0].mdVersion = MD_VERSION;
 	metricDef[0].mdName = "_Internal_CPUTime";
-	metricDef[0].mdReposPluginName = "librepositoryXen.so";
+	metricDef[0].mdReposPluginName = "librepositoryKvm.so";
 	metricDef[0].mdId = mr(pluginname, metricDef[0].mdName);
 	metricDef[0].mdSampleInterval = 30;
 	metricDef[0].mproc = virtMetricRetrCPUTime;
@@ -85,7 +86,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 
 	metricDef[1].mdVersion = MD_VERSION;
 	metricDef[1].mdName = "_Internal_TotalCPUTime";
-	metricDef[1].mdReposPluginName = "librepositoryXen.so";
+	metricDef[1].mdReposPluginName = "librepositoryKvm.so";
 	metricDef[1].mdId = mr(pluginname, metricDef[1].mdName);
 	metricDef[1].mdSampleInterval = 30;
 	metricDef[1].mproc = virtMetricRetrTotalCPUTime;
@@ -93,7 +94,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 
 	metricDef[2].mdVersion = MD_VERSION;
 	metricDef[2].mdName = "ActiveVirtualProcessors";
-	metricDef[2].mdReposPluginName = "librepositoryXen.so";
+	metricDef[2].mdReposPluginName = "librepositoryKvm.so";
 	metricDef[2].mdId = mr(pluginname, metricDef[2].mdName);
 	metricDef[2].mdSampleInterval = 30;
 	metricDef[2].mproc = virtMetricRetrActiveVirtualProcessors;
@@ -101,7 +102,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 
 	metricDef[3].mdVersion = MD_VERSION;
 	metricDef[3].mdName = "_Internal_Memory";
-	metricDef[3].mdReposPluginName = "librepositoryXen.so";
+	metricDef[3].mdReposPluginName = "librepositoryKvm.so";
 	metricDef[3].mdId = mr(pluginname, metricDef[3].mdName);
 	metricDef[3].mdSampleInterval = 30;
 	metricDef[3].mproc = virtMetricRetrInternalMemory;
@@ -109,7 +110,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 
 	metricDef[4].mdVersion = MD_VERSION;
 	metricDef[4].mdName = "HostFreePhysicalMemory";
-	metricDef[4].mdReposPluginName = "librepositoryXen.so";
+	metricDef[4].mdReposPluginName = "librepositoryKvm.so";
 	metricDef[4].mdId = mr(pluginname, metricDef[4].mdName);
 	metricDef[4].mdSampleInterval = 30;
 	metricDef[4].mproc = virtMetricRetrHostFreePhysicalMemory;
@@ -117,7 +118,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 
 	metricDef[5].mdVersion = MD_VERSION;
 	metricDef[5].mdName = "_Internal10m_CPUTime";
-	metricDef[5].mdReposPluginName = "librepositoryXen.so";
+	metricDef[5].mdReposPluginName = "librepositoryKvm.so";
 	metricDef[5].mdId = mr(pluginname, metricDef[5].mdName);
 	metricDef[5].mdSampleInterval = 600;
 	metricDef[5].mproc = virtMetricRetrCPUTime;
@@ -125,7 +126,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 
 	metricDef[6].mdVersion = MD_VERSION;
 	metricDef[6].mdName = "_Internal10m_TotalCPUTime";
-	metricDef[6].mdReposPluginName = "librepositoryXen.so";
+	metricDef[6].mdReposPluginName = "librepositoryKvm.so";
 	metricDef[6].mdId = mr(pluginname, metricDef[6].mdName);
 	metricDef[6].mdSampleInterval = 600;
 	metricDef[6].mproc = virtMetricRetrTotalCPUTime;

@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.12 2009/05/06 07:16:33 tyreld Exp $
+# $Id: Makefile.am,v 1.13 2009/05/08 04:44:07 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -46,6 +46,7 @@ doc_DATA+=plugin/metricIPProtocolEndpoint.readme \
 	plugin/metricOperatingSystem.readme \
 	plugin/metricUnixProcess.readme \
 	plugin/metricXen.readme \
+	plugin/metricKvm.readme \
 	plugin/metriczECKD.readme \
 	plugin/metriczCEC.readme \
 	plugin/metriczLPAR.readme \
@@ -160,6 +161,7 @@ metricplugin_LTLIBRARIES = libmetricOperatingSystem.la \
 	libmetricNetworkPort.la \
 	libmetricIPProtocolEndpoint.la \
 	libmetricXen.la \
+	libmetricKvm.la \
 	libmetriczECKD.la \
 	libmetriczLPAR.la \
 	libmetriczCEC.la \
@@ -182,6 +184,10 @@ libmetricProcessor_la_DEPENDENCIES=libgatherutil.la
 libmetricXen_la_SOURCES=plugin/metricXenV2.c plugin/metricVirt.c
 libmetricXen_la_LIBADD=-lgatherutil -lvirt
 libmetricXen_la_DEPENDENCIES=libgatherutil.la
+
+libmetricKvm_la_SOURCES=plugin/metricKvm.c plugin/metricVirt.c
+libmetricKvm_la_LIBADD=-lgatherutil -lvirt
+libmetricKvm_la_DEPENDENCIES=libgatherutil.la
 
 libmetricNetworkPort_la_SOURCES=plugin/metricNetworkPort.c
 
@@ -210,7 +216,8 @@ reposplugin_LTLIBRARIES = librepositoryOperatingSystem.la \
 	librepositoryNetworkPort.la \
 	librepositoryIPProtocolEndpoint.la \
 	librepositoryXen.la \
-        librepositoryzECKD.la \
+	librepositoryKvm.la \
+	librepositoryzECKD.la \
 	librepositoryzLPAR.la \
 	librepositoryzCEC.la \
 	librepositoryzCH.la
@@ -232,6 +239,10 @@ librepositoryProcessor_la_DEPENDENCIES=libgatherutil.la
 librepositoryXen_la_SOURCES=plugin/repositoryXen.c
 librepositoryXen_la_LIBADD=-lgatherutil
 librepositoryXen_la_DEPENDENCIES=libgatherutil.la
+
+librepositoryKvm_la_SOURCES=plugin/repositoryKvm.c
+librepositoryKvm_la_LIBADD=-lgatherutil
+librepositoryKvm_la_DEPENDENCIES=libgatherutil.la
 
 librepositoryNetworkPort_la_SOURCES=plugin/repositoryNetworkPort.c
 
