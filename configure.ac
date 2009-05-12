@@ -44,7 +44,7 @@ AC_CHECK_LIB([dl], [dlopen])
 AC_CHECK_LIB([sysfs], [sysfs_open_driver])
 
 AC_CHECK_HEADERS([libvirt/libvirt.h], [], [AC_MSG_ERROR([Cannot find header file <libvirt/libvirt.h>. Is libvirt-devel installed?])])
-AC_CHECK_LIB([virt], [virConnectOpen], [], [AC_MSG_ERROR([Cannot fine library -lvirt. Is libvirt installed?])])
+AC_CHECK_LIB([virt], [virConnectOpen], [], [AC_MSG_ERROR([Cannot find library -lvirt. Is libvirt installed?])])
 
 # Checks for header files.
 AC_HEADER_DIRENT
