@@ -1,3 +1,8 @@
+2009-05-12  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * configure.ac:
+   Fixed 2790901: need to test for libvirt-devel in configure script
+
 2009-05-08  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * plugin/metricVirt.c:

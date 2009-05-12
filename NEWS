@@ -1,6 +1,7 @@
 Bugs fixed:
 - 2666450 Updated metricXen.readme with correct metrics
 - 2789260 KVM HostFreePhysicalMemory uses first domain name
+- 2790901 need to test for libvirt-devel in configure script
 
 Features added:
 - 2787610 ported Xen metrics to libvirt API
