@@ -1,5 +1,10 @@
 2009-05-12  Tyrel Datwyler <tyreld@us.ibm.com>
 
+   * configure.ac, Makefile.am, provider/Makefile.am:
+   Fixed 2790937: Xen/KVM and zLinux metrics should be optional
+
+2009-05-12  Tyrel Datwyler <tyreld@us.ibm.com>
+
    * configure.ac:
    Fixed 2790901: need to test for libvirt-devel in configure script
 

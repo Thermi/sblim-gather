@@ -25,13 +25,32 @@ AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
 # Features
+AC_ARG_ENABLE(base, 
+      [AS_HELP_STRING([--disable-base], 
+      [disable building of BaseOS metric plugins.])], 
+      [enable_base=$enableval],
+      [enable_base="yes"])
+
+AC_ARG_ENABLE(virt, 
+      [AS_HELP_STRING([--disable-virt],
+      [disable building of Virtualization metric plugins.])],
+      [enable_virt=$enableval], 
+      [enable_virt="yes"])
+
+AC_ARG_ENABLE(z, 
+      [AS_HELP_STRING([--enable-z],
+      [enable building of zLinux metric plugins.])],
+      [enable_z=$enableval], 
+      [enable_z="no"])
+
 AC_ARG_ENABLE(provider,
-	[AS_HELP_STRING(--disable-provider,disable building the provider.)],
-	[enable_provider=$enableval],
-	[enable_provider="yes"]
-	)
+      [AS_HELP_STRING(--disable-provider,disable building the provider.)],
+	   [enable_provider=$enableval],
+	   [enable_provider="yes"])
+
 AC_ARG_ENABLE(debug,
-	[AS_HELP_STRING(--enable-debug,enable debug output.)])
+      [AS_HELP_STRING([--enable-debug], 
+      [enable debug output.])])
 
 # DECLARE ANY SPECIAL CUSTOM CONFIGURE COMMAND LINE OPTIONS HERE
 AC_ARG_VAR([TESTSUITEDIR],[the directory where the SBLIM testsuite resides.])
@@ -43,8 +62,10 @@ AC_CHECK_LIB([pthread], [pthread_create])
 AC_CHECK_LIB([dl], [dlopen])
 AC_CHECK_LIB([sysfs], [sysfs_open_driver])
 
-AC_CHECK_HEADERS([libvirt/libvirt.h], [], [AC_MSG_ERROR([Cannot find header file <libvirt/libvirt.h>. Is libvirt-devel installed?])])
-AC_CHECK_LIB([virt], [virConnectOpen], [], [AC_MSG_ERROR([Cannot find library -lvirt. Is libvirt installed?])])
+if test "$enable_virt" == "yes"; then
+   AC_CHECK_HEADERS([libvirt/libvirt.h], [], [AC_MSG_ERROR([Cannot find header file <libvirt/libvirt.h>. Is libvirt-devel installed?])])
+   AC_CHECK_LIB([virt], [virConnectOpen], [], [AC_MSG_ERROR([Cannot find library -lvirt. Is libvirt installed?])])
+fi
 
 # Checks for header files.
 AC_HEADER_DIRENT
@@ -89,23 +110,23 @@ AC_CHECK_SIZEOF(long)
 
 if test $ac_cv_sizeof_MetricValue = 0
 then
-    AC_ERROR([Unsupported platform: sizeof(MetricValue) cannot be determined.])
+    AC_MSG_ERROR([Unsupported platform: sizeof(MetricValue) cannot be determined.])
 fi
 
 if test $ac_cv_sizeof_long = 8
 then
   if test $ac_cv_sizeof_MetricValue != $ac_cv_sizeof_MetricValue64
   then
-    AC_ERROR([Unsupported platform: sizeof(MetricValue) != sizeof(MetricValue64)])
+    AC_MSG_ERROR([Unsupported platform: sizeof(MetricValue) != sizeof(MetricValue64)])
   fi
 elif test $ac_cv_sizeof_long = 4
 then
   if test $ac_cv_sizeof_MetricValue != $ac_cv_sizeof_MetricValue32
   then
-    AC_ERROR([Unsupported platform: sizeof(MetricValue) != sizeof(MetricValue32)])
+    AC_MSG_ERROR([Unsupported platform: sizeof(MetricValue) != sizeof(MetricValue32)])
   fi
 else 
-  AC_ERROR([Unsupported platform: sizeof(long) == $ac_cv_sizeof_long])
+  AC_MSG_ERROR([Unsupported platform: sizeof(long) == $ac_cv_sizeof_long])
 fi
 
 
@@ -135,11 +156,14 @@ AC_CONFIG_FILES([Makefile sblim-gather.spec])
 
 AC_SUBST(ARCHDEF)
 
+AM_CONDITIONAL(BASE_METRICS, [test "$enable_base" == "yes"])
+AM_CONDITIONAL(VIRT_METRICS, [test "$enable_virt" == "yes"])
+AM_CONDITIONAL(Z_METRICS, [test "$enable_z" == "yes"])
 AM_CONDITIONAL(PROVIDER,[test "$enable_provider" == "yes"]) 
 
 if test "$enable_debug" == "yes"
 then
-	CPPFLAGS="-DDEBUG $CPPFLAGS"
+	CPPFLAGS="-g -DDEBUG $CPPFLAGS"
 else
 	enable_debug=no
 	CPPFLAGS="-DNOTRACE $CPPFLAGS"
@@ -150,8 +174,14 @@ echo "-------------------------------------------------------"
 echo "Configuration for $PACKAGE complete."
 echo ""
 echo "The following configuration options have been selected:"
-echo "Enable Debug: " $enable_debug
+echo ""
+echo "Enable BaseOS metrics: " $enable_base
+echo "Enable Virtualization metrics: " $enable_virt
+echo "Enable zLinux metrics: " $enable_z
+echo ""
 echo "Enable Provider: " $enable_provider
+echo "Enable Debug: " $enable_debug
+echo ""
 if test $enable_provider == yes
 then
 echo "CIMSERVER: " $CIMSERVER

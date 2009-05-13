@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.13 2009/05/08 04:44:07 tyreld Exp $
+# $Id: Makefile.am,v 1.14 2009/05/13 00:46:34 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -12,6 +12,7 @@
 # Author:       Viktor Mihajlovski <mihajlov@de.ibm.com>
 # Contributors: Dr. Gareth S. Bestor <bestorga@us.ibm.com>
 #               Oliver Benke <benke@de.ibm.com>
+#               Tyrel Datwyler <tyreld@us.ibm.com>
 # Description:  Automake input file for Files and Directories sample provider
 # ==================================================================
 
@@ -38,19 +39,62 @@ pkgincludedir=$(includedir)/gather
 #
 doc_DATA=README AUTHORS COPYING README.TEST reposd2csv.pl
 
+if BASE_METRICS
+BASE_DOC=plugin/metricIPProtocolEndpoint.readme \
+         plugin/metricNetworkPort.readme \
+         plugin/metricLocalFileSystem.readme \
+         plugin/metricProcessor.readme \
+         plugin/metricOperatingSystem.readme \
+         plugin/metricUnixProcess.readme
+
+BASE_METRIC_LIBS=libmetricIPProtocolEndpoint.la \
+                 libmetricNetworkPort.la \
+                 libmetricLocalFileSystem.la \
+                 libmetricProcessor.la \
+                 libmetricOperatingSystem.la \
+                 libmetricUnixProcess.la
+
+BASE_REPOS_LIBS=librepositoryIPProtocolEndpoint.la \
+                librepositoryNetworkPort.la \
+                librepositoryLocalFileSystem.la \
+                librepositoryProcessor.la \
+                librepositoryOperatingSystem.la \
+                librepositoryUnixProcess.la
+endif
+
+if VIRT_METRICS
+VIRT_DOC=plugin/metricKvm.readme \
+         plugin/metricXen.readme
+
+VIRT_METRIC_LIBS=libmetricKvm.la \
+                 libmetricXen.la
+
+VIRT_REPOS_LIBS=librepositoryKvm.la \
+                librepositoryXen.la
+endif
+
+if Z_METRICS
+Z_DOC=plugin/metriczECKD.readme \
+      plugin/metriczCEC.readme \
+      plugin/metriczLPAR.readme \
+      plugin/metriczCH.readme
+
+Z_METRIC_LIBS=libmetriczECKD.la \
+              libmetriczCEC.la \
+              libmetriczLPAR.la \
+              libmetriczCH.la
+
+Z_REPOS_LIBS=librepositoryzECKD.la \
+             librepositoryzCEC.la \
+             librepositoryzLPAR.la \
+             librepositoryzCH.la
+endif
+
 # ADD EXTRA DOC FILES IF PRESENT
-doc_DATA+=plugin/metricIPProtocolEndpoint.readme \
-	plugin/metricNetworkPort.readme \
-	plugin/metricProcessor.readme \
-	plugin/metricLocalFileSystem.readme \
-	plugin/metricOperatingSystem.readme \
-	plugin/metricUnixProcess.readme \
-	plugin/metricXen.readme \
-	plugin/metricKvm.readme \
-	plugin/metriczECKD.readme \
-	plugin/metriczCEC.readme \
-	plugin/metriczLPAR.readme \
-	plugin/metriczCH.readme
+doc_DATA+= $(BASE_DOC) \
+           $(VIRT_DOC) \
+           $(Z_DOC)
+
 EXTRA_DIST+=$(doc_DATA)
 
 #doc_DATA+=doc/rpmbuild.txt
@@ -154,18 +198,9 @@ reposdump_LDADD = -lgatherutil -lrrepos
 reposdump_DEPENDENCIES = libgatherutil.la librrepos.la
 
 # Gatherer Plugins
-metricplugin_LTLIBRARIES = libmetricOperatingSystem.la \
-	libmetricLocalFileSystem.la \
-	libmetricUnixProcess.la \
-	libmetricProcessor.la \
-	libmetricNetworkPort.la \
-	libmetricIPProtocolEndpoint.la \
-	libmetricXen.la \
-	libmetricKvm.la \
-	libmetriczECKD.la \
-	libmetriczLPAR.la \
-	libmetriczCEC.la \
-	libmetriczCH.la
+metricplugin_LTLIBRARIES = $(BASE_METRIC_LIBS) \
+                           $(VIRT_METRIC_LIBS) \
+                           $(Z_METRIC_LIBS)
 
 libmetricOperatingSystem_la_SOURCES=plugin/metricOperatingSystem.c
 libmetricOperatingSystem_la_LIBADD=-lgatherutil
@@ -209,18 +244,9 @@ libmetriczCH_la_SOURCES=plugin/metriczCH.c
 libmetriczCH_la_LIBADD=-lchannelutil -lgatherutil
 libmetriczCH_la_DEPENDENCIES=libchannelutil.la
 
-reposplugin_LTLIBRARIES = librepositoryOperatingSystem.la \
-	librepositoryLocalFileSystem.la \
-	librepositoryUnixProcess.la \
-	librepositoryProcessor.la \
-	librepositoryNetworkPort.la \
-	librepositoryIPProtocolEndpoint.la \
-	librepositoryXen.la \
-	librepositoryKvm.la \
-	librepositoryzECKD.la \
-	librepositoryzLPAR.la \
-	librepositoryzCEC.la \
-	librepositoryzCH.la
+reposplugin_LTLIBRARIES = $(BASE_REPOS_LIBS) \
+                          $(VIRT_REPOS_LIBS) \
+                          $(Z_REPOS_LIBS)
 
 librepositoryOperatingSystem_la_SOURCES=plugin/repositoryOperatingSystem.c
 librepositoryOperatingSystem_la_LIBADD=-lgatherutil
