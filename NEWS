@@ -4,6 +4,7 @@ Bugs fixed:
 - 2790901 need to test for libvirt-devel in configure script
 - 2790937 Xen/KVM and zLinux metrics should be optional
 - 2791472 plugins should be built as dlopen modules
+- 2791496 fix linker paths to gather utility libraries
 
 Features added:
 - 2787610 ported Xen metrics to libvirt API
