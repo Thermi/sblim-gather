@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.11 2009/05/13 00:46:34 tyreld Exp $
+# $Id: Makefile.am,v 1.12 2009/05/14 00:22:28 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -41,7 +41,7 @@ providerdir = @PROVIDERDIR@
 # Generally useful flags
 AM_CPPFLAGS = -I $(srcdir)/.. -I $(srcdir)/../util -I $(srcdir)/../comms
 AM_CFLAGS = -Wall
-AM_LDFLAGS = -L..
+AM_LDFLAGS = -L../ -module -avoid-version -no-undefined
 
 # Include files
 noinst_HEADERS = OSBase_MetricUtil.h

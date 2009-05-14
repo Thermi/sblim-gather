@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.14 2009/05/13 00:46:34 tyreld Exp $
+# $Id: Makefile.am,v 1.15 2009/05/14 00:22:28 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
@@ -104,6 +104,8 @@ EXTRA_DIST+=$(doc_DATA)
 AM_CPPFLAGS = -I $(srcdir)/util -I $(srcdir)/comms @ARCHDEF@
 AM_CFLAGS = -Wall
 
+PLUG_FLAGS = -no-undefined -module -avoid-version
+
 # Include files
 pkginclude_HEADERS = cimplug.h metric.h mplugin.h util/commutil.h 
 nodist_pkginclude_HEADERS = gather-config.h
@@ -205,44 +207,56 @@ metricplugin_LTLIBRARIES = $(BASE_METRIC_LIBS) \
 libmetricOperatingSystem_la_SOURCES=plugin/metricOperatingSystem.c
 libmetricOperatingSystem_la_LIBADD=-lgatherutil
 libmetricOperatingSystem_la_DEPENDENCIES=libgatherutil.la
+libmetricOperatingSystem_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetricLocalFileSystem_la_SOURCES=plugin/metricLocalFileSystem.c
 libmetricLocalFileSystem_la_LIBADD=-lgatherutil
 libmetricLocalFileSystem_la_DEPENDENCIES=libgatherutil.la
+libmetricLocalFileSystem_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetricUnixProcess_la_SOURCES=plugin/metricUnixProcess.c
+libmetricUnixProcess_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetricProcessor_la_SOURCES=plugin/metricProcessor.c
 libmetricProcessor_la_LIBADD=-lgatherutil
 libmetricProcessor_la_DEPENDENCIES=libgatherutil.la
+libmetricProcessor_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetricXen_la_SOURCES=plugin/metricXenV2.c plugin/metricVirt.c
 libmetricXen_la_LIBADD=-lgatherutil -lvirt
 libmetricXen_la_DEPENDENCIES=libgatherutil.la
+libmetricXen_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetricKvm_la_SOURCES=plugin/metricKvm.c plugin/metricVirt.c
 libmetricKvm_la_LIBADD=-lgatherutil -lvirt
 libmetricKvm_la_DEPENDENCIES=libgatherutil.la
+libmetricKvm_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetricNetworkPort_la_SOURCES=plugin/metricNetworkPort.c
+libmetricNetworkPort_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetricIPProtocolEndpoint_la_SOURCES=plugin/metricIPProtocolEndpoint.c
+libmetricIPProtocolEndpoint_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetriczECKD_la_SOURCES=plugin/metriczECKD.c
 libmetriczECKD_la_LIBADD=-lsysfswrapper -lgatherutil
 libmetriczECKD_la_DEPENDENCIES=libsysfswrapper.la
+libmetriczECKD_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetriczLPAR_la_SOURCES=plugin/metriczLPAR.c
 libmetriczLPAR_la_LIBADD=-llparutil -lgatherutil
 libmetriczLPAR_la_DEPENDENCIES=liblparutil.la
+libmetriczLPAR_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetriczCEC_la_SOURCES=plugin/metriczCEC.c
 libmetriczCEC_la_LIBADD=-llparutil -lgatherutil
 libmetriczCEC_la_DEPENDENCIES=liblparutil.la
+libmetriczCEC_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetriczCH_la_SOURCES=plugin/metriczCH.c
 libmetriczCH_la_LIBADD=-lchannelutil -lgatherutil
 libmetriczCH_la_DEPENDENCIES=libchannelutil.la
+libmetriczCH_la_LDFLAGS=$(PLUG_FLAGS)
 
 reposplugin_LTLIBRARIES = $(BASE_REPOS_LIBS) \
                           $(VIRT_REPOS_LIBS) \
@@ -251,40 +265,53 @@ reposplugin_LTLIBRARIES = $(BASE_REPOS_LIBS) \
 librepositoryOperatingSystem_la_SOURCES=plugin/repositoryOperatingSystem.c
 librepositoryOperatingSystem_la_LIBADD=-lgatherutil
 librepositoryOperatingSystem_la_DEPENDENCIES=libgatherutil.la
+librepositoryOperatingSystem_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryLocalFileSystem_la_SOURCES=plugin/repositoryLocalFileSystem.c
 librepositoryLocalFileSystem_la_LIBADD=-lgatherutil
 librepositoryLocalFileSystem_la_DEPENDENCIES=libgatherutil.la
+librepositoryLocalFileSystem_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryUnixProcess_la_SOURCES=plugin/repositoryUnixProcess.c
+librepositoryUnixProcess_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryProcessor_la_SOURCES=plugin/repositoryProcessor.c
 librepositoryProcessor_la_LIBADD=-lgatherutil
 librepositoryProcessor_la_DEPENDENCIES=libgatherutil.la
+librepositoryProcessor_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryXen_la_SOURCES=plugin/repositoryXen.c
 librepositoryXen_la_LIBADD=-lgatherutil
 librepositoryXen_la_DEPENDENCIES=libgatherutil.la
+librepositoryXen_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryKvm_la_SOURCES=plugin/repositoryKvm.c
 librepositoryKvm_la_LIBADD=-lgatherutil
 librepositoryKvm_la_DEPENDENCIES=libgatherutil.la
+librepositoryKvm_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryNetworkPort_la_SOURCES=plugin/repositoryNetworkPort.c
+librepositoryNetworkPort_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryIPProtocolEndpoint_la_SOURCES=plugin/repositoryIPProtocolEndpoint.c
+librepositoryIPProtocolEndpoint_la_LDFLAGS=$(PLUG_FLAGS)
+
 librepositoryzECKD_la_SOURCES=plugin/repositoryzECKD.c
 librepositoryzECKD_la_LIBADD=-lgatherutil
+librepositoryzECKD_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryzLPAR_la_SOURCES=plugin/repositoryzLPAR.c
 librepositoryzLPAR_la_LIBADD=-lgatherutil
+librepositoryzLPAR_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryzCEC_la_SOURCES=plugin/repositoryzCEC.c
 librepositoryzCEC_la_LIBADD=-lgatherutil
+librepositoryzCEC_la_LDFLAGS=$(PLUG_FLAGS)
 
 librepositoryzCH_la_SOURCES=plugin/repositoryzCH.c
 librepositoryzCH_la_LIBADD=-lchannelutil -lgatherutil -lm
 librepositoryzCH_la_DEPENDENCIES=libchannelutil.la
+librepositoryzCH_la_LDFLAGS=$(PLUG_FLAGS)
 
 # Gather utility test programs (not installed)
 noinst_PROGRAMS = mcfgtest mtracetest merrnotest mcstest mcctest \

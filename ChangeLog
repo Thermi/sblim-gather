@@ -1,3 +1,8 @@
+2009-05-13  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * Makefile.am, provider/Makefile.am:
+   Fixed 2791472: plugins should be built as dlopen modules
+
 2009-05-12  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * configure.ac, Makefile.am, provider/Makefile.am:
