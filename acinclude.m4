@@ -1,19 +1,19 @@
 dnl
-dnl $Id: acinclude.m4,v 1.3 2007/07/10 13:23:28 mihajlov Exp $
+dnl $Id: acinclude.m4,v 1.4 2009/05/20 19:39:55 tyreld Exp $
 dnl
- dnl 
- dnl (C) Copyright IBM Corp. 2004, 2005
- dnl
- dnl THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
- dnl ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
- dnl CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
- dnl
- dnl You can obtain a current copy of the Common Public License from
- dnl  http://www.opensource.org/licenses/cpl1.0.php
- dnl
- dnl Author:       Konrad Rzeszutek <konradr@us.ibm.com>
- dnl Contributors: Viktor Mihajlovski <mihajlov@de.ibm.com>
- dnl Date  :	      09/20/2004
+dnl 
+dnl (C) Copyright IBM Corp. 2004, 2005, 2009
+dnl
+dnl THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
+dnl ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+dnl CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+dnl
+dnl You can obtain a current copy of the Eclipse Public License from
+dnl http://www.eclipse.org/legal/epl-v10.html
+dnl
+dnl Author:       Konrad Rzeszutek <konradr@us.ibm.com>
+dnl Contributors: Viktor Mihajlovski <mihajlov@de.ibm.com>
+dnl Date  :	      09/20/2004
 dnl
 dnl
 dnl CHECK_CMPI: Check for CMPI headers and set the CPPFLAGS
@@ -72,10 +72,10 @@ AC_DEFUN([_CHECK_CMPI],
 	AC_MSG_CHECKING($1)
 	AC_TRY_LINK(
 	[
+		#include <stdio.h>
 		#include <cmpimacs.h>
 		#include <cmpidt.h>
 		#include <cmpift.h>
-		#include <stdio.h>
 	],
 	[
 		CMPIBroker broker;

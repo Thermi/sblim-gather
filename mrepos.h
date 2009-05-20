@@ -1,14 +1,14 @@
 /*
- * $Id: mrepos.h,v 1.8 2006/03/14 09:27:26 mihajlov Exp $
+ * $Id: mrepos.h,v 1.9 2009/05/20 19:39:55 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2003, 2004
+ * (C) Copyright IBM Corp. 2003, 2004, 2009
  *
- * THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+ * THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
  * CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
  *
- * You can obtain a current copy of the Common Public License from
- * http://oss.software.ibm.com/developerworks/opensource/license-cpl.html
+ * You can obtain a current copy of the Eclipse Public License from
+ * http://www.opensource.org/licenses/eclipse-1.0.php
  *
  * Author:       Viktor Mihajlovski <mihajlov@de.ibm.cim>
  * Contributors: 

@@ -1,14 +1,14 @@
 #!/bin/sh
-# $Id: provider-register.sh,v 1.4 2006/04/05 11:21:30 mihajlov Exp $
+# $Id: provider-register.sh,v 1.5 2009/05/20 19:39:56 tyreld Exp $
 # ==================================================================
-# (C) Copyright IBM Corp. 2005
+# (C) Copyright IBM Corp. 2005, 2009
 #
-# THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+# THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
 # ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
 # CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
 #
-# You can obtain a current copy of the Common Public License from
-# http://www.opensource.org/licenses/cpl1.0.php
+# You can obtain a current copy of the Eclipse Public License from
+# http://www.eclipse.org/legal/epl-v10.html
 #
 # Author:       Viktor Mihajlovski <mihajlov@de.ibm.com>
 # Contributors:

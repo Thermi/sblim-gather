@@ -1,5 +1,5 @@
 #
-# $Id: sblim-gather.rh.spec,v 1.5 2006/07/03 15:27:35 mihajlov Exp $
+# $Id: sblim-gather.rh.spec,v 1.6 2009/05/20 19:39:56 tyreld Exp $
 #
 # Package spec for sblim-gather
 #
@@ -14,7 +14,7 @@ Version: 2.1.1pre1
 Release: 1.rh%{?rhel4:el4}
 Group: Systems Management/Base
 URL: http://www.sblim.org
-License: CPL
+License: EPL
 
 Source0: http://prdownloads.sourceforge.net/sblim/%{name}-%{version}.tar.bz2
 
