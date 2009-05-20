@@ -1,3 +1,8 @@
+2009-05-20  Tyrel Datwyler <tyreld@us.ibm.com>
+
+   * Updated all files with Copyright Header (list ommitted for brevity):
+   Fixed 2794542: migrate license from CPL to EPL
+
 2009-05-14  Tyrel Datwyler <tyreld@us.ibm.com>
 
    * Makefile.am, provider/Makefile.am:
