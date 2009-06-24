@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.readme,v 1.9 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: metricOperatingSystem.readme,v 1.10 2009/06/24 20:25:06 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2009
  *
@@ -42,10 +42,12 @@ The Plugin offers the following metrics :
 - MemorySize
 - TotalVisibleMemorySize
 - FreePhysicalMemory
+- UsedPhysicalMemory
 - SizeStoredInPagingFiles
 - FreeSpaceInPagingFiles
 - TotalVirtualMemorySize
 - FreeVirtualMemory
+- UsedVirtualMemory
 
 - PageInCounter
 - PageInRate
@@ -277,6 +279,17 @@ Units           : kByte
 Value Source    : second entry of MemorySize
 
 
+UsedPhysicalMemory
+------------------
+
+Metric Type     : Point
+Based on Metric : MemorySize
+CIM Data Type   : uint64
+Units           : kByte
+
+Value Source    : first entry minus second of MemorySize
+
+
 SizeStoredInPagingFiles
 -----------------------
 
@@ -319,6 +332,18 @@ CIM Data Type   : uint64
 Units           : kByte
 
 Value Source    : sum of second and fourth entry of MemorySize
+
+
+UsedVirtualMemory
+------------------
+
+Metric Type     : Point
+Based on Metric : MemorySize
+CIM Data Type   : uint64
+Units           : kByte
+
+Value Source    : sum of first and third entry minus sum of second and fourth
+				  entry of MemorySize
 
 
 /* ---------------------------------------------------------------------------*/

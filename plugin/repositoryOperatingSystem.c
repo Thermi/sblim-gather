@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.17 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.18 2009/06/24 20:25:06 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -63,7 +63,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[31];
+static MetricCalculationDefinition metricCalcDef[33];
 
 /* --- NumberOfUsers --- */
 static MetricCalculator metricCalcNumOfUser;
@@ -99,7 +99,9 @@ static MetricCalculator metricCalcCPUConsumptionIndex;
 /* --- MemorySize is base for :
  * TotalVisibleMemorySize,  FreePhysicalMemory, 
  * SizeStoredInPagingFiles, FreeSpaceInPagingFiles,
- * TotalVirtualMemorySize,  FreeVirtualMemory --- */
+ * TotalVirtualMemorySize,  FreeVirtualMemory,
+ * UsedPhysicalMemory, UsedVirtualMemory
+ *  --- */
 static MetricCalculator metricCalcMemorySize;
 
 static MetricCalculator metricCalcTotalPhysMem;
@@ -108,6 +110,9 @@ static MetricCalculator metricCalcTotalSwapMem;
 static MetricCalculator metricCalcFreeSwapMem;
 static MetricCalculator metricCalcTotalVirtMem;
 static MetricCalculator metricCalcFreeVirtMem;
+
+static MetricCalculator metricCalcUsedPhysMem;
+static MetricCalculator metricCalcUsedVirtMem;
 
 /* --- PageInCounter, PageInRate --- */
 static MetricCalculator metricCalcPageInCounter;
@@ -533,7 +538,31 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[30].mcCalc=metricCalcHardwareInterruptRate;
   metricCalcDef[30].mcUnits=muEventsPerSecond;
 
-  *mcnum=31;
+  metricCalcDef[31].mcVersion=MD_VERSION;
+  metricCalcDef[31].mcName="UsedPhysicalMemory";
+  metricCalcDef[31].mcId=mr(pluginname,metricCalcDef[31].mcName);
+  metricCalcDef[31].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[31].mcChangeType=MD_GAUGE;
+  metricCalcDef[31].mcIsContinuous=MD_TRUE;
+  metricCalcDef[31].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[31].mcDataType=MD_UINT64;
+  metricCalcDef[31].mcAliasId=metricCalcDef[6].mcId;
+  metricCalcDef[31].mcCalc=metricCalcUsedPhysMem;
+  metricCalcDef[31].mcUnits=muKiloBytes;
+  
+  metricCalcDef[32].mcVersion=MD_VERSION;
+  metricCalcDef[32].mcName="UsedVirtualMemory";
+  metricCalcDef[32].mcId=mr(pluginname,metricCalcDef[32].mcName);
+  metricCalcDef[32].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[32].mcChangeType=MD_GAUGE;
+  metricCalcDef[32].mcIsContinuous=MD_TRUE;
+  metricCalcDef[32].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[32].mcDataType=MD_UINT64;
+  metricCalcDef[32].mcAliasId=metricCalcDef[6].mcId;
+  metricCalcDef[32].mcCalc=metricCalcUsedVirtMem;
+  metricCalcDef[32].mcUnits=muKiloBytes;
+
+  *mcnum=33;
   *mc=metricCalcDef;
   return 0;
 }
@@ -856,6 +885,53 @@ size_t metricCalcFreePhysMem( MetricValue *mv,
   return -1;
 }
 
+/* ---------------------------------------------------------------------------*/
+/* UsedPhysicalMemory                                                         */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcUsedPhysMem(MetricValue *mv,
+							int mnum,
+							void *v,
+							size_t vlen)
+{
+	char * hlp = NULL;
+	char * end = NULL;
+	char * pmem = NULL;
+	char * smem = NULL;
+	unsigned long long usedmem;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate UsedPhysicalMemory\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * the UsedPhysicalMemory is based on the difference of the first and second 
+   * entries of the MemorySize value
+   *
+   */
+	
+	if (mv && (vlen >= sizeof(unsigned long long)) && (mnum==1)) {
+		hlp = mv->mvData;
+		end = strchr(hlp, ':');
+		
+		pmem = calloc(1, (strlen(hlp) - strlen(end) + 1));
+		strncpy(pmem, hlp, (strlen(hlp) - strlen(end)));
+
+		hlp = ++end;
+		end = strchr(hlp, ':');
+		
+		smem = calloc(1, (strlen(hlp) - strlen(end) + 1));
+		strncpy(smem, hlp, (strlen(hlp) - strlen(end)));
+		
+		usedmem = strtoll(pmem, (char**)NULL, 10) - strtoll(smem, (char**)NULL, 10);
+		free(pmem);
+		free(smem);
+		
+		memcpy(v, &usedmem, sizeof(unsigned long long));
+		return sizeof(unsigned long long);
+	}
+	return -1;
+}
 
 /* ---------------------------------------------------------------------------*/
 /* SizeStoredInPagingFiles                                                    */
@@ -1040,6 +1116,64 @@ size_t metricCalcFreeVirtMem( MetricValue *mv,
   return -1;
 }
 
+/* ---------------------------------------------------------------------------*/
+/* UsedVirtualMemory                                                          */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcUsedVirtMem(MetricValue *mv,
+							 int mnum,
+							 void *v,
+							 size_t vlen)
+{
+	char * hlp = NULL;
+	char * end = NULL;
+	char * pmem = NULL;
+	char * smem = NULL;
+	unsigned long long physmem, virtmem, usedmem;
+	
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate UsedVirtualMemory\n",
+	  __FILE__,__LINE__);
+#endif
+  /* 
+   * the UsedVirtualMemory is based on the sum of the first and third entries
+   * subtracted from the sum of the second and fourth entires of the
+   * MemorySize value
+   *
+   */
+	
+	if (mv && (vlen >= sizeof(unsigned long long)) && (mnum == 1)) {
+		hlp = mv->mvData;
+		end = strchr(hlp, ':');
+		pmem = calloc(1, (strlen(hlp) - strlen(end) + 1));
+		strncpy(pmem, hlp, (strlen(hlp) - strlen(end)));
+		
+		hlp = ++end;
+		end = strchr(hlp, ':');
+		smem = calloc(1, (strlen(hlp) - strlen(end) + 1));
+		strncpy(smem, hlp, (strlen(hlp) - strlen(end)));
+		
+		physmem = strtoll(pmem, (char **)NULL, 10) - strtoll(smem, (char **)NULL, 10);
+		
+		hlp = ++end;
+		end = strchr(hlp, ':');
+		pmem = realloc(pmem, (strlen(hlp) - strlen(end) + 1));
+		strncpy(pmem, hlp, (strlen(hlp) - strlen(end)));
+		
+		hlp = ++end;
+		smem = realloc(smem, (strlen(hlp) + 1));
+		strncpy(smem, hlp, strlen(hlp));
+
+		virtmem = strtoll(pmem, (char **)NULL, 10) - strtoll(smem, (char **)NULL, 10);
+		free(pmem);
+		free(smem);
+		
+		usedmem = physmem + virtmem;
+		memcpy(v, &usedmem, sizeof(unsigned long long));
+		return sizeof(unsigned long long);
+	}
+	return -1;
+}
 
 /* ---------------------------------------------------------------------------*/
 /* PageInCounter                                                              */
