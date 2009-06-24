@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryIPProtocolEndpoint.c,v 1.6 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: repositoryIPProtocolEndpoint.c,v 1.7 2009/06/24 21:24:22 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -22,6 +22,8 @@
  * ErrorRate
  * PacketsTransmitted
  * PacketsReceived
+ * PacketTransmitRate
+ * PacketReceiveRate
  *
  */
 
@@ -34,7 +36,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[6];
+static MetricCalculationDefinition metricCalcDef[8];
 
 /* --- BytesSubmitted is base for :
  * BytesTransmitted, BytesReceived, ErrorRate,
@@ -46,11 +48,14 @@ static MetricCalculator  metricCalcBytesReceived;
 static MetricCalculator  metricCalcErrorRate;
 static MetricCalculator  metricCalcPacketsTransmitted;
 static MetricCalculator  metricCalcPacketsReceived;
+static MetricCalculator  metricCalcPacketTransRate;
+static MetricCalculator  metricCalcPacketRecRate;
 
 
 /* unit definitions */
 static char * muBytes = "Bytes";
 static char * muPackets = "Packets";
+static char * muPacketsPerSecond = "Packets per second";
 static char * muErrorsPerSecond = "Errors per second";
 static char * muNa ="N/A";
 
@@ -148,7 +153,31 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcCalc=metricCalcPacketsReceived;
   metricCalcDef[5].mcUnits=muPackets;
 
-  *mcnum=6;
+  metricCalcDef[6].mcVersion=MD_VERSION;
+  metricCalcDef[6].mcName="PacketTransmitRate";
+  metricCalcDef[6].mcId=mr(pluginname,metricCalcDef[6].mcName);
+  metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[6].mcChangeType=MD_GAUGE;
+  metricCalcDef[6].mcIsContinuous=MD_TRUE;
+  metricCalcDef[6].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[6].mcDataType=MD_UINT32;
+  metricCalcDef[6].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[6].mcCalc=metricCalcPacketTransRate;
+  metricCalcDef[6].mcUnits=muPacketsPerSecond;
+
+  metricCalcDef[7].mcVersion=MD_VERSION;
+  metricCalcDef[7].mcName="PacketReceiveRate";
+  metricCalcDef[7].mcId=mr(pluginname,metricCalcDef[7].mcName);
+  metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[7].mcChangeType=MD_GAUGE;
+  metricCalcDef[7].mcIsContinuous=MD_TRUE;
+  metricCalcDef[7].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[7].mcDataType=MD_UINT32;
+  metricCalcDef[7].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[7].mcCalc=metricCalcPacketRecRate;
+  metricCalcDef[7].mcUnits=muPacketsPerSecond;
+
+  *mcnum=8;
   *mc=metricCalcDef;
   return 0;
 }
@@ -285,6 +314,64 @@ size_t metricCalcErrorRate( MetricValue *mv,
     return sizeof(float);
   }
   return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* PacketTransmitRate                                                         */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcPacketTransRate(MetricValue * mv,
+								 int mnum,
+								 void * v,
+								 size_t vlen)
+{
+	unsigned long long p1, p2;
+	unsigned long rate;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PacketTransmitRate\n",
+	  __FILE__,__LINE__);
+#endif
+	if (mv && (vlen >= sizeof(unsigned long)) && (mnum >= 2)) {
+		p1 = ip_getPacketsTransmitted(mv[0].mvData);
+		p2 = ip_getPacketsTransmitted(mv[mnum-1].mvData);
+		
+		rate = (p1 - p2) / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
+		
+		memcpy(v, &rate, sizeof(unsigned long ));
+		return sizeof(unsigned long);
+	}
+	return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* PacketReceiveRate                                                          */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcPacketRecRate(MetricValue * mv,
+								 int mnum,
+								 void * v,
+								 size_t vlen)
+{
+	unsigned long long p1, p2;
+	unsigned long rate;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PacketReceiveRate\n",
+	  __FILE__,__LINE__);
+#endif
+	if (mv && (vlen >= sizeof(unsigned long)) && (mnum >= 2)) {
+		p1 = ip_getPacketsReceived(mv[0].mvData);
+		p2 = ip_getPacketsReceived(mv[mnum-1].mvData);
+		
+		rate = (p1 - p2) / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
+		
+		memcpy(v, &rate, sizeof(unsigned long));
+		return sizeof(unsigned long);
+	}
+	return -1;
 }
 
 

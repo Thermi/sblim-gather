@@ -11,6 +11,7 @@ Features added:
 - 2787610 ported Xen metrics to libvirt API
 - 2787612 KVM metric support
 - 2811680 add used memory metrics
+- 2811685 add packet rate metrics
 
 Changes in Version 2.1.9
 ========================
