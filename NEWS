@@ -12,6 +12,7 @@ Features added:
 - 2787612 KVM metric support
 - 2811680 add used memory metrics
 - 2811685 add packet rate metrics
+- 2811885 add Service and Capabilities providers
 
 Changes in Version 2.1.9
 ========================

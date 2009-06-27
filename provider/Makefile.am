@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.14 2009/05/20 19:39:56 tyreld Exp $
+# $Id: Makefile.am,v 1.15 2009/06/27 04:19:21 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -125,6 +125,8 @@ libOSBase_MetricUtil_la_LIBADD=$(srcdir)/../librrepos.la -lcmpiOSBase_Common
 # Gather CMPI provider libraries
 provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \
 	libOSBase_MetricValueProvider.la \
+    libOSBase_MetricServiceProvider.la \
+    libOSBase_MetricServiceCapabilitiesProvider.la \
 	libOSBase_MetricGathererProvider.la \
 	libOSBase_MetricRepositoryServiceProvider.la \
 	libOSBase_MetricForMEProvider.la \
@@ -140,6 +142,11 @@ libOSBase_MetricDefinitionProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 libOSBase_MetricValueProvider_la_SOURCES = OSBase_MetricValueProvider.c
 libOSBase_MetricValueProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la
 libOSBase_MetricValueProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
+
+libOSBase_MetricServiceProvider_la_SOURCES = OSBase_MetricServiceProvider.c
+libOSBase_MetricServiceProvider_la_LIBADD = @LIBSBLIMBASE@
+
+libOSBase_MetricServiceCapabilitiesProvider_la_SOURCES = OSBase_MetricServiceCapabilitiesProvider.c
 
 libOSBase_MetricGathererProvider_la_SOURCES = OSBase_MetricGathererProvider.c
 libOSBase_MetricGathererProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la $(srcdir)/../librgather.la @LIBSBLIMBASE@
