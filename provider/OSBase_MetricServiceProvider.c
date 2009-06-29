@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricServiceProvider.c,v 1.1 2009/06/27 04:19:21 tyreld Exp $
+ * $Id: OSBase_MetricServiceProvider.c,v 1.2 2009/06/29 22:43:15 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -29,6 +29,12 @@
 #include <cmpimacs.h>
 
 const CMPIBroker * _broker;
+
+enum METHOD_RETURN {
+	METHOD_SUCCESS = 0,
+	METHOD_NOT_SUPPORTED = 1,
+	METHOD_FAILED = 2,
+};
 
 #define NUMKEYS 4
 
@@ -61,15 +67,16 @@ static void check_keys(const CMPIObjectPath * op, CMPIStatus * rc)
 	for (i = 0; i < NUMKEYS; i++) {
 		key = CMGetKey(op, keys[i].key, rc).value.string;
 		
-		if (rc->rc != CMPI_RC_OK || key == NULL) {
-			CMSetStatusWithChars(_broker, rc, CMPI_RC_ERR_FAILED,
-								 "Couldn't get key value");
+		if (rc->rc != CMPI_RC_OK) {
 			return;
+		} else if ( key == NULL) {
+			CMSetStatusWithChars(_broker, rc, CMPI_RC_ERR_FAILED,
+								 "NULL key value");
 		}
 		
 		if (strcasecmp(CMGetCharPtr(key), keys[i].value) != 0) {
 			CMSetStatusWithChars(_broker, rc, CMPI_RC_ERR_NOT_FOUND,
-								 "Instance doesn't exist");
+								 "The requested instance doesn't exist");
 			return;
 		}
 	}
@@ -255,7 +262,56 @@ static CMPIStatus InvokeMethod(CMPIMethodMI * mi,
                                const CMPIArgs * in, 
                                CMPIArgs * out)
 {
-    CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
+	CMPIStatus rc = {CMPI_RC_OK, NULL};
+	CMPIValue valrc;
+
+	check_keys(op, &rc);
+	
+	if (rc.rc != CMPI_RC_OK) {
+		return rc;
+	}
+	
+	if (strcasecmp(method, "ShowMetrics") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);
+	} else if (strcasecmp(method, "ShowMetricsByClass") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);	
+	} else if (strcasecmp(method, "ControlMetrics") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);
+	} else if (strcasecmp(method, "ControlMetricsByClass") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);	
+	} else if (strcasecmp(method, "GetMetricValues") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);
+	} else if (strcasecmp(method, "StartService") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);
+	} else if (strcasecmp(method, "StopService") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);
+	} else if (strcasecmp(method, "ChangeAffectedElementsAssignedSequence") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);
+	} else if (strcasecmp(method, "RequestStateChange") == 0) {
+		valrc.uint32 = METHOD_NOT_SUPPORTED;
+		CMReturnData(rslt, &valrc, CMPI_uint32);
+		CMReturnDone(rslt);
+	} else {
+		CMSetStatusWithChars(_broker, &rc, CMPI_RC_ERR_METHOD_NOT_FOUND, method);	
+	}
+	
+    return rc;
 }
 
 CMMethodMIStub(, OSBase_MetricServiceProvider, _broker, CMNoHook);

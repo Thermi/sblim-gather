@@ -13,6 +13,7 @@ Features added:
 - 2811680 add used memory metrics
 - 2811685 add packet rate metrics
 - 2811885 add Service and Capabilities providers
+- 2811897 add Service method provider
 
 Changes in Version 2.1.9
 ========================
