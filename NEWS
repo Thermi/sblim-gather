@@ -6,6 +6,7 @@ Bugs fixed:
 - 2791472 plugins should be built as dlopen modules
 - 2791496 fix linker paths to gather utility libraries
 - 2794542 migrate license from CPL to EPL
+- 2818791 libvirt metric associations need to be to root/virt
 
 Features added:
 - 2787610 ported Xen metrics to libvirt API

@@ -1,5 +1,5 @@
 /*
- * $Id: cimplugKvm.c,v 1.2 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: cimplugKvm.c,v 1.3 2009/07/09 22:04:09 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+static const char * ns = "root/virt";
 
 CMPIObjectPath *COP4VALID(CMPIBroker * broker, const char *id,
 			  const char *systemid)
@@ -32,7 +33,7 @@ CMPIObjectPath *COP4VALID(CMPIBroker * broker, const char *id,
     /* we construct the operating system id according to the OSBase
        rules */
     CMPIObjectPath *cop =
-	CMNewObjectPath(broker, NULL, "KVM_ComputerSystem",
+	CMNewObjectPath(broker, ns, "KVM_ComputerSystem",
 			NULL);
     if (cop) {
 	CMAddKey(cop, "Name", id, CMPI_chars);
