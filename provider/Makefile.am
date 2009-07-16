@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.15 2009/06/27 04:19:21 tyreld Exp $
+# $Id: Makefile.am,v 1.16 2009/07/16 21:14:06 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -127,6 +127,9 @@ provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \
 	libOSBase_MetricValueProvider.la \
     libOSBase_MetricServiceProvider.la \
     libOSBase_MetricServiceCapabilitiesProvider.la \
+    libOSBase_MetricElementCapabilitiesProvider.la \
+    libOSBase_MetricHostedServiceProvider.la \
+    libOSBase_MetricServiceAffectsElementProvider.la \
 	libOSBase_MetricGathererProvider.la \
 	libOSBase_MetricRepositoryServiceProvider.la \
 	libOSBase_MetricForMEProvider.la \
@@ -147,6 +150,12 @@ libOSBase_MetricServiceProvider_la_SOURCES = OSBase_MetricServiceProvider.c
 libOSBase_MetricServiceProvider_la_LIBADD = @LIBSBLIMBASE@
 
 libOSBase_MetricServiceCapabilitiesProvider_la_SOURCES = OSBase_MetricServiceCapabilitiesProvider.c
+
+libOSBase_MetricElementCapabilitiesProvider_la_SOURCES = OSBase_MetricElementCapabilitiesProvider.c
+
+libOSBase_MetricHostedServiceProvider_la_SOURCES = OSBase_MetricHostedServiceProvider.c
+
+libOSBase_MetricServiceAffectsElementProvider_la_SOURCES = OSBase_MetricServiceAffectsElementProvider.c
 
 libOSBase_MetricGathererProvider_la_SOURCES = OSBase_MetricGathererProvider.c
 libOSBase_MetricGathererProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la $(srcdir)/../librgather.la @LIBSBLIMBASE@

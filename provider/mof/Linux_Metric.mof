@@ -1,5 +1,5 @@
 //
-// $Id: Linux_Metric.mof,v 1.12 2009/06/27 04:19:21 tyreld Exp $
+// $Id: Linux_Metric.mof,v 1.13 2009/07/16 21:14:07 tyreld Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004, 2009
 //
@@ -32,6 +32,24 @@ class Linux_MetricService : CIM_MetricService
 { };
 
 class Linux_MetricServiceCapabilities : CIM_MetricServiceCapabilities
+{ };
+
+[ 
+	Association
+]
+class Linux_MetricElementCapabilities : CIM_ElementCapabilities
+{ };
+
+[
+	Association
+]
+class Linux_MetricHostedService : CIM_HostedService
+{ };
+
+[
+	Association
+]
+class Linux_MetricServiceAffectsElement : CIM_ServiceAffectsElement
 { };
 
 [ Provider("cmpi:OSBase_MetricGathererProvider"),
