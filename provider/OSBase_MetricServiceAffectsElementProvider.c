@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricServiceAffectsElementProvider.c,v 1.1 2009/07/16 21:14:07 tyreld Exp $
+ * $Id: OSBase_MetricServiceAffectsElementProvider.c,v 1.2 2009/07/17 22:17:18 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -332,46 +332,7 @@ static CMPIStatus References(CMPIAssociationMI * mi,
 			}
 		}
 	}
-/*	
-	if (CMClassPathIsA(_broker, op, _LEFTREF, &rc) ||
-		CMClassPathIsA(_broker, op, _RIGHTREF, &rc)) {
-		
-		inst = CBGetInstance(_broker, ctx, op, NULL, &rc);
-		if (rc.rc != CMPI_RC_OK) {
-			return rc;
-		}
 	
-		cop = CMNewObjectPath(_broker, 
-							  CMGetCharPtr(CMGetNameSpace(op, NULL)),
-							  _LEFTREF,
-							  NULL);
-	
-		cap = CBEnumInstanceNames(_broker, ctx, cop, &rc);
-		if (rc.rc != CMPI_RC_OK) {
-			return rc;
-		}
-	
-		cop = CMNewObjectPath(_broker,
-							  CMGetCharPtr(CMGetNameSpace(op, NULL)),
-							  _RIGHTREF,
-							  NULL);
-						  
-		manelm = CBEnumInstanceNames(_broker, ctx, cop, &rc);
-		if (rc.rc != CMPI_RC_OK) {
-			return rc;
-		}
-	
-		if (CMHasNext(cap, &rc) && CMHasNext(manelm, &rc)) {
-			data = CMGetNext(manelm, NULL);
-			while (CMHasNext(cap, &rc)) {
-				inst = make_ref_inst(op, CMGetNext(cap, NULL), data);
-				if (inst) {
-					CMReturnInstance(rslt, inst);
-				}
-			}
-		}
-	}
-*/	
 	CMReturnDone(rslt);
 	return rc;
 }
