@@ -1,3 +1,6 @@
+Changes in Version 2.2.0
+========================
+
 Bugs fixed:
 - 2666450 Updated metricXen.readme with correct metrics
 - 2789260 KVM HostFreePhysicalMemory uses first domain name
@@ -6,7 +9,6 @@ Bugs fixed:
 - 2791472 plugins should be built as dlopen modules
 - 2791496 fix linker paths to gather utility libraries
 - 2794542 migrate license from CPL to EPL
-- 2818791 libvirt metric associations need to be to root/virt
 
 Features added:
 - 2787610 ported Xen metrics to libvirt API
@@ -15,6 +17,8 @@ Features added:
 - 2811685 add packet rate metrics
 - 2811885 add Service and Capabilities providers
 - 2811897 add Service method provider
+- 2811892 add Service and Capabilities associations
+- 2811900 DSP1053 Base Metric Profile Conformance
 
 Changes in Version 2.1.9
 ========================
