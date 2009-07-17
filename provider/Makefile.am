@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.16 2009/07/16 21:14:06 tyreld Exp $
+# $Id: Makefile.am,v 1.17 2009/07/17 22:15:38 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -130,6 +130,8 @@ provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \
     libOSBase_MetricElementCapabilitiesProvider.la \
     libOSBase_MetricHostedServiceProvider.la \
     libOSBase_MetricServiceAffectsElementProvider.la \
+    libOSBase_MetricRegisteredProfileProvider.la \
+    libOSBase_MetricElementConformsToProfileProvider.la \
 	libOSBase_MetricGathererProvider.la \
 	libOSBase_MetricRepositoryServiceProvider.la \
 	libOSBase_MetricForMEProvider.la \
@@ -156,6 +158,10 @@ libOSBase_MetricElementCapabilitiesProvider_la_SOURCES = OSBase_MetricElementCap
 libOSBase_MetricHostedServiceProvider_la_SOURCES = OSBase_MetricHostedServiceProvider.c
 
 libOSBase_MetricServiceAffectsElementProvider_la_SOURCES = OSBase_MetricServiceAffectsElementProvider.c
+
+libOSBase_MetricRegisteredProfileProvider_la_SOURCES = OSBase_MetricRegisteredProfileProvider.c
+
+libOSBase_MetricElementConformsToProfileProvider_la_SOURCES = OSBase_MetricElementConformsToProfileProvider.c
 
 libOSBase_MetricGathererProvider_la_SOURCES = OSBase_MetricGathererProvider.c
 libOSBase_MetricGathererProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la $(srcdir)/../librgather.la @LIBSBLIMBASE@
@@ -193,18 +199,24 @@ MOFS=	$(srcdir)/mof/Linux_Metric.mof \
       $(VIRT_MOFS) \
       $(Z_MOFS)
 
+INT_MOFS=	$(srcdir)/mof/Linux_MetricProfile.mof
+
 REGS= $(srcdir)/mof/Linux_Metric.registration \
       $(BASE_REGS) \
       $(VIRT_REGS) \
       $(Z_REGS)
+      
+INT_REGS= 	$(srcdir)/mof/Linux_MetricProfile.registration
 
 # Register the provider(s) and class definition(s) to the current CIM server/CIMOM
 postinstall:
 	sh $(srcdir)/provider-register.sh -t @CIMSERVER@ -r $(REGS) -m $(MOFS)
+	sh $(srcdir)/provider-register.sh -t @CIMSERVER@ -n root/interop -r $(INT_REGS) -m $(INT_MOFS)
 
 preuninstall:
 	sh $(srcdir)/provider-register.sh -d -t @CIMSERVER@ -r $(REGS) -m $(MOFS)
-
+	sh $(srcdir)/provider-register.sh -d -t @CIMSERVER@ -n root/interop -r $(INT_REGS) -m $(INT_MOFS)
+	
 dist-hook:
 	test -d "$(distdir)" &&	rm -rf `find $(distdir) -type d -name CVS`
 
