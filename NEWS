@@ -1,3 +1,6 @@
+Bugs fixed:
+- 2839915 2.2.0 release fails to build
+
 Changes in Version 2.2.0
 ========================
 

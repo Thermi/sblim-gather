@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.17 2009/07/17 22:15:38 tyreld Exp $
+# $Id: Makefile.am,v 1.18 2009/08/18 23:16:59 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -194,15 +194,17 @@ libOSBase_MetricLifeCycleProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 #
 # Automake instructions for ./mof subdir
 #
-MOFS=	$(srcdir)/mof/Linux_Metric.mof \
-      $(BASE_MOFS) \
+PRE_MOFS= $(srcdir)/mof/Linux_Metric.mof
+
+MOFS= $(BASE_MOFS) \
       $(VIRT_MOFS) \
       $(Z_MOFS)
 
 INT_MOFS=	$(srcdir)/mof/Linux_MetricProfile.mof
 
-REGS= $(srcdir)/mof/Linux_Metric.registration \
-      $(BASE_REGS) \
+PRE_REGS= $(srcdir)/mof/Linux_Metric.registration
+
+REGS= $(BASE_REGS) \
       $(VIRT_REGS) \
       $(Z_REGS)
       
@@ -210,18 +212,20 @@ INT_REGS= 	$(srcdir)/mof/Linux_MetricProfile.registration
 
 # Register the provider(s) and class definition(s) to the current CIM server/CIMOM
 postinstall:
+	sh $(srcdir)/provider-register.sh -t @CIMSERVER@ -r $(PRE_REGS) -m $(PRE_MOFS)
 	sh $(srcdir)/provider-register.sh -t @CIMSERVER@ -r $(REGS) -m $(MOFS)
 	sh $(srcdir)/provider-register.sh -t @CIMSERVER@ -n root/interop -r $(INT_REGS) -m $(INT_MOFS)
 
 preuninstall:
 	sh $(srcdir)/provider-register.sh -d -t @CIMSERVER@ -r $(REGS) -m $(MOFS)
 	sh $(srcdir)/provider-register.sh -d -t @CIMSERVER@ -n root/interop -r $(INT_REGS) -m $(INT_MOFS)
+	sh $(srcdir)/provider-register.sh -d -t @CIMSERVER@ -r $(PRE_REGS) -m $(PRE_MOFS)
 	
 dist-hook:
 	test -d "$(distdir)" &&	rm -rf `find $(distdir) -type d -name CVS`
 
 # We must explicity add all the schema files to the distribution package
-pkgdata_DATA=$(MOFS) $(REGS)
+pkgdata_DATA=$(PRE_MOFS) $(MOFS) $(INT_MOFS) $(PRE_REGS) $(REGS) $(INT_REGS)
 pkgdata_SCRIPTS=provider-register.sh start_gathering.sh stop_gathering.sh
 
 EXTRA_DIST+=$(pkgdata_DATA) $(pkgdata_SCRIPTS)

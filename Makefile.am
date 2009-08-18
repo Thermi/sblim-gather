@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.17 2009/05/20 19:39:55 tyreld Exp $
+# $Id: Makefile.am,v 1.18 2009/08/18 23:16:59 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -119,7 +119,7 @@ noinst_HEADERS = gatherc.h marshal.h mlist.h mplugmgr.h \
 	util/merrno.h util/mrwlock.h util/reposcfg.h util/dirutil.h \
 	comms/mcclt.h comms/mcdefs.h comms/mcserv.h comms/rcclt.h \
 	comms/rcserv.h \
-	plugin/channelutil.h plugin/hypfs.h
+	plugin/channelutil.h plugin/hypfs.h plugin/metricVirt.h
 
 # Gather support utility libraries
 lib_LTLIBRARIES = libgatherutil.la libmcserv.la librcserv.la \
