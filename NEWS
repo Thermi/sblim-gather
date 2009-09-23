@@ -1,6 +1,9 @@
 Bugs fixed:
 - 2839915 2.2.0 release fails to build
 
+Features added:
+- 2863817 add service boot scripts
+
 Changes in Version 2.2.0
 ========================
 

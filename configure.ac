@@ -149,10 +149,24 @@ AC_SUBST(PROVIDER_SUBDIR)
 AC_CONFIG_FILES([provider/Makefile])
 fi
 
+# Check for Linux System Style
+
+if test -f /etc/redhat-release 
+then
+   INIT_STYLE=init-redhat
+elif test -f /etc/SuSE-release
+then 
+   INIT_STYLE=init-suse
+else
+   INIT_STYLE=init-none
+fi
+AC_SUBST(INIT_STYLE)
+
 # Check for SBLIM Test Suite (defined in acinclude.m4)
 CHECK_TESTSUITE
 
-AC_CONFIG_FILES([Makefile sblim-gather.spec])
+AC_CONFIG_FILES([Makefile sblim-gather.spec gatherer.init-suse
+				gatherer.init-redhat gatherer.init-none])
 
 AC_SUBST(ARCHDEF)
 

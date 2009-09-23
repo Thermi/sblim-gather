@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.18 2009/08/18 23:16:59 tyreld Exp $
+# $Id: Makefile.am,v 1.19 2009/09/23 01:45:14 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -26,6 +26,9 @@ gatherrundir=$(localstatedir)/run/gather
 
 # docdir defines where the documentation goes
 docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
+
+# initdir defines location of init scripts
+initdir=$(sysconfdir)/init.d
 
 # plugin directories
 metricplugindir=$(libdir)/gather/mplug
@@ -358,6 +361,16 @@ channelclt_SOURCES = plugin/channelclt.c
 channelclt_LDADD = -lsysfs $(srcdir)/libchannelutil.la $(srcdir)/libsysfswrapper.la
 channelclt_DEPENDENCIES = libsysfswrapper.la libchannelutil.la
 
+# Gather init scripts
+EXTRA_DIST += gatherer.init-suse.in gatherer.init-redhat.in \
+				gatherer.init-none.in
+
+init_SCRIPTS=gatherer
+
+gatherer: gatherer.$(INIT_STYLE)
+	sed -e s?$$\{prefix\}?$(prefix)?g \
+	-e s?$$\{exec_prefix\}?$(prefix)?g $< > $@
+
 # Gather config files
 sysconf_DATA = gatherd.conf reposd.conf
 EXTRA_DIST += $(sysconf_DATA)
@@ -375,6 +388,9 @@ postinstall:
 
 preuninstall:
 	$(MAKE) -C $(PROVIDER_SUBDIR) preuninstall
+
+clean-local:
+	rm -f gatherer gatherer.init-*
 
 dist-hook:
 	test -d "$(distdir)" &&	rm -rf `find $(distdir) -type d -name CVS`
