@@ -1,5 +1,5 @@
 /*
- * $Id: reposd.c,v 1.32 2009/05/20 19:39:55 tyreld Exp $
+ * $Id: reposd.c,v 1.33 2009/12/01 23:56:35 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -765,12 +765,12 @@ static void * rrepos_getrequest(void * hdl)
   MetricValue   *mv;
   MetricValue64 *mv64;
 
-  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Starting thread on socket %i",(int)hdl));
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Starting thread on socket %i",(long)hdl));
   if (pthread_detach(pthread_self()) != 0) {
     m_log(M_ERROR,M_SHOW,"Remote reposd thread could not detach: %s.\n",
 	  strerror(errno));
   }
-  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Detached thread on socket %i",(int)hdl));
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Detached thread on socket %i",(long)hdl));
 
   while (1) {
     bufferlen=GATHERVALBUFLEN;
@@ -874,14 +874,14 @@ static void * rrepos_getrequest(void * hdl)
     mv->mvDataLength = ntohl((size_t)mv->mvDataLength);
     mv->mvSystemId=mv->mvData+mv->mvDataLength;
     M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
-	    ("Retrieved data on socket %i: %s %s %s",(int)hdl,
+	    ("Retrieved data on socket %i: %s %s %s",(long)hdl,
 	     mv->mvSystemId,pluginname,metricname));
     if ((comm->gc_result=reposvalue_put(pluginname,metricname,mv)) != 0) {
       m_log(M_ERROR,M_SHOW,"Remote reposd on socket %i: write %s to repository failed.\n",
 	    hdl,metricname);
     }
   }
-  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Ending thread on socket %i",(int)hdl));
+  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,("Ending thread on socket %i",(long)hdl));
   free(buffer);
   return NULL;
 }

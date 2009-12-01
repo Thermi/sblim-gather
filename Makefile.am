@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.19 2009/09/23 01:45:14 tyreld Exp $
+# $Id: Makefile.am,v 1.20 2009/12/01 23:56:35 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -390,7 +390,7 @@ preuninstall:
 	$(MAKE) -C $(PROVIDER_SUBDIR) preuninstall
 
 clean-local:
-	rm -f gatherer gatherer.init-*
+	rm -f gatherer gatherer.init-redhat gatherer.init-suse gatherer.init-none
 
 dist-hook:
 	test -d "$(distdir)" &&	rm -rf `find $(distdir) -type d -name CVS`
