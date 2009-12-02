@@ -1,5 +1,5 @@
 /*
- * $Id: mreposl.c,v 1.14 2009/05/20 19:39:55 tyreld Exp $
+ * $Id: mreposl.c,v 1.15 2009/12/02 22:15:27 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004, 2009
  *
@@ -98,7 +98,7 @@ struct _MReposHdr {
 size_t LocalReposNumIds = 0;
 
 
-static int locateres(int idx, const char *, const char *);
+static int locateres(int idx, const char *, const char *, int read);
 
 static int locateIndex(int mid);
 static int addIndex(int mid);
@@ -130,7 +130,7 @@ int LocalMetricAdd (MetricValue *mv)
       idx=addIndex(mv->mvId);
     }
     if (idx!=-1) {
-      ridx=locateres(idx,mv->mvResource, mv->mvSystemId);
+      ridx=locateres(idx,mv->mvResource, mv->mvSystemId, 0);
       mrv=malloc(sizeof(MReposValue));
       mrv->mrv_next=LocalReposHeader[idx].mrh_reslist[ridx].lrid_first;
       mrv->mrv_value=malloc(sizeof(MetricValue));
@@ -481,7 +481,7 @@ static inline int rescmp(LocalResourceId *rid, const char *r, size_t rl, const c
   return memcmp(rid->lrid_system,s,rs);
 }
 
-static int locateres(int idx, const char *res, const char *sys)
+static int locateres(int idx, const char *res, const char *sys, int read)
 {
   /* this one is called quite often - therefore optimized */
   int left, right, cursor;
@@ -504,26 +504,30 @@ static int locateres(int idx, const char *res, const char *sys)
     }
   }
   
-  /* insert new resource */
-  LocalReposHeader[idx].mrh_reslist = 
-    realloc(LocalReposHeader[idx].mrh_reslist,
-	    (LocalReposHeader[idx].mrh_resnum+1)*sizeof(LocalResourceId));
+  if (!read) {
+	  /* insert new resource */
+	  LocalReposHeader[idx].mrh_reslist = 
+	    realloc(LocalReposHeader[idx].mrh_reslist,
+		    (LocalReposHeader[idx].mrh_resnum+1)*sizeof(LocalResourceId));
 
-  memmove(LocalReposHeader[idx].mrh_reslist+left+1,
-	  LocalReposHeader[idx].mrh_reslist+left, 
-	  sizeof(LocalResourceId)*(LocalReposHeader[idx].mrh_resnum-left));
+	  memmove(LocalReposHeader[idx].mrh_reslist+left+1,
+		  LocalReposHeader[idx].mrh_reslist+left, 
+		  sizeof(LocalResourceId)*(LocalReposHeader[idx].mrh_resnum-left));
 
-  LocalReposHeader[idx].mrh_reslist[left].lrid_resource=malloc(reslen);
-  memcpy(LocalReposHeader[idx].mrh_reslist[left].lrid_resource,res,reslen);
-  LocalReposHeader[idx].mrh_reslist[left].lrid_system=malloc(syslen);
-  memcpy(LocalReposHeader[idx].mrh_reslist[left].lrid_system,sys,syslen);
-  LocalReposHeader[idx].mrh_reslist[left].lrid_first=NULL;
-  LocalReposHeader[idx].mrh_reslist[left].lrid_flags=0;
-  LocalReposHeader[idx].mrh_resnum ++;
-  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
-	  ("LocalMetricAdd adding resource %s:%s (%d)", 
-	   sys,res, LocalReposHeader[idx].mrh_id));  
-  return left;
+	  LocalReposHeader[idx].mrh_reslist[left].lrid_resource=malloc(reslen);
+	  memcpy(LocalReposHeader[idx].mrh_reslist[left].lrid_resource,res,reslen);
+	  LocalReposHeader[idx].mrh_reslist[left].lrid_system=malloc(syslen);
+	  memcpy(LocalReposHeader[idx].mrh_reslist[left].lrid_system,sys,syslen);
+	  LocalReposHeader[idx].mrh_reslist[left].lrid_first=NULL;
+	  LocalReposHeader[idx].mrh_reslist[left].lrid_flags=0;
+	  LocalReposHeader[idx].mrh_resnum ++;
+	  M_TRACE(MTRACE_FLOW,MTRACE_REPOS,
+		  ("LocalMetricAdd adding resource %s:%s (%d)", 
+		   sys,res, LocalReposHeader[idx].mrh_id));  
+	  return left;
+	}
+	
+	return -1;
 }
 
 static int _LocalMetricResources(int midx, LocalResourceId ** resources,
@@ -541,7 +545,10 @@ static int _LocalMetricResources(int midx, LocalResourceId ** resources,
     *resources = LocalReposHeader[midx].mrh_reslist;
     return LocalReposHeader[midx].mrh_resnum;
   } else if (resource && system) {
-    ridx = locateres(midx,resource,system);
+    ridx = locateres(midx,resource,system, 1);
+    if (ridx < 0) {
+    	return 0;
+    }
     *resources = LocalReposHeader[midx].mrh_reslist + ridx;
     return 1;
   } else {

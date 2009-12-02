@@ -1,5 +1,7 @@
 Bugs fixed:
 - 2839915 2.2.0 release fails to build
+- 2907191 debug compile errors
+- 2907773 resource list corrupted by metric retrieval
 
 Features added:
 - 2863817 add service boot scripts
