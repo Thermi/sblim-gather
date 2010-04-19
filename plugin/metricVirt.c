@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.4 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: metricVirt.c,v 1.5 2010/04/19 23:58:19 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -48,7 +48,7 @@ int connectHypervisor(int type)
 		uri = "qemu:///system";
 		break;
 	default:
-		return 0;
+		return VIRT_SUCCESS;
 	}
 	
 	tconn = virConnectOpen(uri);
@@ -61,6 +61,10 @@ int connectHypervisor(int type)
 	return (tconn ? 1 : 0);
 }
 
+/* ---------------------------------------------------------------------------*/
+/* collectNodeStats                                                           */
+/* get node statistics from libvirt API                                       */
+/* ---------------------------------------------------------------------------*/
 static int collectNodeStats()
 {
 	virNodeInfo ninfo;
@@ -69,13 +73,20 @@ static int collectNodeStats()
 	fprintf(stderr, "collectNodeStats()\n");
 #endif
 
-	node_statistics.num_domains = virConnectNumOfDomains(conn);
-	if (node_statistics.num_domains < 0)
-		return -1;
+	node_statistics.num_active_domains = virConnectNumOfDomains(conn);
+	if (node_statistics.num_active_domains < 0)
+		return VIRT_FAIL;
+
+	node_statistics.num_inactive_domains = virConnectNumOfDefinedDomains(conn);
+	if (node_statistics.num_inactive_domains < 0)
+		return VIRT_FAIL;
+
+	node_statistics.total_domains = node_statistics.num_active_domains
+			                        + node_statistics.num_inactive_domains;
 
 	node_statistics.free_memory = virNodeGetFreeMemory(conn) / 1024;
 	if (virNodeGetInfo(conn, &ninfo)) {
-		return -1;
+		return VIRT_FAIL;
 	}
 	node_statistics.total_memory = ninfo.memory;
 
@@ -84,15 +95,20 @@ static int collectNodeStats()
 	    __FILE__, __LINE__, node_statistics.total_memory, node_statistics.free_memory);
 #endif	
 
-	return 0;	
+	return VIRT_SUCCESS;
 }
 
+/* ---------------------------------------------------------------------------*/
+/* collectDomainStats                                                         */
+/* get domain statistics from libvirt API                                     */
+/* ---------------------------------------------------------------------------*/
 static int collectDomainStats()
 {
 	virDomainPtr domain;
 	virDomainInfo dinfo;
-	int * ids;
-	int i;
+	char **defdomlist = NULL;
+	int  * ids, *ids_ptr;
+	int  cnt, j;
 
 #ifdef DEBUG
 	fprintf(stderr, "collectDomainStats()\n");
@@ -103,46 +119,104 @@ static int collectDomainStats()
 #ifdef DBUG
 	fprintf(stderr, "parseXm called too frequently\n");
 #endif
-		return 0;
+		return VIRT_NOUPD;
     } else {
-		node_statistics.num_domains = 0;	// reset number of domains
+		node_statistics.num_active_domains = 0;	// reset number of domains
+		node_statistics.num_inactive_domains = 0;
+		node_statistics.total_domains = 0;
 		last_time_sampled = time(NULL);
     }
 
 	if (collectNodeStats())
-		return -1;
-		
-	ids = malloc(sizeof(ids) * node_statistics.num_domains);
+		return VIRT_FAIL;
 
-	if ((node_statistics.num_domains = virConnectListDomains(conn, ids, node_statistics.num_domains)) < 1)
-		return -1;
+	/* no domains reported */
+	if (node_statistics.total_domains == 0)
+		return VIRT_FAIL;
+
+	/*
+	 *  get statistics from active domains
+	 */
+	ids = malloc(sizeof(ids) * node_statistics.num_active_domains);
+	if (ids == NULL)
+		return VIRT_FAIL;
+	else
+		ids_ptr=ids;
+
+	if ((node_statistics.num_active_domains = virConnectListDomains(conn, ids_ptr,
+			                                   node_statistics.num_active_domains)) < 0)
+	{
+		return VIRT_FAIL;
+	}
 
 #ifdef DEBUG
-	fprintf(stderr, "--- %s(%i) : num_domains  %d\n", __FILE__, __LINE__, node_statistics.num_domains);
+	fprintf(stderr, "--- %s(%i) : num_active_domains  %d\n", __FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
 
-	for (i = 0; i < node_statistics.num_domains; ids++, i++) {
-		domain = virDomainLookupByID(conn, *ids);
-		domain_statistics.domain_id[i] = *ids;
-		domain_statistics.domain_name[i] = strdup(virDomainGetName(domain));
+	for (cnt = 0; cnt < node_statistics.num_active_domains; ids_ptr++, cnt++)
+	{
+		domain = virDomainLookupByID(conn, *ids_ptr);
+		domain_statistics.domain_id[cnt] = *ids_ptr;
 		
+		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt],
+													strlen(virDomainGetName(domain)+1));
+		strcpy(domain_statistics.domain_name[cnt],virDomainGetName(domain));
+
 		virDomainGetInfo(domain, &dinfo);
 		
-		domain_statistics.claimed_memory[i] = dinfo.memory;
-		domain_statistics.max_memory[i] = dinfo.maxMem;
-		domain_statistics.cpu_time[i] = ((float) dinfo.cpuTime) / 1000000000;
-		domain_statistics.vcpus[i] = dinfo.nrVirtCpu;
+		domain_statistics.claimed_memory[cnt] = dinfo.memory;
+		domain_statistics.max_memory[cnt] = dinfo.maxMem;
+		domain_statistics.cpu_time[cnt] = ((float) dinfo.cpuTime) / 1000000000;
+		domain_statistics.vcpus[cnt] = dinfo.nrVirtCpu;
+		domain_statistics.state[cnt] = dinfo.state;
 		
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : %s (%d)\n\t claimed %lu  max %lu\n\t time %f  cpus %hu\n",
-		__FILE__, __LINE__, domain_statistics.domain_name[i], *ids, dinfo.memory, dinfo.maxMem,
-		domain_statistics.cpu_time[i], dinfo.nrVirtCpu);
+		__FILE__, __LINE__, domain_statistics.domain_name[cnt], *ids_ptr, dinfo.memory, dinfo.maxMem,
+		domain_statistics.cpu_time[cnt], dinfo.nrVirtCpu);
 #endif
 		
 		virDomainFree(domain);
-	}
+	} /* end for */
 	
-	return 0;
+	free(ids);
+
+	/*
+	 *  get statistics from inactive domains
+	 */
+	defdomlist = malloc(sizeof(*defdomlist) * node_statistics.num_inactive_domains);
+	if (defdomlist == NULL)
+		return VIRT_FAIL;
+	if ((node_statistics.num_inactive_domains = virConnectListDefinedDomains(conn, defdomlist,
+	                                       node_statistics.num_inactive_domains)) < 0)
+	{
+		return VIRT_FAIL;
+	}
+
+	for (j = 0 ; j < node_statistics.num_inactive_domains; j++, cnt++ )
+	{
+		domain = virDomainLookupByName(conn, *(defdomlist + j));
+		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt],
+															strlen(*(defdomlist + j)+1));
+		strcpy(domain_statistics.domain_name[cnt], *(defdomlist + j));
+
+		virDomainGetInfo(domain, &dinfo);
+
+		domain_statistics.claimed_memory[cnt] = dinfo.memory;
+		domain_statistics.max_memory[cnt] = dinfo.maxMem;
+		domain_statistics.cpu_time[cnt] = ((float) dinfo.cpuTime) / 1000000000;
+		domain_statistics.vcpus[cnt] = dinfo.nrVirtCpu;
+		domain_statistics.state[cnt] = dinfo.state;
+
+		virDomainFree(domain);
+
+		/* free strdup'ed memory */
+		free(*(defdomlist + j));
+	} /* end for */
+
+	free(defdomlist);
+
+	return VIRT_SUCCESS;
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -175,10 +249,10 @@ int virtMetricRetrCPUTime(int mid, MetricReturner mret)
 	int i;
 
 #ifdef DEBUG
-	fprintf(stderr, "--- %s(%i) : num_domains %d\n",
-		__FILE__, __LINE__, node_statistics.num_domains);
+	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
+		__FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
-	for (i = 0; i < node_statistics.num_domains; i++) {
+	for (i = 0; i < node_statistics.num_active_domains; i++) {
 
 	    mv = calloc(1, sizeof(MetricValue) +
 			sizeof(float) +
@@ -198,7 +272,6 @@ int virtMetricRetrCPUTime(int mid, MetricReturner mret)
 		strcpy(mv->mvResource, domain_statistics.domain_name[i]);
 		mret(mv);
 	    }
-
 	}
 	return 1;
     }
@@ -214,6 +287,7 @@ int virtMetricRetrCPUTime(int mid, MetricReturner mret)
 int virtMetricRetrTotalCPUTime(int mid, MetricReturner mret)
 {
     MetricValue *mv = NULL;
+
 
 #ifdef DEBUG
     fprintf(stderr, "--- %s(%i) : Retrieving Xen CPUTime\n",
@@ -236,10 +310,10 @@ int virtMetricRetrTotalCPUTime(int mid, MetricReturner mret)
 	int i;
 
 #ifdef DEBUG
-	fprintf(stderr, "--- %s(%i) : num_domains %d\n",
-		__FILE__, __LINE__, node_statistics.num_domains);
+	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
+		__FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
-	for (i = 0; i < node_statistics.num_domains; i++) {
+	for (i = 0; i < node_statistics.num_active_domains; i++) {
 
 	    mv = calloc(1, sizeof(MetricValue) +
 			sizeof(unsigned long long) +
@@ -267,7 +341,6 @@ int virtMetricRetrTotalCPUTime(int mid, MetricReturner mret)
 		strcpy(mv->mvResource, domain_statistics.domain_name[i]);
 		mret(mv);
 	    }
-
 	}
 	return 1;
     }
@@ -305,10 +378,10 @@ int virtMetricRetrActiveVirtualProcessors(int mid, MetricReturner mret)
 	int i;
 
 #ifdef DEBUG
-	fprintf(stderr, "--- %s(%i) : num_domains %d\n",
-		__FILE__, __LINE__, node_statistics.num_domains);
+	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
+		__FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
-	for (i = 0; i < node_statistics.num_domains; i++) {
+	for (i = 0; i < node_statistics.num_active_domains; i++) {
 
 	    mv = calloc(1, sizeof(MetricValue) +
 			sizeof(float) +
@@ -357,13 +430,13 @@ int virtMetricRetrInternalMemory(int mid, MetricReturner mret)
 	int i;
 
 #ifdef DEBUG
-	fprintf(stderr, "--- %s(%i) : num_domains %d\n",
-		__FILE__, __LINE__, node_statistics.num_domains);
+	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
+		__FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
 
 	char buf[70];		// 3 unsigned long, max 20 characters each
 
-	for (i = 0; i < node_statistics.num_domains; i++) {
+	for (i = 0; i < node_statistics.num_active_domains; i++) {
 	    memset(buf,0,sizeof(buf));
 	    sprintf(buf,
 		    "%lld:%lld:%lld",
@@ -450,29 +523,62 @@ int virtMetricRetrHostFreePhysicalMemory(int mid, MetricReturner mret)
     return -1;
 }
 
-int main(int argc, char ** argv)
-{
-	if (argc == 2) {
-		switch((char)argv[1][0]) {
-		case 'x':
-			connectHypervisor(XEN_HYP);
-			break;
-		case 'k':
-			connectHypervisor(KVM_HYP);
-			break;
-		default:
-			goto fail;
-		}
-	} else {
-		goto fail;
-	}
-	
-	if (conn) {
-		collectDomainStats();
-		exit(EXIT_SUCCESS);
-	}
 
-fail:
-	fprintf(stderr, "usage: %s [xk]\n", argv[0]);
-	exit(EXIT_FAILURE);
+/* ---------------------------------------------------------------------------*/
+/* VirtualSystemState                                                        */
+/* ---------------------------------------------------------------------------*/
+
+int virtMetricRetrVirtualSystemState(int mid, MetricReturner mret)
+{
+    MetricValue *mv = NULL;
+
+#ifdef DEBUG
+    fprintf(stderr,
+	    "--- %s(%i) : Retrieving kvm VirtualSystemState metric\n",
+	    __FILE__, __LINE__);
+#endif
+
+    collectDomainStats();
+
+    if (mret == NULL) {
+#ifdef DEBUG
+    	fprintf(stderr, "Returner pointer is NULL\n");
+#endif
+    } else {
+#ifdef DEBUG
+    	fprintf(stderr,
+    			"--- %s(%i) : Sampling for metric VirtualSystemState %d\n",
+    			__FILE__, __LINE__, mid);
+#endif
+
+    	int i;
+
+#ifdef DEBUG
+    	fprintf(stderr, "--- %s(%i) : total_domains %d\n",
+    			__FILE__, __LINE__, node_statistics.total_domains);
+#endif
+    	for (i = 0; i < node_statistics.total_domains; i++) {
+
+    		mv = calloc(1, sizeof(MetricValue) +
+    				sizeof(unsigned) +
+    				strlen(domain_statistics.domain_name[i]) + 1);
+
+    		if (mv) {
+    			mv->mvId = mid;
+    			mv->mvTimeStamp = time(NULL);
+    			mv->mvDataType = MD_UINT32;
+    			mv->mvDataLength = sizeof(unsigned);
+    			mv->mvData = (char *) mv + sizeof(MetricValue);
+    			*(unsigned *) mv->mvData = (unsigned) domain_statistics.state[i];
+
+    			mv->mvResource = (char *) mv + sizeof(MetricValue)
+		    		+ sizeof(unsigned);
+    			strcpy(mv->mvResource, domain_statistics.domain_name[i]);
+    			mret(mv);
+    		}
+    	}
+    	return 1;
+    }
+    return -1;
 }
+

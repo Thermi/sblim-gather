@@ -1,5 +1,5 @@
 /*
- * $Id: metricKvm.c,v 1.2 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: metricKvm.c,v 1.3 2010/04/19 23:58:19 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -18,6 +18,7 @@
  * 
  *    ActiveVirtualProcessors
  *    HostFreePhysicalMemory
+ *    VirtualSystemState
  * 
  * plus the following metrics which are only intended for internal usage:
  *    _Internal_CPUTime
@@ -44,7 +45,7 @@
 #include <ctype.h>
 
 /* --- metric callback retrievers to be exported --- */
-static MetricDefinition metricDef[7];
+static MetricDefinition metricDef[8];
 
 /* --- required plugin functions --- */
 int _DefinedMetrics(MetricRegisterId * mr,
@@ -132,7 +133,15 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	metricDef[6].mproc = virtMetricRetrTotalCPUTime;
 	metricDef[6].mdeal = free;
 
-	*mdnum = 7;
+	metricDef[7].mdVersion = MD_VERSION;
+	metricDef[7].mdName = "VirtualSystemState";
+	metricDef[7].mdReposPluginName = "librepositoryKvm.so";
+	metricDef[7].mdId = mr(pluginname, metricDef[7].mdName);
+	metricDef[7].mdSampleInterval = 30;
+	metricDef[7].mproc = virtMetricRetrVirtualSystemState;
+	metricDef[7].mdeal = free;
+
+	*mdnum = 8;
     } else {
 	*mdnum = 0;
     }

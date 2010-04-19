@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.h,v 1.3 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: metricVirt.h,v 1.4 2010/04/19 23:58:19 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -28,8 +28,14 @@
 
 #define MAX_DOMAINS 255
 
+#define VIRT_SUCCESS 0
+#define VIRT_NOUPD   1
+#define VIRT_FAIL    -1
+
 struct node_statistics_type {
-	unsigned int num_domains;
+	unsigned int num_active_domains;
+	unsigned int num_inactive_domains;
+	unsigned int total_domains;
 	unsigned long long total_memory;
 	unsigned long long free_memory;
 } node_statistics;
@@ -41,6 +47,7 @@ struct domain_statistics_type {
 	unsigned long long max_memory[MAX_DOMAINS];
 	float cpu_time[MAX_DOMAINS];
 	unsigned short vcpus[MAX_DOMAINS];
+	unsigned char  state[MAX_DOMAINS];
 } domain_statistics;
 
 int connectHypervisor(int type);
@@ -50,5 +57,6 @@ MetricRetriever virtMetricRetrTotalCPUTime;
 MetricRetriever virtMetricRetrActiveVirtualProcessors;
 MetricRetriever virtMetricRetrInternalMemory;
 MetricRetriever virtMetricRetrHostFreePhysicalMemory;
+MetricRetriever virtMetricRetrVirtualSystemState;
 
 #endif

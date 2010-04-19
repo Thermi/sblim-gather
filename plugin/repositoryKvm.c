@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryKvm.c,v 1.2 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: repositoryKvm.c,v 1.3 2010/04/19 23:58:19 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -25,6 +25,7 @@
  *    HostMemoryPercentage
  *    TenMinuteTotalCPUTime
  *	  TenMinuteExternalViewTotalCPUTimePercentage
+ *	  VirtualSystemState
  * 
  * plus the following metrics which are only intended for internal usage:
  *    _Internal_CPUTime
@@ -81,6 +82,8 @@ static MetricCalculator metricCalcPhysicalMemoryAllocatedToVirtualSystemPercenta
 // metric HostMemoryPercentage
 static MetricCalculator metricCalcHostMemoryPercentage;
 
+// metric VirtualSystemState
+static MetricCalculator metricCalcVirtualSystemState;
 
 
 /* unit definitions */
@@ -280,7 +283,19 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[13].mcCalc = metricCalcExtTotalCPUTimePerc;
     metricCalcDef[13].mcUnits = muPercent;
 
-    *mcnum = 14;
+    metricCalcDef[14].mcVersion = MD_VERSION;
+    metricCalcDef[14].mcName = "VirtualSystemState";
+    metricCalcDef[14].mcId = mr(pluginname, metricCalcDef[14].mcName);
+    metricCalcDef[14].mcMetricType =
+	MD_PERIODIC | MD_RETRIEVED | MD_INTERVAL;
+    metricCalcDef[14].mcChangeType = MD_GAUGE;
+    metricCalcDef[14].mcIsContinuous = MD_TRUE;
+    metricCalcDef[14].mcCalculable = MD_NONSUMMABLE;
+    metricCalcDef[14].mcDataType = MD_UINT32;
+    metricCalcDef[14].mcCalc = metricCalcVirtualSystemState;
+    metricCalcDef[14].mcUnits = muNA;
+
+    *mcnum = 15;
     *mc = metricCalcDef;
     return 0;
 }
@@ -593,6 +608,26 @@ size_t metricCalcHostMemoryPercentage(MetricValue * mv,
 	    (float) claimed_memory / (float) total_memory * 100.0;
 	memcpy(v, &result, sizeof(float));
 	return sizeof(float);
+    }
+
+    return -1;
+}
+
+/* ---------------------------------------------------------------------------*/
+/* VirtualSystemState                                                         */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcVirtualSystemState(MetricValue * mv,
+					 int mnum, void *v, size_t vlen)
+{
+
+#ifdef DEBUG
+    fprintf(stderr, "Calculate Virtual System State\n");
+#endif
+
+    if (mv && (mnum >= 2)) {
+	memcpy(v, mv[0].mvData, mv->mvDataLength);
+	return mv->mvDataLength;
     }
 
     return -1;
