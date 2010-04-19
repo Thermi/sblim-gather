@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.18 2009/06/24 20:25:06 tyreld Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.19 2010/04/19 23:56:27 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -21,6 +21,7 @@
  * CPUTime
  * KernelModeTime
  * UserModeTime
+ * IOWaitTime
  * TotalCPUTime
  * MemorySize
  * TotalVisibleMemorySize
@@ -63,7 +64,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[33];
+static MetricCalculationDefinition metricCalcDef[34];
 
 /* --- NumberOfUsers --- */
 static MetricCalculator metricCalcNumOfUser;
@@ -72,7 +73,7 @@ static MetricCalculator metricCalcNumOfUser;
 static MetricCalculator metricCalcNumOfProc;
 
 /* --- CPUTime is base for :
- * KernelModeTime, UserModeTime, TotalCPUTime 
+ * KernelModeTime, UserModeTime, IOWaitTime, TotalCPUTime
  * InternalViewKernelModePercentage, InternalViewUserModePercentage,
  * InternalViewIdlePercentage, InternalViewTotalCPUPercentage,
  * ExternalViewKernelModePercentage, ExternalViewUserModePercentage,
@@ -83,6 +84,7 @@ static MetricCalculator metricCalcCPUTime;
 
 static MetricCalculator metricCalcKernelTime;
 static MetricCalculator metricCalcUserTime;
+static MetricCalculator metricCalcIOWaitTime;
 static MetricCalculator metricCalcTotalCPUTime;
 
 static MetricCalculator metricCalcInternKernelTimePerc;
@@ -155,6 +157,7 @@ static unsigned long long os_getCPUNiceTime( char * data );
 #endif
 static unsigned long long os_getCPUKernelTime( char * data );
 static unsigned long long os_getCPUIdleTime( char * data );
+static unsigned long long os_getCPUIOWaitTime( char * data );
 static unsigned long long os_getCPUTotalTime( char * data );
 static float os_getCPUKernelTimePercentage( char * start, char * end ); 
 static float os_getCPUUserTimePercentage( char * start, char * end );
@@ -562,7 +565,19 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[32].mcCalc=metricCalcUsedVirtMem;
   metricCalcDef[32].mcUnits=muKiloBytes;
 
-  *mcnum=33;
+  metricCalcDef[33].mcVersion=MD_VERSION;
+  metricCalcDef[33].mcName="IOWaitTime";
+  metricCalcDef[33].mcId=mr(pluginname,metricCalcDef[33].mcName);
+  metricCalcDef[33].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[33].mcChangeType=MD_GAUGE;
+  metricCalcDef[33].mcIsContinuous=MD_TRUE;
+  metricCalcDef[33].mcCalculable=MD_SUMMABLE;
+  metricCalcDef[33].mcDataType=MD_UINT64;
+  metricCalcDef[33].mcAliasId=metricCalcDef[2].mcId;
+  metricCalcDef[33].mcCalc=metricCalcIOWaitTime;
+  metricCalcDef[33].mcUnits=muMilliSeconds;
+
+  *mcnum=34;
   *mc=metricCalcDef;
   return 0;
 }
@@ -621,7 +636,8 @@ size_t metricCalcNumOfProc( MetricValue *mv,
 /* 
  * The raw data CPUTime has the following syntax :
  *
- * <user mode>:<user mode with low priority(nice)>:<system mode>:<idle task>
+ * <user mode>:<user mode with low priority(nice)>:<system mode>:<idle task>:
+ * <iowait>:<irq>:<softirq>:<steal time>:<guest time>
  *
  * the values in CPUTime are saved in Jiffies ( 1/100ths of a second )
  */
@@ -725,6 +741,49 @@ size_t metricCalcUserTime( MetricValue *mv,
 
     //fprintf(stderr,"user time: %lld\n",ut);
     memcpy(v,&ut,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* IOWaitTime                                                                 */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcIOWaitTime( MetricValue *mv,
+			     int mnum,
+			     void *v,
+			     size_t vlen ) {
+
+  unsigned long long iot = 0;
+  unsigned long long io1 = 0;
+  unsigned long long io2 = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate IOWaitTime\n",
+	  __FILE__,__LINE__);
+#endif
+  /*
+   * IOWaitTime is based on the fith entry of the CPUTime value
+   *
+   */
+  /*
+  fprintf(stderr,"mnum : %i\n",mnum);
+  fprintf(stderr,"mv[0].mvData : %s\n",mv[0].mvData);
+  fprintf(stderr,"mv[mnum-1].mvData : %s\n",mv[mnum-1].mvData);
+  */
+
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    io1 = os_getCPUIOWaitTime(mv[0].mvData);
+    if( mnum > 1 ) {
+      io2 = os_getCPUIOWaitTime(mv[mnum-1].mvData);
+      iot = io1-io2;
+    }
+    else { iot = io1; }
+
+    memcpy(v,&iot,sizeof(unsigned long long));
     return sizeof(unsigned long long);
   }
   return -1;
@@ -1827,7 +1886,7 @@ unsigned long long os_getCPUKernelTime( char * data ) {
     end = strchr(hlp, ':');
     memset(time,0,sizeof(time));
     strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
-    val = strtoll(time,(char**)NULL,10)*10;;
+    val = strtoll(time,(char**)NULL,10)*10;
   }
 
   return val;
@@ -1836,18 +1895,49 @@ unsigned long long os_getCPUKernelTime( char * data ) {
 unsigned long long os_getCPUIdleTime( char * data ) {
 
   char * hlp = NULL;
+  char * end = NULL;
   char   time[128];
   unsigned long long val = 0;
 
-  if( (hlp = strrchr(data, ':')) != NULL ) {
+  if( (hlp = strchr(data, ':')) != NULL ) {
     hlp++;
+    hlp = strchr(hlp, ':');
+    hlp++;
+    hlp = strchr(hlp, ':');
+    hlp++;
+    end = strchr(hlp, ':');
+	memset(time,0,sizeof(time));
+	strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+	val = strtoll(time,(char**)NULL,10)*10;
+  }
+
+  return val;
+}
+
+unsigned long long os_getCPUIOWaitTime( char * data ) {
+
+  char * hlp = NULL;
+  char * end = NULL;
+  char   time[128];
+  unsigned long long val = 0;
+
+  if( (hlp = strchr(data, ':')) != NULL ) {
+    hlp++;
+    hlp = strchr(hlp, ':');
+    hlp++;
+    hlp = strchr(hlp, ':');
+    hlp++;
+    hlp = strchr(hlp, ':');
+    hlp++;
+    end = strchr(hlp, ':');
     memset(time,0,sizeof(time));
-    strcpy(time, hlp);
+    strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
     val = strtoll(time,(char**)NULL,10)*10;
   }
 
   return val;
 }
+
 
 unsigned long long os_getCPUTotalTime( char * data ) {
 

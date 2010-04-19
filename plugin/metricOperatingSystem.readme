@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.readme,v 1.10 2009/06/24 20:25:06 tyreld Exp $
+ * $Id: metricOperatingSystem.readme,v 1.11 2010/04/19 23:56:27 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2009
  *
@@ -29,6 +29,7 @@ The Plugin offers the following metrics :
 - CPUTime
 - KernelModeTime
 - UserModeTime
+- IOWaitTime
 - TotalCPUTime
 - InternalViewKernelModePercentage
 - InternalViewUserModePercentage
@@ -107,7 +108,8 @@ Units           : Jiffies ( 1/100ths of a second )
 Value Source    : the first line of /proc/stat contains the CPU times,
                   summarized over all CPUs
 
-Syntax          : <user mode>:<user mode with low priority(nice)>:<kernel mode>:<idle task>
+Syntax          : <user mode>:<user mode with low priority(nice)>:<kernel mode>:<idle task>:
+                  <iowait>:<irq>:<softirq>:<steal time>:<guest time>
 
 
 KernelModeTime
@@ -131,6 +133,15 @@ Units           : milli-seconds
 
 Value Source    : first entry of CPUTime * 10
 
+IOWaitTime
+------------
+
+Metric Type     : Interval
+Based on Metric : CPUTime
+CIM Data Type   : uint64
+Units           : milli-seconds
+
+Value Source    : fith entry of CPUTime * 10
 
 TotalCPUTime
 ------------

@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.19 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: metricOperatingSystem.c,v 1.20 2010/04/19 23:56:27 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2009
  *
@@ -344,7 +344,8 @@ int metricRetrNumOfProc( int mid,
 /* 
  * The raw data CPUTime has the following syntax :
  *
- * <user mode>:<user mode with low priority(nice)>:<system mode>:<idle task>
+ * <user mode>:<user mode with low priority(nice)>:<system mode>:<idle task>:
+ * <iowait>:<irq>:<softirq>:<steal time>:<guest time>
  *
  * the values in CPUTime are saved in Jiffies ( 1/100ths of a second )
  */
@@ -380,7 +381,7 @@ int metricRetrCPUTime( int mid,
 
       /* replace ' ' with ':' */
       hlp = ptr;
-      for( ; i<3; i++ ) { 
+      for( ; i<8; i++ ) {
 	hlp = strchr(hlp, ' ');
 	*hlp = ':';
       }
