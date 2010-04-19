@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.20 2009/12/01 23:56:35 tyreld Exp $
+# $Id: Makefile.am,v 1.21 2010/04/19 23:53:39 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -110,14 +110,16 @@ AM_CFLAGS = -Wall
 PLUG_FLAGS = -no-undefined -module -avoid-version
 
 # Include files
-pkginclude_HEADERS = cimplug.h metric.h mplugin.h util/commutil.h 
+pkginclude_HEADERS = cimplug.h metric.h mplugin.h util/commutil.h \
+	gather.h repos.h rrepos.h mrepos.h util/commheap.h
+ 
 nodist_pkginclude_HEADERS = gather-config.h
 
 noinst_HEADERS = gatherc.h marshal.h mlist.h mplugmgr.h \
-	mrepos.h repos.h rplugin.h rreg.h sforward.h \
-	gather.h mplugin.h mreg.h mretr.h \
-	rgather.h rplugmgr.h rrepos.h slisten.h \
-	util/commheap.h util/gathercfg.h util/merrdefs.h \
+	rplugin.h rreg.h sforward.h \
+	mplugin.h mreg.h mretr.h \
+	rgather.h rplugmgr.h slisten.h \
+	util/gathercfg.h util/merrdefs.h \
 	util/mlog.h util/mtrace.h util/mcfg.h \
 	util/merrno.h util/mrwlock.h util/reposcfg.h util/dirutil.h \
 	comms/mcclt.h comms/mcdefs.h comms/mcserv.h comms/rcclt.h \
