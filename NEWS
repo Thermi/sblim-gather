@@ -8,6 +8,7 @@ Features added:
 - 2863817 add service boot scripts
 - 2989650 add VitualSystemState metric for KVM
 - 2989651 add iowait cpu metric for OS
+- 3000971 add rate metrics for ip interfaces
 
 Changes in Version 2.2.0
 ========================
