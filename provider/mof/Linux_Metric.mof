@@ -1,5 +1,5 @@
 //
-// $Id: Linux_Metric.mof,v 1.14 2009/07/17 22:15:39 tyreld Exp $
+// $Id: Linux_Metric.mof,v 1.15 2010/05/22 02:07:51 tyreld Exp $
 //
 // (C) Copyright IBM Corp. 2003, 2004, 2009
 //
@@ -29,7 +29,10 @@
 
 
 class Linux_MetricService : CIM_MetricService
-{ };
+{ 
+  [Description("Package release version")]
+  String Release;
+};
 
 class Linux_MetricServiceCapabilities : CIM_MetricServiceCapabilities
 { };
@@ -63,6 +66,8 @@ class Linux_MetricElementConformsToProfile : CIM_ElementConformsToProfile
 ]
 class Linux_MetricGatherer : CIM_Service
 { 
+  [Description("Package release version")]
+  String Release;
   [Description("Number of registered plugins")]
   uint16 NumberOfPlugins;
   [Description("Number of active metrics")]
@@ -80,6 +85,8 @@ class Linux_MetricGatherer : CIM_Service
 ]
 class Linux_MetricRepositoryService : CIM_Service
 { 
+  [Description("Package release version")]
+  String Release;
   [Description("Number of registered plugins")]
   uint16 NumberOfPlugins;
   [Description("Number of registered metrics")]

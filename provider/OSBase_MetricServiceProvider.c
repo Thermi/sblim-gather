@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricServiceProvider.c,v 1.2 2009/06/29 22:43:15 tyreld Exp $
+ * $Id: OSBase_MetricServiceProvider.c,v 1.3 2010/05/22 02:07:51 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -20,6 +20,8 @@
  */
 
 #include <string.h>
+
+#include <metric.h>
 
 #include <OSBase_Common.h>
 #include <cmpiOSBase_Common.h>
@@ -124,6 +126,7 @@ static CMPIInstance * make_inst(const CMPIObjectPath * op)
 			CMSetProperty(ci, keys[i].key, keys[i].value, CMPI_chars);
 		}
 		CMSetProperty(ci, "ElementName", _CLASSNAME, CMPI_chars);
+        CMSetProperty(ci, "Release", PACKAGE_VERSION, CMPI_chars);
 		return ci;
 	}
 	

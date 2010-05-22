@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.10 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.11 2010/05/22 02:07:51 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -127,6 +127,9 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstances( CMPIInstanceMI *
     CMSetProperty(ci,"Name",_Name,CMPI_chars);
     CMSetProperty(ci,"SystemCreationClassName",CSCreationClassName,CMPI_chars);
     CMSetProperty(ci,"SystemName",get_system_name(),CMPI_chars);
+
+    CMSetProperty(ci,"Release",PACKAGE_VERSION,CMPI_chars);
+
     if (rrepos_status(&rs)) {
       CMSetProperty(ci,"Started",&_false,CMPI_boolean);
       ival=0; /* unknown */
@@ -186,6 +189,9 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderGetInstance( CMPIInstanceMI * m
     CMSetProperty(ci,"Name",_Name,CMPI_chars);
     CMSetProperty(ci,"SystemCreationClassName",CSCreationClassName,CMPI_chars);
     CMSetProperty(ci,"SystemName",get_system_name(),CMPI_chars);
+
+    CMSetProperty(ci,"Release",PACKAGE_VERSION,CMPI_chars);
+
     if (rrepos_status(&rs)) {
       CMSetProperty(ci,"Started",&_false,CMPI_boolean);
       ival=0; /* unknown */
