@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.5 2010/04/19 23:58:19 tyreld Exp $
+ * $Id: metricVirt.c,v 1.6 2010/05/22 04:20:01 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -68,18 +68,23 @@ int connectHypervisor(int type)
 static int collectNodeStats()
 {
 	virNodeInfo ninfo;
+    int num_dom;
 
 #ifdef DEBUG
 	fprintf(stderr, "collectNodeStats()\n");
 #endif
 
-	node_statistics.num_active_domains = virConnectNumOfDomains(conn);
-	if (node_statistics.num_active_domains < 0)
+	num_dom = virConnectNumOfDomains(conn);
+    if (num_dom < 0)
 		return VIRT_FAIL;
 
-	node_statistics.num_inactive_domains = virConnectNumOfDefinedDomains(conn);
-	if (node_statistics.num_inactive_domains < 0)
+    node_statistics.num_active_domains = num_dom;
+
+	num_dom = virConnectNumOfDefinedDomains(conn);
+    if (num_dom < 0)
 		return VIRT_FAIL;
+    
+    node_statistics.num_inactive_domains = num_dom;
 
 	node_statistics.total_domains = node_statistics.num_active_domains
 			                        + node_statistics.num_inactive_domains;
