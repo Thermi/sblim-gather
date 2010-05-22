@@ -9,6 +9,7 @@ Features added:
 - 2989650 add VitualSystemState metric for KVM
 - 2989651 add iowait cpu metric for OS
 - 3000971 add rate metrics for ip interfaces
+- 3005544 add package release info to service providers
 
 Changes in Version 2.2.0
 ========================
