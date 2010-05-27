@@ -2,8 +2,10 @@ Bugs fixed:
 - 2839915 2.2.0 release fails to build
 - 2907191 debug compile errors
 - 2907773 resource list corrupted by metric retrieval
+- 2971232 sblim-gatherer-provider-s390x does not collect or return zCh
 - 2989648 expose extra devel headers
 - 3005591 segfault if num domains set to -1 on error
+- 2142290 MetricForME association is broken
 
 Features added:
 - 2863817 add service boot scripts
