@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricForMEProvider.c,v 1.9 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.10 2010/05/27 05:50:46 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -137,7 +137,8 @@ static CMPIStatus associatorHelper( const CMPIResult * rslt,
 	/* for all metric ids retrieve data for given resource */
 	vr.vsId=metricids[i];
 	vr.vsResource=resources[i];
-	vr.vsSystemId=systems[i];
+	vr.vsSystemId=NULL; /* systems[i]; repository get fails when a system name
+	                       is supplied. Need to fix for distrubuted gathering */
 	vr.vsFrom=vr.vsTo=0;
 	vr.vsNumValues=1; /* restrict to one/latest value per resource */
 	if (rrepos_get(&vr,ch)==0) {
