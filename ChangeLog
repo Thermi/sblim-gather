@@ -1,3 +1,9 @@
+2010-06-01  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* ChangeLog, NEWS, configure.ac, gatherer.init-redhat.in:
+
+	Fixed 3010178: initialze gatherer after libvirtd
+
 2010-05-26  Tyrel Datwyler <tyreld@us.ibm.com>
 
 	* NEWS, configure.ac:
