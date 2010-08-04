@@ -1,6 +1,8 @@
 Changes in Version 2.2.2
 ========================
 
+Bugs fixed:
+- 3039719 normalize virtual server metric sample interval
 
 Changes in Version 2.2.1
 ========================

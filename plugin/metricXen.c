@@ -1,5 +1,5 @@
 /*
- * $Id: metricXen.c,v 1.12 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: metricXen.c,v 1.13 2010/08/04 23:24:36 tyreld Exp $
  *
  * © Copyright IBM Corp. 2006, 2007, 2009
  *
@@ -155,7 +155,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	metricDef[0].mdName = "_Internal_CPUTime";
 	metricDef[0].mdReposPluginName = "librepositoryXen.so";
 	metricDef[0].mdId = mr(pluginname, metricDef[0].mdName);
-	metricDef[0].mdSampleInterval = 30;
+	metricDef[0].mdSampleInterval = 60;
 	metricDef[0].mproc = metricRetrCPUTime;
 	metricDef[0].mdeal = free;
 
@@ -163,7 +163,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	metricDef[1].mdName = "_Internal_TotalCPUTime";
 	metricDef[1].mdReposPluginName = "librepositoryXen.so";
 	metricDef[1].mdId = mr(pluginname, metricDef[1].mdName);
-	metricDef[1].mdSampleInterval = 30;
+	metricDef[1].mdSampleInterval = 60;
 	metricDef[1].mproc = metricRetrTotalCPUTime;
 	metricDef[1].mdeal = free;
 
@@ -171,7 +171,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	metricDef[2].mdName = "ActiveVirtualProcessors";
 	metricDef[2].mdReposPluginName = "librepositoryXen.so";
 	metricDef[2].mdId = mr(pluginname, metricDef[2].mdName);
-	metricDef[2].mdSampleInterval = 30;
+	metricDef[2].mdSampleInterval = 60;
 	metricDef[2].mproc = metricRetrActiveVirtualProcessors;
 	metricDef[2].mdeal = free;
 
@@ -179,7 +179,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	metricDef[3].mdName = "_Internal_Memory";
 	metricDef[3].mdReposPluginName = "librepositoryXen.so";
 	metricDef[3].mdId = mr(pluginname, metricDef[3].mdName);
-	metricDef[3].mdSampleInterval = 30;
+	metricDef[3].mdSampleInterval = 60;
 	metricDef[3].mproc = metricRetrInternalMemory;
 	metricDef[3].mdeal = free;
 
@@ -187,7 +187,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	metricDef[4].mdName = "HostFreePhysicalMemory";
 	metricDef[4].mdReposPluginName = "librepositoryXen.so";
 	metricDef[4].mdId = mr(pluginname, metricDef[4].mdName);
-	metricDef[4].mdSampleInterval = 30;
+	metricDef[4].mdSampleInterval = 60;
 	metricDef[4].mproc = metricRetrHostFreePhysicalMemory;
 	metricDef[4].mdeal = free;
 

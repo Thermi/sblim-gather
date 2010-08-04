@@ -1,5 +1,5 @@
 /*
- * $Id: metricKvm.readme,v 1.3 2010/04/19 23:58:19 tyreld Exp $
+ * $Id: metricKvm.readme,v 1.4 2010/08/04 23:24:36 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -46,7 +46,7 @@ TotalCPUTime
 ------------
 
 Metric Type     : Interval
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : uint64
 Units           : MilliSeconds
 
@@ -64,7 +64,7 @@ ActiveVirtualProcessors
 -----------------------
 
 Metric Type     : Interval
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : real32
 Units           : MilliSeconds
 
@@ -73,7 +73,7 @@ ExternalViewTotalCPUPercentage
 ------------------------------
 
 Metric Type     : Interval
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : real32
 Units           : Percent
 
@@ -93,7 +93,7 @@ PhysicalMemoryAllocatedToVirtualSystem
 ----------------------                  
 
 Metric Type     : Point   
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : uint64
 Units           : KiloBytes                       
 
@@ -102,7 +102,7 @@ HostFreePhysicalMemory
 ----------------------                  
 
 Metric Type     : Point   
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : uint64
 Units           : KiloBytes
 
@@ -111,7 +111,7 @@ PhysicalMemoryAllocatedToVirtualSystemPercentage
 ----------------------                  
 
 Metric Type     : Point   
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : uint64
 Units           : KiloBytes
 
@@ -120,7 +120,7 @@ HostMemoryPercentage
 --------------------                  
 
 Metric Type     : Point   
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : real32
 Units           : Percent 
 
@@ -129,6 +129,6 @@ VirtualSystemState
 ------------------                  
 
 Metric Type     : Point   
-Sample Interval : 30 sec
+Sample Interval : 60 sec
 CIM Data Type   : unit32
 Units           : None
