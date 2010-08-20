@@ -3,6 +3,7 @@ Changes in Version 2.2.2
 
 Bugs fixed:
 - 3039719 normalize virtual server metric sample interval
+- 3049802 plugin load generates error if already loaded
 
 Changes in Version 2.2.1
 ========================

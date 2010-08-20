@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.27 2009/05/20 19:39:55 tyreld Exp $
+ * $Id: repos.c,v 1.28 2010/08/20 23:44:23 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -162,7 +162,11 @@ int reposplugin_add(const char *pluginname)
   RepositoryPlugin *rp;
   int status = -1;
   int i;
-  if (initialized && pluginname && pl_find(pluginname)==NULL) {
+  if (initialized && pluginname) {
+    if (pl_find(pluginname) != NULL) {
+        /* plugin is already loaded, treat as success */
+        return 0;
+    }
     rp = malloc(sizeof(RepositoryPlugin));
     /* load plugin */
     rp->rpName = strdup(pluginname);
