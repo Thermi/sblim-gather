@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryKvm.c,v 1.5 2010/09/24 00:01:42 tyreld Exp $
+ * $Id: repositoryKvm.c,v 1.6 2010/09/24 00:09:06 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -163,7 +163,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[4].mcName = "ActiveVirtualProcessors";
     metricCalcDef[4].mcId = mr(pluginname, metricCalcDef[4].mcName);
     metricCalcDef[4].mcMetricType =
-	MD_PERIODIC | MD_RETRIEVED | MD_INTERVAL;
+	MD_PERIODIC | MD_RETRIEVED | MD_POINT;
     metricCalcDef[4].mcChangeType = MD_GAUGE;
     metricCalcDef[4].mcIsContinuous = MD_TRUE;
     metricCalcDef[4].mcCalculable = MD_NONSUMMABLE;
@@ -424,7 +424,7 @@ size_t metricCalcActiveVirtualProcessors(MetricValue * mv,
     // it's an eServer interval metric, however on Xen the number of processors
     // cannot currently change dynamically so just one of the values is actually
     // picked
-    if (mv && (mnum >= 2)) {
+    if (mv && (mnum >= 1)) {
 	memcpy(v, mv[0].mvData, mv->mvDataLength);
 	return mv->mvDataLength;
     }

@@ -5,6 +5,7 @@ Bugs fixed:
 - 3039719 normalize virtual server metric sample interval
 - 3049802 plugin load generates error if already loaded
 - 3074431 change VSState to a Point metric
+- 3074452 change ActiveVirtualProcessors to point metric
 
 Changes in Version 2.2.1
 ========================
