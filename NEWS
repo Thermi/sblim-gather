@@ -6,6 +6,7 @@ Bugs fixed:
 - 3049802 plugin load generates error if already loaded
 - 3074431 change VSState to a Point metric
 - 3074452 change ActiveVirtualProcessors to point metric
+- 1845491 gather reposdump facility segfaults
 
 Changes in Version 2.2.1
 ========================
