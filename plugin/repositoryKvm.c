@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryKvm.c,v 1.4 2010/09/23 23:22:36 tyreld Exp $
+ * $Id: repositoryKvm.c,v 1.5 2010/09/24 00:01:42 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -625,7 +625,7 @@ size_t metricCalcVirtualSystemState(MetricValue * mv,
     fprintf(stderr, "Calculate Virtual System State\n");
 #endif
 
-    if (mv && (mnum >= 2)) {
+    if (mv && (mnum >= 1)) {
 	memcpy(v, mv[0].mvData, mv->mvDataLength);
 	return mv->mvDataLength;
     }
