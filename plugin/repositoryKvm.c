@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryKvm.c,v 1.6 2010/09/24 00:09:06 tyreld Exp $
+ * $Id: repositoryKvm.c,v 1.7 2010/10/08 01:01:34 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -366,6 +366,8 @@ size_t metricCalcTotalCPUTime(MetricValue * mv,
 	    ntohll(*(unsigned long long *) mv[0].mvData);
 
 	unsigned long long cputime = end_time - start_time;
+    if (end_time == 0) cputime = 0;
+
 	memcpy(v, &cputime, sizeof(unsigned long long));
 	return sizeof(unsigned long long);
     }
@@ -401,6 +403,7 @@ size_t metricCalcExtTotalCPUTimePerc(MetricValue * mv,
 #endif
 
 	float result = (end_time - start_time) / interval_length * 100;
+    if (end_time == 0) result = 0;
 
 	memcpy(v, &result, sizeof(float));
 	return sizeof(float);

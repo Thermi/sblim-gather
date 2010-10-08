@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.6 2010/05/22 04:20:01 tyreld Exp $
+ * $Id: metricVirt.c,v 1.7 2010/10/08 01:01:34 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -207,10 +207,10 @@ static int collectDomainStats()
 
 		virDomainGetInfo(domain, &dinfo);
 
-		domain_statistics.claimed_memory[cnt] = dinfo.memory;
+		domain_statistics.claimed_memory[cnt] = 0;
 		domain_statistics.max_memory[cnt] = dinfo.maxMem;
 		domain_statistics.cpu_time[cnt] = ((float) dinfo.cpuTime) / 1000000000;
-		domain_statistics.vcpus[cnt] = dinfo.nrVirtCpu;
+		domain_statistics.vcpus[cnt] = 0;
 		domain_statistics.state[cnt] = dinfo.state;
 
 		virDomainFree(domain);
@@ -257,7 +257,7 @@ int virtMetricRetrCPUTime(int mid, MetricReturner mret)
 	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
 		__FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
-	for (i = 0; i < node_statistics.num_active_domains; i++) {
+	for (i = 0; i < node_statistics.total_domains; i++) {
 
 	    mv = calloc(1, sizeof(MetricValue) +
 			sizeof(float) +
@@ -269,8 +269,13 @@ int virtMetricRetrCPUTime(int mid, MetricReturner mret)
 		mv->mvDataType = MD_FLOAT32;
 		mv->mvDataLength = sizeof(float);
 		mv->mvData = (char *) mv + sizeof(MetricValue);
-		*(float *) mv->mvData = htonf(domain_statistics.cpu_time[i]
+        
+        if (i < node_statistics.num_active_domains) {
+		    *(float *) mv->mvData = htonf(domain_statistics.cpu_time[i]
 					      / domain_statistics.vcpus[i]);
+        } else {
+            *(float *) mv->mvData = 0;
+        }
 
 		mv->mvResource = (char *) mv + sizeof(MetricValue)
 		    + sizeof(float);
@@ -318,7 +323,7 @@ int virtMetricRetrTotalCPUTime(int mid, MetricReturner mret)
 	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
 		__FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
-	for (i = 0; i < node_statistics.num_active_domains; i++) {
+	for (i = 0; i < node_statistics.total_domains; i++) {
 
 	    mv = calloc(1, sizeof(MetricValue) +
 			sizeof(unsigned long long) +
@@ -330,11 +335,11 @@ int virtMetricRetrTotalCPUTime(int mid, MetricReturner mret)
 		mv->mvDataType = MD_UINT64;
 		mv->mvDataLength = sizeof(unsigned long long);
 		mv->mvData = (char *) mv + sizeof(MetricValue);
-		*(unsigned long long *) mv->mvData
+        *(unsigned long long *) mv->mvData
 		    =
 		    htonll((unsigned long long) (domain_statistics.
 						 cpu_time[i] * 1000));
-
+        
 #ifdef DEBUG
 		fprintf(stderr,
 			"--- %s(%i) : metric_id %d metric_value %f \n",
@@ -386,7 +391,7 @@ int virtMetricRetrActiveVirtualProcessors(int mid, MetricReturner mret)
 	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
 		__FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
-	for (i = 0; i < node_statistics.num_active_domains; i++) {
+	for (i = 0; i < node_statistics.total_domains; i++) {
 
 	    mv = calloc(1, sizeof(MetricValue) +
 			sizeof(float) +
@@ -441,7 +446,7 @@ int virtMetricRetrInternalMemory(int mid, MetricReturner mret)
 
 	char buf[70];		// 3 unsigned long, max 20 characters each
 
-	for (i = 0; i < node_statistics.num_active_domains; i++) {
+	for (i = 0; i < node_statistics.total_domains; i++) {
 	    memset(buf,0,sizeof(buf));
 	    sprintf(buf,
 		    "%lld:%lld:%lld",
