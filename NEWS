@@ -8,6 +8,7 @@ Bugs fixed:
 - 3074452 change ActiveVirtualProcessors to point metric
 - 1845491 gather reposdump facility segfaults
 - 3078358 no metrics collected for inactive virtual servers
+- 3109840 mlog with arguments segfaults on M_SHOW
 
 Features added:
 - 3098510 add process name to UnixProcessMetric

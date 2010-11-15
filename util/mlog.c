@@ -1,5 +1,5 @@
 /*
- * $Id: mlog.c,v 1.3 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: mlog.c,v 1.4 2010/11/15 23:36:17 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004, 2009
  *
@@ -17,7 +17,7 @@
  *
  */
 
-const char *_mlog_id = "$Id: mlog.c,v 1.3 2009/05/20 19:39:56 tyreld Exp $";
+const char *_mlog_id = "$Id: mlog.c,v 1.4 2010/11/15 23:36:17 tyreld Exp $";
 
 #include "mlog.h"
 #include <syslog.h>
@@ -55,7 +55,7 @@ void m_log(int priority, int errout, const char *fmt, ...)
   syslog(priosysl,buf);
 
   if (errout) {
-    vfprintf(stderr,fmt,ap);
+    vfprintf(stderr,buf);
   }
   va_end(ap);
 }
