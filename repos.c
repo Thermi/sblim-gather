@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.28 2010/08/20 23:44:23 tyreld Exp $
+ * $Id: repos.c,v 1.29 2010/12/15 00:41:09 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -371,7 +371,7 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	  syslen=strlen(mv[j][numv[j]-1].mvSystemId) + 1;
 	  reslen=strlen(mv[j][numv[j]-1].mvResource) + 1;
 	  if (useIntervals) {
-	    vs->vsValues[actnum].viCaptureTime=mv[j][numv[j]-1].mvTimeStamp;
+	    vs->vsValues[actnum].viCaptureTime=mv[j][0].mvTimeStamp;
 	    vs->vsValues[actnum].viDuration=
 	      mv[j][0].mvTimeStamp -
 	      vs->vsValues[actnum].viCaptureTime;
