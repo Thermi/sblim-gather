@@ -9,6 +9,7 @@ Bugs fixed:
 - 1845491 gather reposdump facility segfaults
 - 3078358 no metrics collected for inactive virtual servers
 - 3109840 mlog with arguments segfaults on M_SHOW
+- 3109852 TimeStamp property should be end of interval
 
 Features added:
 - 3098510 add process name to UnixProcessMetric
