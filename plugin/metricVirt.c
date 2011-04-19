@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.7 2010/10/08 01:01:34 tyreld Exp $
+ * $Id: metricVirt.c,v 1.8 2011/04/19 23:09:44 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -163,9 +163,10 @@ static int collectDomainStats()
 		domain = virDomainLookupByID(conn, *ids_ptr);
 		domain_statistics.domain_id[cnt] = *ids_ptr;
 		
-		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt],
-													strlen(virDomainGetName(domain)+1));
-		strcpy(domain_statistics.domain_name[cnt],virDomainGetName(domain));
+		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt], 
+                    sizeof(char *) * (strlen(virDomainGetName(domain)+1)));
+
+        strcpy(domain_statistics.domain_name[cnt],virDomainGetName(domain));
 
 		virDomainGetInfo(domain, &dinfo);
 		
@@ -201,9 +202,10 @@ static int collectDomainStats()
 	for (j = 0 ; j < node_statistics.num_inactive_domains; j++, cnt++ )
 	{
 		domain = virDomainLookupByName(conn, *(defdomlist + j));
-		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt],
-															strlen(*(defdomlist + j)+1));
-		strcpy(domain_statistics.domain_name[cnt], *(defdomlist + j));
+		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt], 
+                    sizeof(char *) * (strlen(*(defdomlist + j)+1)));
+		
+        strcpy(domain_statistics.domain_name[cnt], *(defdomlist + j));
 
 		virDomainGetInfo(domain, &dinfo);
 
