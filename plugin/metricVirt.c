@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.8 2011/04/19 23:09:44 tyreld Exp $
+ * $Id: metricVirt.c,v 1.9 2011/05/11 01:42:58 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -30,6 +30,14 @@
 #include <stdio.h>
 #include <string.h>
 
+#define PIDDIR "/var/run/libvirt/qemu/"
+#define L_piddir 22
+#define PROC "/proc/"
+#define TASK "/task/"
+#define SCHED "/sched"
+#define L_sched 32
+#define bufsize 4096
+
 static virConnectPtr conn;
 static int hyp_type;
 
@@ -59,6 +67,108 @@ int connectHypervisor(int type)
 	}
 	
 	return (tconn ? 1 : 0);
+}
+
+/* ---------------------------------------------------------------------------*/
+/* collectDomainSchedStats                                                    */
+/* get scheduler statistics for a given domain                                */
+/* ---------------------------------------------------------------------------*/
+
+static void collectDomainSchedStats(int cnt)
+{
+    FILE * fd = NULL;
+    char * pidfile = NULL;
+    char * tidfile = NULL;
+    char tmpfile[L_tmpnam];
+    char cmdbuf[128];
+    char buf[bufsize];
+    int * tids = NULL;
+    int pid = 0;
+    int i;
+    
+    /* default stats to 0 in case of error */
+	domain_statistics.cpu_used[cnt] = 0;
+	domain_statistics.cpu_ready[cnt] = 0;
+
+    /* open libvirts pid file to obtain vm pid */
+    pidfile = malloc(sizeof(char *) * 
+        (strlen(domain_statistics.domain_name[cnt]) + L_piddir + 4 + 1));
+    sprintf(pidfile, "%s%s.pid", PIDDIR, domain_statistics.domain_name[cnt]);
+    
+    if ((fd = fopen(pidfile, "r")) != NULL) {
+        if (fgets(buf, bufsize, fd) != NULL) {
+            sscanf(buf, "%d", &pid);
+        }
+        fclose(fd);
+    }
+    
+    free(pidfile);
+    
+    /* determine thread ids for each vcpu via ps */
+    if (pid) {
+        if (tmpnam(tmpfile)) {
+            sprintf(cmdbuf, "ps --no-headers -p %d -Lo lwp > %s", pid, tmpfile);
+            if (system(cmdbuf) == 0) {
+                if ((fd = fopen(tmpfile, "r")) != NULL) {
+                    /* ignore master thread (vm pid) */
+                    fgets(buf, bufsize, fd);
+                    
+                    tids = malloc(sizeof(int *) * domain_statistics.vcpus[cnt]);
+                    
+                    for (i = 0; i < domain_statistics.vcpus[cnt]; i++) {
+                        fgets(buf, bufsize, fd);
+                        sscanf(buf, "%d", &tids[i]);
+                    }                  
+                    fclose(fd);
+                }
+            }
+            remove(tmpfile);
+        }
+    }
+    
+    /* retrieve scheduler stats for each vcpu/tid */
+    if (tids) {
+        tidfile = malloc(sizeof(char *) * (L_sched + 1));
+        
+        /* for each vcpu/tid grab stats from /proc/$pid/task/$tid/sched */
+        for (i = 0; i < domain_statistics.vcpus[cnt]; i++) {
+            float used, ready;
+            
+            if (tmpnam(tmpfile)) {
+                sprintf(tidfile, "%s%d%s%d%s", PROC, pid, TASK, tids[i], SCHED);
+                
+                /* interested in se.sum_exec_runtime and se.wait_sum */           
+                sprintf(cmdbuf, "cat %s | awk '/exec_runtime/ || /wait_sum/ {print $3}' > %s",
+                    tidfile, tmpfile);
+                
+                /* stats are in floating point ms, convert to microseconds */
+                if (system(cmdbuf) == 0) {
+                    if ((fd = fopen(tmpfile, "r")) != NULL) {
+                        fgets(buf, bufsize, fd);
+                        sscanf(buf, "%f", &used);
+                        used = used * 1000;
+                        domain_statistics.cpu_used[cnt] += used;
+                        
+                        fgets(buf, bufsize, fd);
+                        sscanf(buf, "%f", &ready);
+                        ready = ready * 1000;
+                        domain_statistics.cpu_ready[cnt] += ready;
+                        
+                        fclose(fd);
+                    }
+                }
+                remove(tmpfile);
+            }
+            
+        }
+        
+        /* Average the sum of all stats across number of vcpus */
+        domain_statistics.cpu_used[cnt] = domain_statistics.cpu_used[cnt] / domain_statistics.vcpus[cnt];
+        domain_statistics.cpu_ready[cnt] = domain_statistics.cpu_ready[cnt] / domain_statistics.vcpus[cnt];
+        
+        free(tidfile);
+        free(tids);
+    }
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -176,6 +286,8 @@ static int collectDomainStats()
 		domain_statistics.vcpus[cnt] = dinfo.nrVirtCpu;
 		domain_statistics.state[cnt] = dinfo.state;
 		
+		collectDomainSchedStats(cnt);
+		
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : %s (%d)\n\t claimed %lu  max %lu\n\t time %f  cpus %hu\n",
 		__FILE__, __LINE__, domain_statistics.domain_name[cnt], *ids_ptr, dinfo.memory, dinfo.maxMem,
@@ -214,6 +326,8 @@ static int collectDomainStats()
 		domain_statistics.cpu_time[cnt] = ((float) dinfo.cpuTime) / 1000000000;
 		domain_statistics.vcpus[cnt] = 0;
 		domain_statistics.state[cnt] = dinfo.state;
+		domain_statistics.cpu_used[cnt] = 0;
+		domain_statistics.cpu_ready[cnt] = 0;
 
 		virDomainFree(domain);
 
@@ -594,3 +708,122 @@ int virtMetricRetrVirtualSystemState(int mid, MetricReturner mret)
     return -1;
 }
 
+/* ----------------------------------------------------------------------*/
+/* Scheduler Statistic Metrics                                           */
+/* ----------------------------------------------------------------------*/
+
+int virtMetricRetrCPUUsedTimeCounter(int mid, MetricReturner mret)
+{
+    MetricValue *mv = NULL;
+
+#ifdef DEBUG
+    fprintf(stderr,
+            "--- %s(%i) : Retrieving KVM Scheduler CPUUsedTimeCounter\n",
+            __FILE__, __LINE__);
+#endif
+
+    collectDomainStats();
+
+    if (mret == NULL) {
+#ifdef DEBUG
+        fprintf(stderr, 
+                "--- %s(%i) : Returner pointer is NULL\n", 
+                __FILE__, __LINE__);
+#endif
+    } else {
+#ifdef DEBUG
+        fprintf(stderr,
+                "--- %s(%i) : Sampling for Scheduler CPUUsedTimeCounter metric\n",
+                __FILE__, __LINE__);
+#endif
+
+        int i;
+
+#ifdef DEBUG
+        fprintf(stderr,
+                "--- %s(%i) : num_active_domains %d\n",
+                __FILE__, __LINE__, node_statistics.num_active_domains);
+#endif
+
+        for (i = 0; i < node_statistics.total_domains; i++) {
+
+            mv = calloc(1, sizeof(MetricValue) +
+                    sizeof(unsigned long long) +
+                    strlen(domain_statistics.domain_name[i]) + 1);
+
+            if (mv) {
+                mv->mvId = mid;
+                mv->mvTimeStamp = time(NULL);
+                mv->mvDataType = MD_UINT64;
+                mv->mvDataLength = sizeof(unsigned long long);
+                mv->mvData = (char *) mv + sizeof(MetricValue);
+                *(unsigned long long *) mv->mvData = htonll(domain_statistics.cpu_used[i]);
+                mv->mvResource = (char *) mv + sizeof(MetricValue) + sizeof(unsigned long long);
+                strcpy(mv->mvResource, domain_statistics.domain_name[i]);
+                mret(mv);
+            }
+        }
+
+        return 1;
+    }
+
+    return -1;
+}
+
+int virtMetricRetrCPUReadyTimeCounter(int mid, MetricReturner mret)
+{
+    MetricValue *mv = NULL;
+
+#ifdef DEBUG
+    fprintf(stderr,
+            "--- %s(%i) : Retrieving KVM Scheduler CPUReadyTimeCounter\n",
+            __FILE__, __LINE__);
+#endif
+
+    collectDomainStats();
+
+    if (mret == NULL) {
+#ifdef DEBUG
+        fprintf(stderr, 
+                "--- %s(%i) : Returner pointer is NULL\n", 
+                __FILE__, __LINE__);
+#endif
+    } else {
+#ifdef DEBUG
+        fprintf(stderr,
+                "--- %s(%i) : Sampling for Scheduler CPUReadyTimeCounter metric\n",
+                __FILE__, __LINE__);
+#endif
+
+        int i;
+
+#ifdef DEBUG
+        fprintf(stderr,
+                "--- %s(%i) : num_active_domains %d\n",
+                __FILE__, __LINE__, node_statistics.num_active_domains);
+#endif
+
+        for (i = 0; i < node_statistics.total_domains; i++) {
+
+            mv = calloc(1, sizeof(MetricValue) +
+                    sizeof(unsigned long long) +
+                    strlen(domain_statistics.domain_name[i]) + 1);
+
+            if (mv) {
+                mv->mvId = mid;
+                mv->mvTimeStamp = time(NULL);
+                mv->mvDataType = MD_UINT64;
+                mv->mvDataLength = sizeof(unsigned long long);
+                mv->mvData = (char *) mv + sizeof(MetricValue);
+                *(unsigned long long *) mv->mvData = htonll(domain_statistics.cpu_ready[i]);
+                mv->mvResource = (char *) mv + sizeof(MetricValue) + sizeof(unsigned long long);
+                strcpy(mv->mvResource, domain_statistics.domain_name[i]);
+                mret(mv);
+            }
+        }
+
+        return 1;
+    }
+
+    return -1;
+}

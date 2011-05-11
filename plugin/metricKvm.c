@@ -1,5 +1,5 @@
 /*
- * $Id: metricKvm.c,v 1.4 2010/08/04 23:24:36 tyreld Exp $
+ * $Id: metricKvm.c,v 1.5 2011/05/11 01:42:58 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -45,7 +45,7 @@
 #include <ctype.h>
 
 /* --- metric callback retrievers to be exported --- */
-static MetricDefinition metricDef[8];
+static MetricDefinition metricDef[10];
 
 /* --- required plugin functions --- */
 int _DefinedMetrics(MetricRegisterId * mr,
@@ -141,7 +141,23 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	metricDef[7].mproc = virtMetricRetrVirtualSystemState;
 	metricDef[7].mdeal = free;
 
-	*mdnum = 8;
+    metricDef[8].mdVersion = MD_VERSION;
+    metricDef[8].mdName = "CPUUsedTimeCounter";
+    metricDef[8].mdReposPluginName = "librepositoryKvm.so";
+    metricDef[8].mdId = mr(pluginname, metricDef[8].mdName);
+    metricDef[8].mdSampleInterval = 60;
+    metricDef[8].mproc = virtMetricRetrCPUUsedTimeCounter;
+    metricDef[8].mdeal = free;
+    
+    metricDef[9].mdVersion = MD_VERSION;
+    metricDef[9].mdName = "CPUReadyTimeCounter";
+    metricDef[9].mdReposPluginName = "librepositoryKvm.so";
+    metricDef[9].mdId = mr(pluginname, metricDef[9].mdName);
+    metricDef[9].mdSampleInterval = 60;
+    metricDef[9].mproc = virtMetricRetrCPUReadyTimeCounter;
+    metricDef[9].mdeal = free;
+
+	*mdnum = 10;
     } else {
 	*mdnum = 0;
     }

@@ -1,5 +1,5 @@
 /*
- * $Id: metricKvm.readme,v 1.4 2010/08/04 23:24:36 tyreld Exp $
+ * $Id: metricKvm.readme,v 1.5 2011/05/11 01:42:58 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -32,6 +32,8 @@ The Plugin offers the following metrics :
 - PhysicalMemoryAllocatedToVirtualSystemPercentage
 - HostMemoryPercentage
 - VirtualSystemState
+- CPUUsedTimeCounter
+- CPUReadyTimeCounter
 
 plus the following metrics which are only intended for internal usage:
 - _Internal_CPUTime
@@ -132,3 +134,22 @@ Metric Type     : Point
 Sample Interval : 60 sec
 CIM Data Type   : unit32
 Units           : None
+
+
+CPUUsedTimeCounter
+------------------
+
+Metric Type     : Point
+Sample Interval : 60 sec
+CIM Data Type   : uint64
+Units           : MicroSeconds
+
+
+CPUReadyTimeCounter
+-------------------
+
+Metric Type     : Point
+Sample Interval : 60 sec
+CIM Data Type   : uint64
+Units           : MicroSeconds
+

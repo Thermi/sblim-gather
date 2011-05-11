@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.h,v 1.4 2010/04/19 23:58:19 tyreld Exp $
+ * $Id: metricVirt.h,v 1.5 2011/05/11 01:42:58 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -48,6 +48,8 @@ struct domain_statistics_type {
 	float cpu_time[MAX_DOMAINS];
 	unsigned short vcpus[MAX_DOMAINS];
 	unsigned char  state[MAX_DOMAINS];
+	unsigned long long cpu_used[MAX_DOMAINS];
+	unsigned long long cpu_ready[MAX_DOMAINS];
 } domain_statistics;
 
 int connectHypervisor(int type);
@@ -58,5 +60,7 @@ MetricRetriever virtMetricRetrActiveVirtualProcessors;
 MetricRetriever virtMetricRetrInternalMemory;
 MetricRetriever virtMetricRetrHostFreePhysicalMemory;
 MetricRetriever virtMetricRetrVirtualSystemState;
+MetricRetriever virtMetricRetrCPUUsedTimeCounter;
+MetricRetriever virtMetricRetrCPUReadyTimeCounter;
 
 #endif

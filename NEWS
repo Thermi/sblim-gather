@@ -3,6 +3,9 @@ Bugs fixed:
 - 3289931 long vm names cause buffer overflow
 - 3181085 Mandatory Properties not instantiated: CIM_MetricServiceCapa
 
+Features added:
+- 3300216 new KVM scheduler counter metrics
+
 Changes in Version 2.2.2
 ========================
 
