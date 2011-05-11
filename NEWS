@@ -1,6 +1,7 @@
 Bugs fixed:
 - 3275169 bash error reported in provider bootstrap scripts
 - 3289931 long vm names cause buffer overflow
+- 3181085 Mandatory Properties not instantiated: CIM_MetricServiceCapa
 
 Changes in Version 2.2.2
 ========================
