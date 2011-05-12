@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.h,v 1.5 2011/05/11 01:42:58 tyreld Exp $
+ * $Id: metricVirt.h,v 1.6 2011/05/12 00:46:29 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -23,8 +23,9 @@
 
 #include <mplugin.h>
 
-#define XEN_HYP 0
-#define KVM_HYP 1
+#define NO_HYP 0
+#define XEN_HYP 1
+#define KVM_HYP 2
 
 #define MAX_DOMAINS 255
 
@@ -52,7 +53,7 @@ struct domain_statistics_type {
 	unsigned long long cpu_ready[MAX_DOMAINS];
 } domain_statistics;
 
-int connectHypervisor(int type);
+int testHypervisor(int type);
 
 MetricRetriever virtMetricRetrCPUTime;
 MetricRetriever virtMetricRetrTotalCPUTime;

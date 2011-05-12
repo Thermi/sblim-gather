@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.9 2011/05/11 01:42:58 tyreld Exp $
+ * $Id: metricVirt.c,v 1.10 2011/05/12 00:46:29 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -39,16 +39,16 @@
 #define bufsize 4096
 
 static virConnectPtr conn;
-static int hyp_type;
+static int hyp_type = NO_HYP;
 
 static time_t last_time_sampled;
 
-int connectHypervisor(int type)
+static int connectHypervisor()
 {
 	virConnectPtr tconn;
 	const char * uri;
 	
-	switch (type) {
+	switch (hyp_type) {
 	case XEN_HYP:
 		uri = "xen:///";
 		break;
@@ -56,17 +56,34 @@ int connectHypervisor(int type)
 		uri = "qemu:///system";
 		break;
 	default:
-		return VIRT_SUCCESS;
+		return VIRT_FAIL;
 	}
 	
 	tconn = virConnectOpen(uri);
 	
 	if (tconn) {
 		conn = tconn;
-		hyp_type = type;
 	}
-	
-	return (tconn ? 1 : 0);
+
+	return (tconn ? VIRT_SUCCESS : VIRT_FAIL);
+}
+
+int testHypervisor(int type) {
+    int tconn = VIRT_FAIL;
+
+    /* If no hypervisor type defined yet try and connect */
+    if (hyp_type == NO_HYP) {
+        hyp_type = type;
+        tconn = connectHypervisor();
+
+        if (tconn == VIRT_FAIL) {
+            hyp_type = NO_HYP;
+        } else {
+            virConnectClose(conn);
+        }
+    }
+
+    return tconn;
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -228,12 +245,17 @@ static int collectDomainStats()
 #ifdef DEBUG
 	fprintf(stderr, "collectDomainStats()\n");
 #endif
+    
+    if (connectHypervisor())
+        return VIRT_FAIL;
 
     // only update the statistics if this function was called more than 10 seconds ago
     if ((time(NULL) - last_time_sampled) < 10) {
 #ifdef DBUG
 	fprintf(stderr, "parseXm called too frequently\n");
 #endif
+
+        virConnectClose(conn);
 		return VIRT_NOUPD;
     } else {
 		node_statistics.num_active_domains = 0;	// reset number of domains
@@ -337,6 +359,8 @@ static int collectDomainStats()
 
 	free(defdomlist);
 
+    virConnectClose(conn);
+
 	return VIRT_SUCCESS;
 }
 
@@ -354,7 +378,8 @@ int virtMetricRetrCPUTime(int mid, MetricReturner mret)
 	    __FILE__, __LINE__);
 #endif
 
-    collectDomainStats();
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
 
     if (mret == NULL) {
 #ifdef DEBUG
@@ -420,7 +445,8 @@ int virtMetricRetrTotalCPUTime(int mid, MetricReturner mret)
 	    __FILE__, __LINE__);
 #endif
 
-    collectDomainStats();
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
 
     if (mret == NULL) {
 #ifdef DEBUG
@@ -488,7 +514,8 @@ int virtMetricRetrActiveVirtualProcessors(int mid, MetricReturner mret)
 	    __FILE__, __LINE__);
 #endif
 
-    collectDomainStats();
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
 
     if (mret == NULL) {
 #ifdef DEBUG
@@ -546,7 +573,8 @@ int virtMetricRetrInternalMemory(int mid, MetricReturner mret)
 	    __FILE__, __LINE__);
 #endif
 
-    collectDomainStats();
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
 
     if (mret == NULL) {
 #ifdef DEBUG
@@ -610,7 +638,8 @@ int virtMetricRetrHostFreePhysicalMemory(int mid, MetricReturner mret)
 	    __FILE__, __LINE__);
 #endif
 
-    collectDomainStats();
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
 
     if (mret == NULL) {
 #ifdef DEBUG
@@ -664,7 +693,8 @@ int virtMetricRetrVirtualSystemState(int mid, MetricReturner mret)
 	    __FILE__, __LINE__);
 #endif
 
-    collectDomainStats();
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
 
     if (mret == NULL) {
 #ifdef DEBUG
@@ -722,7 +752,8 @@ int virtMetricRetrCPUUsedTimeCounter(int mid, MetricReturner mret)
             __FILE__, __LINE__);
 #endif
 
-    collectDomainStats();
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
 
     if (mret == NULL) {
 #ifdef DEBUG
@@ -780,7 +811,8 @@ int virtMetricRetrCPUReadyTimeCounter(int mid, MetricReturner mret)
             __FILE__, __LINE__);
 #endif
 
-    collectDomainStats();
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
 
     if (mret == NULL) {
 #ifdef DEBUG

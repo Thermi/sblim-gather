@@ -1,5 +1,5 @@
 /*
- * $Id: metricKvm.c,v 1.5 2011/05/11 01:42:58 tyreld Exp $
+ * $Id: metricKvm.c,v 1.6 2011/05/12 00:46:29 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -58,7 +58,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
     fprintf(stderr, "retrieving metric definitions\n");
 #endif
 	
-	conn = connectHypervisor(KVM_HYP);
+	conn = testHypervisor(KVM_HYP);
 	
 #ifdef DEBUG
     fprintf(stderr, "--- %s(%i) : Xen is %s\n",
@@ -76,7 +76,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	return -1;
     }
 
-    if (conn) {
+    if (conn == VIRT_SUCCESS) {
 	metricDef[0].mdVersion = MD_VERSION;
 	metricDef[0].mdName = "_Internal_CPUTime";
 	metricDef[0].mdReposPluginName = "librepositoryKvm.so";

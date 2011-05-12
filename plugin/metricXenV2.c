@@ -1,5 +1,5 @@
 /*
- * $Id: metricXenV2.c,v 1.4 2010/08/04 23:24:36 tyreld Exp $
+ * $Id: metricXenV2.c,v 1.5 2011/05/12 00:46:29 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -56,7 +56,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
     fprintf(stderr, "retrieving metric definitions\n");
 #endif
 	
-	conn = connectHypervisor(XEN_HYP);
+	conn = testHypervisor(XEN_HYP);
 	
 #ifdef DEBUG
     fprintf(stderr, "--- %s(%i) : Xen is %s\n",
@@ -74,7 +74,7 @@ int _DefinedMetrics(MetricRegisterId * mr,
 	return -1;
     }
 
-    if (conn) {
+    if (conn == VIRT_SUCCESS) {
 	metricDef[0].mdVersion = MD_VERSION;
 	metricDef[0].mdName = "_Internal_CPUTime";
 	metricDef[0].mdReposPluginName = "librepositoryXen.so";

@@ -2,6 +2,7 @@ Bugs fixed:
 - 3275169 bash error reported in provider bootstrap scripts
 - 3289931 long vm names cause buffer overflow
 - 3181085 Mandatory Properties not instantiated: CIM_MetricServiceCapa
+- 3005596 virt plugin only connects to libvirtd at load
 
 Features added:
 - 3300216 new KVM scheduler counter metrics
