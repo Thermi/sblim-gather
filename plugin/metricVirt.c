@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.11 2011/05/16 05:40:26 tyreld Exp $
+ * $Id: metricVirt.c,v 1.12 2011/05/16 07:00:50 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -23,8 +23,10 @@
 #include "metricVirt.h"
 
 #include <commutil.h>
+#include <mlog.h>
 
 #include <libvirt/libvirt.h>
+#include <libvirt/virterror.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -40,8 +42,14 @@
 
 static virConnectPtr conn;
 static int hyp_type = NO_HYP;
+static int err_fn_set = 0;
 
 static time_t last_time_sampled;
+
+static void logHypervisorErrors(void *userData, virErrorPtr err)
+{
+    m_log(M_INFO, M_SHOW, "libvirt error: %s\n", err->message);
+}
 
 static int connectHypervisor()
 {
@@ -63,13 +71,21 @@ static int connectHypervisor()
 	
 	if (tconn) {
 		conn = tconn;
-	}
+	} else {
+        m_log(M_ERROR, M_SHOW, "Failed to open connection with libvirtd on %s\n", uri);
+    }
 
 	return (tconn ? VIRT_SUCCESS : VIRT_FAIL);
 }
 
 int testHypervisor(int type) {
     int tconn = VIRT_FAIL;
+
+    /* Log failed libvirt calls to syslog */
+    if (!err_fn_set) {
+        virSetErrorFunc(NULL, logHypervisorErrors);
+        err_fn_set = 1;
+    }
 
     /* If no hypervisor type defined yet try and connect */
     if (hyp_type == NO_HYP) {
@@ -78,7 +94,9 @@ int testHypervisor(int type) {
 
         if (tconn == VIRT_FAIL) {
             hyp_type = NO_HYP;
+            m_log(M_INFO, M_QUIET, "No support for hypervisor type=%d\n", type);
         } else {
+            m_log(M_INFO, M_QUIET, "Found support for hypervisor type=%d\n", type);
             virConnectClose(conn);
         }
     }
@@ -264,8 +282,10 @@ static int collectDomainStats()
 		last_time_sampled = time(NULL);
     }
 
-	if (collectNodeStats())
+	if (collectNodeStats()) {
+        virConnectClose(conn);
 		return VIRT_FAIL;
+    }
 
 	/* no domains reported */
 	if (node_statistics.total_domains == 0) {
@@ -277,14 +297,17 @@ static int collectDomainStats()
 	 *  get statistics from active domains
 	 */
 	ids = malloc(sizeof(ids) * node_statistics.num_active_domains);
-	if (ids == NULL)
+	if (ids == NULL) {
+        virConnectClose(conn);
 		return VIRT_FAIL;
-	else
+    } else {
 		ids_ptr=ids;
+    }
 
 	if ((node_statistics.num_active_domains = virConnectListDomains(conn, ids_ptr,
 			                                   node_statistics.num_active_domains)) < 0)
 	{
+        virConnectClose(conn);
 		return VIRT_FAIL;
 	}
 
@@ -327,11 +350,15 @@ static int collectDomainStats()
 	 *  get statistics from inactive domains
 	 */
 	defdomlist = malloc(sizeof(*defdomlist) * node_statistics.num_inactive_domains);
-	if (defdomlist == NULL)
+	if (defdomlist == NULL) {
+        virConnectClose(conn);
 		return VIRT_FAIL;
+    }
+    
 	if ((node_statistics.num_inactive_domains = virConnectListDefinedDomains(conn, defdomlist,
 	                                       node_statistics.num_inactive_domains)) < 0)
 	{
+        virConnectClose(conn);
 		return VIRT_FAIL;
 	}
 

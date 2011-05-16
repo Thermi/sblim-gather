@@ -7,6 +7,7 @@ Bugs fixed:
 
 Features added:
 - 3300216 new KVM scheduler counter metrics
+- 3302712 log libvirt connection failures
 
 Changes in Version 2.2.2
 ========================
