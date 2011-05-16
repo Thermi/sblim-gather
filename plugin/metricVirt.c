@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.10 2011/05/12 00:46:29 tyreld Exp $
+ * $Id: metricVirt.c,v 1.11 2011/05/16 05:40:26 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -268,8 +268,10 @@ static int collectDomainStats()
 		return VIRT_FAIL;
 
 	/* no domains reported */
-	if (node_statistics.total_domains == 0)
-		return VIRT_FAIL;
+	if (node_statistics.total_domains == 0) {
+        virConnectClose(conn);
+		return VIRT_SUCCESS;
+    }
 
 	/*
 	 *  get statistics from active domains

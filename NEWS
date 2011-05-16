@@ -3,6 +3,7 @@ Bugs fixed:
 - 3289931 long vm names cause buffer overflow
 - 3181085 Mandatory Properties not instantiated: CIM_MetricServiceCapa
 - 3005596 virt plugin only connects to libvirtd at load
+- 3302709 leak libvir connections when no domains
 
 Features added:
 - 3300216 new KVM scheduler counter metrics
