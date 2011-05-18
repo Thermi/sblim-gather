@@ -1,3 +1,6 @@
+Changes in Version 2.2.3
+========================
+
 Bugs fixed:
 - 3275169 bash error reported in provider bootstrap scripts
 - 3289931 long vm names cause buffer overflow
