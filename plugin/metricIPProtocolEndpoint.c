@@ -1,5 +1,5 @@
 /*
- * $Id: metricIPProtocolEndpoint.c,v 1.5 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: metricIPProtocolEndpoint.c,v 1.6 2011/08/19 00:17:54 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -28,6 +28,14 @@
 #include <stdlib.h>
 #include <string.h>     
 #include <time.h>
+#include <limits.h>
+#include <math.h>
+
+#ifndef ULLONG_MAX
+#   define ULLONG_MAX 18446744073709551615ULL
+#endif
+
+#define ULL_CHAR_MAX ((int) ((log(ULLONG_MAX)) / (log(10)) + 1))
 
 /* ---------------------------------------------------------------------------*/
 
@@ -103,7 +111,7 @@ int metricRetrBytesSubmitted( int mid,
   char * end        = NULL;
   char   port[64];
   char   buf[60000];
-  char   values[(6*sizeof(unsigned long long))+6];
+  char   values[(6*ULL_CHAR_MAX)+6];
   size_t bytes_read = 0;
   int    i          = 0;
   unsigned long long receive_byte, receive_packets, receive_error = 0;

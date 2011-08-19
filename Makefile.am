@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.22 2011/05/16 07:00:50 tyreld Exp $
+# $Id: Makefile.am,v 1.23 2011/08/19 00:17:54 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -238,10 +238,10 @@ libmetricKvm_la_DEPENDENCIES=libgatherutil.la
 libmetricKvm_la_LDFLAGS=$(PLUG_FLAGS)
 
 libmetricNetworkPort_la_SOURCES=plugin/metricNetworkPort.c
-libmetricNetworkPort_la_LDFLAGS=$(PLUG_FLAGS)
+libmetricNetworkPort_la_LDFLAGS=$(PLUG_FLAGS) -lm
 
 libmetricIPProtocolEndpoint_la_SOURCES=plugin/metricIPProtocolEndpoint.c
-libmetricIPProtocolEndpoint_la_LDFLAGS=$(PLUG_FLAGS)
+libmetricIPProtocolEndpoint_la_LDFLAGS=$(PLUG_FLAGS) -lm
 
 libmetriczECKD_la_SOURCES=plugin/metriczECKD.c
 libmetriczECKD_la_LIBADD=$(srcdir)/libsysfswrapper.la $(srcdir)/libgatherutil.la

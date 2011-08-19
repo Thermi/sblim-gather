@@ -1,3 +1,9 @@
+Changes in Version 2.2.4
+========================
+
+Bugs fixed:
+- 3394202 large network counters overflow raw metric buffer
+
 Changes in Version 2.2.3
 ========================
 
