@@ -1,5 +1,5 @@
 /*
- * $Id: metricUnixProcess.c,v 1.14 2010/11/06 01:38:54 tyreld Exp $
+ * $Id: metricUnixProcess.c,v 1.15 2011/08/24 01:47:15 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2009
  *
@@ -26,6 +26,10 @@
  */
 
 /* ---------------------------------------------------------------------------*/
+
+#ifndef _GNU_SOURCE
+#define	_GNU_SOURCE
+#endif
 
 #include <mplugin.h>
 #include <commutil.h>
