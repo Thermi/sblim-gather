@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.12 2011/05/16 07:00:50 tyreld Exp $
+ * $Id: metricVirt.c,v 1.13 2011/09/21 21:38:38 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -321,7 +321,7 @@ static int collectDomainStats()
 		domain_statistics.domain_id[cnt] = *ids_ptr;
 		
 		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt], 
-                    sizeof(char *) * (strlen(virDomainGetName(domain)+1)));
+                    sizeof(char *) * (strlen(virDomainGetName(domain)) + 1));
 
         strcpy(domain_statistics.domain_name[cnt],virDomainGetName(domain));
 
@@ -366,7 +366,7 @@ static int collectDomainStats()
 	{
 		domain = virDomainLookupByName(conn, *(defdomlist + j));
 		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt], 
-                    sizeof(char *) * (strlen(*(defdomlist + j)+1)));
+                    sizeof(char *) * (strlen(*(defdomlist + j)) + 1));
 		
         strcpy(domain_statistics.domain_name[cnt], *(defdomlist + j));
 

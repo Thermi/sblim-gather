@@ -4,6 +4,7 @@ Changes in Version 2.2.4
 Bugs fixed:
 - 3394202 large network counters overflow raw metric buffer
 - 3397109 gcc extensions not available on new distros
+- 3412635 bad string allocations
 
 Changes in Version 2.2.3
 ========================
