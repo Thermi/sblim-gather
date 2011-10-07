@@ -4,6 +4,7 @@ Changes in Version 2.2.4
 Bugs fixed:
 - 3394202 large network counters overflow raw metric buffer
 - 3412635 bad string allocations
+- 3419837 bad alloc and unsigned returns in metricVirt
 
 Changes in Version 2.2.3
 ========================

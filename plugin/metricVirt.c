@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.13 2011/09/21 21:38:38 tyreld Exp $
+ * $Id: metricVirt.c,v 1.14 2011/10/07 00:08:52 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -296,7 +296,7 @@ static int collectDomainStats()
 	/*
 	 *  get statistics from active domains
 	 */
-	ids = malloc(sizeof(ids) * node_statistics.num_active_domains);
+	ids = malloc(sizeof(*ids) * node_statistics.num_active_domains);
 	if (ids == NULL) {
         virConnectClose(conn);
 		return VIRT_FAIL;

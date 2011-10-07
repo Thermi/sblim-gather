@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.h,v 1.6 2011/05/12 00:46:29 tyreld Exp $
+ * $Id: metricVirt.h,v 1.7 2011/10/07 00:08:52 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009
  *
@@ -34,8 +34,8 @@
 #define VIRT_FAIL    -1
 
 struct node_statistics_type {
-	unsigned int num_active_domains;
-	unsigned int num_inactive_domains;
+	int num_active_domains;
+	int num_inactive_domains;
 	unsigned int total_domains;
 	unsigned long long total_memory;
 	unsigned long long free_memory;
