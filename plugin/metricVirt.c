@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.14 2011/10/07 00:08:52 tyreld Exp $
+ * $Id: metricVirt.c,v 1.15 2011/10/27 16:33:10 hellerda Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2009
  *
@@ -315,9 +315,13 @@ static int collectDomainStats()
 	fprintf(stderr, "--- %s(%i) : num_active_domains  %d\n", __FILE__, __LINE__, node_statistics.num_active_domains);
 #endif
 
-	for (cnt = 0; cnt < node_statistics.num_active_domains; ids_ptr++, cnt++)
+	for (j = 0, cnt = 0; j < node_statistics.num_active_domains; j++, ids_ptr++)
 	{
-		domain = virDomainLookupByID(conn, *ids_ptr);
+		// On the small chance a domain was shut down since the last call to virConnectListDomains(),
+		// the domain id will be invalid and we will get a null ptr here. If so, skip it.
+		if (!(domain = virDomainLookupByID(conn, *ids_ptr)))
+			continue;
+
 		domain_statistics.domain_id[cnt] = *ids_ptr;
 		
 		domain_statistics.domain_name[cnt] = realloc(domain_statistics.domain_name[cnt], 
@@ -342,8 +346,12 @@ static int collectDomainStats()
 #endif
 		
 		virDomainFree(domain);
+		cnt++;
 	} /* end for */
 	
+	// Refresh num_active_domains to the number we actually found.
+	node_statistics.num_active_domains = cnt;
+
 	free(ids);
 
 	/*
@@ -386,6 +394,8 @@ static int collectDomainStats()
 		free(*(defdomlist + j));
 	} /* end for */
 
+	node_statistics.total_domains = node_statistics.num_active_domains
+			                        + node_statistics.num_inactive_domains;
 	free(defdomlist);
 
     virConnectClose(conn);

@@ -6,6 +6,7 @@ Bugs fixed:
 - 3412635 bad string allocations
 - 3419837 bad alloc and unsigned returns in metricVirt
 - 3397109 UnixProcess plugins occasionally crashes
+- 3429346 libvirt race conditions
 
 Changes in Version 2.2.3
 ========================
