@@ -1,7 +1,7 @@
 /*
- * $Id: repositoryIPProtocolEndpoint.c,v 1.8 2010/05/13 08:03:24 tyreld Exp $
+ * $Id: repositoryIPProtocolEndpoint.c,v 1.9 2011/11/15 04:20:53 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2004, 2009
+ * (C) Copyright IBM Corp. 2004, 2009, 2011
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -11,7 +11,7 @@
  * http://www.opensource.org/licenses/eclipse-1.0.php
  *
  * Author:       Heidi Neumann <heidineu@de.ibm.com>
- * Contributors: 
+ * Contributors: Tyrel Datwyler <tyreld@us.ibm.com>
  *
  * Description:
  * Repository Plugin of the following IP Protocol Endpoint specific metrics :
@@ -64,12 +64,8 @@ static char * muNa ="N/A";
 
 /* ---------------------------------------------------------------------------*/
 
-static unsigned long long ip_getBytesTransmitted( char * data );
-static unsigned long long ip_getBytesReceived( char * data );
-static unsigned long long ip_getPacketsTransmitted( char * data );
-static unsigned long long ip_getPacketsReceived( char * data );
-static unsigned long long ip_getErrorsTransmitted( char * data );
-static unsigned long long ip_getErrorsReceived( char * data );
+enum indices { RX_BYTE, TX_BYTE, RX_ERRS, TX_ERRS, RX_PACK, TX_PACK, RX_DROP, TX_DROP };
+static unsigned long long ip_getData(char * data, char index);
 
 /* ---------------------------------------------------------------------------*/
 
@@ -87,7 +83,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   }
 
   metricCalcDef[0].mcVersion=MD_VERSION;
-  metricCalcDef[0].mcName="BytesSubmitted";
+  metricCalcDef[0].mcName="_BytesSubmitted";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
   metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
   metricCalcDef[0].mcIsContinuous=MD_FALSE;
@@ -259,9 +255,9 @@ size_t metricCalcBytesTransmitted( MetricValue *mv,
 #endif  
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
 
-    b1 = ip_getBytesTransmitted(mv[0].mvData);
+    b1 = ip_getData(mv[0].mvData, TX_BYTE);
     if( mnum > 1 ) {
-      b2 = ip_getBytesTransmitted(mv[mnum-1].mvData);
+      b2 = ip_getData(mv[mnum-1].mvData, TX_BYTE);
       bt = b1-b2;
     }
     else { bt = b1; }
@@ -292,9 +288,9 @@ size_t metricCalcBytesReceived( MetricValue *mv,
 #endif
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
 
-    b1 = ip_getBytesReceived(mv[0].mvData);
+    b1 = ip_getData(mv[0].mvData, RX_BYTE);
     if( mnum > 1 ) {
-      b2 = ip_getBytesReceived(mv[mnum-1].mvData);
+      b2 = ip_getData(mv[mnum-1].mvData, RX_BYTE);
       br = b1-b2;
     }
     else { br = b1; }
@@ -324,8 +320,8 @@ size_t metricCalcByteTransRate(MetricValue * mv,
 	  __FILE__,__LINE__);
 #endif
 	if (mv && (vlen >= sizeof(unsigned long)) && (mnum >= 2)) {
-		b1 = ip_getBytesTransmitted(mv[0].mvData);
-		b2 = ip_getBytesTransmitted(mv[mnum-1].mvData);
+		b1 = ip_getData(mv[0].mvData, TX_BYTE);
+		b2 = ip_getData(mv[mnum-1].mvData, TX_BYTE);
 		
 		rate = (b1 - b2) / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
 		
@@ -353,8 +349,8 @@ size_t metricCalcByteRecRate(MetricValue * mv,
 	  __FILE__,__LINE__);
 #endif
 	if (mv && (vlen >= sizeof(unsigned long)) && (mnum >= 2)) {
-		b1 = ip_getBytesReceived(mv[0].mvData);
-		b2 = ip_getBytesReceived(mv[mnum-1].mvData);
+		b1 = ip_getData(mv[0].mvData, RX_BYTE);
+		b2 = ip_getData(mv[mnum-1].mvData, RX_BYTE);
 		
 		rate = (b1 - b2) / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
 		
@@ -385,11 +381,11 @@ size_t metricCalcErrorRate( MetricValue *mv,
 #endif  
   if ( mv && (vlen>=sizeof(float)) && (mnum>=2) ) {
 
-    et1 = ip_getErrorsTransmitted(mv[0].mvData);
-    er1 = ip_getErrorsReceived(mv[0].mvData);
+    et1 = ip_getData(mv[0].mvData, TX_ERRS);
+    er1 = ip_getData(mv[0].mvData, RX_ERRS);
 
-    et2 = ip_getErrorsTransmitted(mv[mnum-1].mvData);
-    er2 = ip_getErrorsReceived(mv[mnum-1].mvData);
+    et2 = ip_getData(mv[mnum-1].mvData, TX_ERRS);
+    er2 = ip_getData(mv[mnum-1].mvData, RX_ERRS);
 
     rate = ( (et1+er1) - (et2+er2) ) /
            (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
@@ -419,8 +415,8 @@ size_t metricCalcPacketTransRate(MetricValue * mv,
 	  __FILE__,__LINE__);
 #endif
 	if (mv && (vlen >= sizeof(unsigned long)) && (mnum >= 2)) {
-		p1 = ip_getPacketsTransmitted(mv[0].mvData);
-		p2 = ip_getPacketsTransmitted(mv[mnum-1].mvData);
+		p1 = ip_getData(mv[0].mvData, TX_PACK);
+		p2 = ip_getData(mv[mnum-1].mvData, TX_PACK);
 		
 		rate = (p1 - p2) / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
 		
@@ -448,8 +444,8 @@ size_t metricCalcPacketRecRate(MetricValue * mv,
 	  __FILE__,__LINE__);
 #endif
 	if (mv && (vlen >= sizeof(unsigned long)) && (mnum >= 2)) {
-		p1 = ip_getPacketsReceived(mv[0].mvData);
-		p2 = ip_getPacketsReceived(mv[mnum-1].mvData);
+		p1 = ip_getData(mv[0].mvData, RX_PACK);
+		p2 = ip_getData(mv[mnum-1].mvData, RX_PACK);
 		
 		rate = (p1 - p2) / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
 		
@@ -478,9 +474,9 @@ size_t metricCalcPacketsTransmitted( MetricValue *mv,
 #endif  
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
 
-    p1 = ip_getPacketsTransmitted(mv[0].mvData);
+    p1 = ip_getData(mv[0].mvData, TX_PACK);
     if( mnum > 1 ) {
-      p2 = ip_getPacketsTransmitted(mv[mnum-1].mvData);
+      p2 = ip_getData(mv[mnum-1].mvData, TX_PACK);
       pt = p1-p2;
     }
     else { pt = p1; }
@@ -512,9 +508,9 @@ size_t metricCalcPacketsReceived( MetricValue *mv,
 
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
 
-    p1 = ip_getPacketsReceived(mv[0].mvData);
+    p1 = ip_getData(mv[0].mvData, RX_PACK);
     if( mnum > 1 ) {
-      p2 = ip_getPacketsReceived(mv[mnum-1].mvData);
+      p2 = ip_getData(mv[mnum-1].mvData, RX_PACK);
       pr = p1-p2;
     }
     else { pr = p1; }
@@ -531,120 +527,28 @@ size_t metricCalcPacketsReceived( MetricValue *mv,
 /* tool functions on BytesSubmitted                                           */
 /* ---------------------------------------------------------------------------*/
 
-unsigned long long ip_getBytesReceived( char * data ) {
+unsigned long long ip_getData(char * data, char index) {
+	char * hlp = NULL;
+	char * end = NULL;
+	char bytes[128];
+	unsigned long long val = 0;
+	int i = 0;
 
-  char * hlp = NULL;
-  char   bytes[128];
-  unsigned long long val = 0;
+	hlp = data;
+	if ((end = strchr(hlp, ':')) != NULL) {
+		for (i = 0; i < index; i++) {
+			hlp = ++end;
+			if ((end = strchr(hlp, ':')) == NULL) {
+				return val;
+			}
+		}
 
-  if( (hlp = strchr(data, ':')) != NULL ) {
-    memset(bytes,0,sizeof(bytes));
-    strncpy(bytes, data, (strlen(data)-strlen(hlp)) );
-    val = strtoll(bytes,(char**)NULL,10);
-  }
+		memset(bytes, 0, sizeof(bytes));
+		strncpy(bytes, hlp, strlen(hlp) - strlen(end));
+		val = strtoll(bytes, (char**) NULL, 10);
+	}
 
-  return val;
-}
-
-
-unsigned long long ip_getBytesTransmitted( char * data ) {
-
-  char * hlp = NULL;
-  char * end = NULL;
-  char   bytes[128];
-  unsigned long long val = 0;
-
-  if( (hlp = strchr(data, ':')) != NULL ) {
-    hlp++;
-    end = strchr(hlp, ':');
-    memset(bytes,0,sizeof(bytes));
-    strncpy(bytes, hlp, (strlen(hlp)-strlen(end)) );
-    val = strtoll(bytes,(char**)NULL,10);
-  }
-
-  return val;
-}
-
-
-unsigned long long ip_getErrorsReceived( char * data ) {
-  char * hlp = NULL;
-  char * end = NULL;
-  char   bytes[128];
-  unsigned long long val = 0;
-
-  if( (hlp = strchr(data, ':')) != NULL ) {
-    hlp++;
-    hlp = strchr(hlp, ':');
-    hlp++;
-    end = strchr(hlp, ':');
-    memset(bytes,0,sizeof(bytes));
-    strncpy(bytes, hlp, (strlen(hlp)-strlen(end)) );
-    val = strtoll(bytes,(char**)NULL,10);
-  }
-
-  return val;
-}
-
-
-unsigned long long ip_getErrorsTransmitted( char * data ) {
-  char * hlp = NULL;
-  char * end = NULL;
-  char   bytes[128];
-  unsigned long long val = 0;
-
-  if( (hlp = strchr(data, ':')) != NULL ) {
-    hlp++;
-    hlp = strchr(hlp, ':');
-    hlp++;
-    hlp = strchr(hlp, ':');
-    hlp++;
-    end = strchr(hlp, ':');
-    memset(bytes,0,sizeof(bytes));
-    strncpy(bytes, hlp, (strlen(hlp)-strlen(end)) );
-    val = strtoll(bytes,(char**)NULL,10);
-  }
-
-  return val;
-}
-
-
-unsigned long long ip_getPacketsReceived( char * data ) {
-  char * hlp = NULL;
-  char * end = NULL;
-  char   bytes[128];
-  unsigned long long val = 0;
-
-  if( (hlp = strchr(data, ':')) != NULL ) {
-    hlp++;
-    hlp = strchr(hlp, ':');
-    hlp++;
-    hlp = strchr(hlp, ':');
-    hlp++;
-    hlp = strchr(hlp, ':');
-    hlp++;
-    end = strchr(hlp, ':');
-    memset(bytes,0,sizeof(bytes));
-    strncpy(bytes, hlp, (strlen(hlp)-strlen(end)) );
-    val = strtoll(bytes,(char**)NULL,10);
-  }
-
-  return val;
-}
-
-
-unsigned long long ip_getPacketsTransmitted( char * data ) {
-  char * hlp = NULL;
-  char   bytes[128];
-  unsigned long long val = 0;
-
-  if( (hlp = strrchr(data, ':')) != NULL ) {
-    hlp++;
-    memset(bytes,0,sizeof(bytes));
-    strcpy(bytes, hlp);
-    val = strtoll(bytes,(char**)NULL,10);
-  }
-
-  return val;
+	return val;
 }
 
 

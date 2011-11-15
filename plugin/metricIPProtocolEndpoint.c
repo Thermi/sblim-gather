@@ -1,5 +1,5 @@
 /*
- * $Id: metricIPProtocolEndpoint.c,v 1.6 2011/08/19 00:17:54 tyreld Exp $
+ * $Id: metricIPProtocolEndpoint.c,v 1.7 2011/11/15 04:20:53 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -68,7 +68,7 @@ int _DefinedMetrics( MetricRegisterId *mr,
   }
 
   metricDef[0].mdVersion=MD_VERSION;
-  metricDef[0].mdName="BytesSubmitted";
+  metricDef[0].mdName="_BytesSubmitted";
   metricDef[0].mdReposPluginName="librepositoryIPProtocolEndpoint.so";
   metricDef[0].mdId=mr(pluginname,metricDef[0].mdName);
   metricDef[0].mdSampleInterval=60;
@@ -115,7 +115,7 @@ int metricRetrBytesSubmitted( int mid,
   size_t bytes_read = 0;
   int    i          = 0;
   unsigned long long receive_byte, receive_packets, receive_error = 0;
-  unsigned long long trans_byte, trans_packets, trans_error       = 0;
+  unsigned long long trans_byte, trans_packets, trans_error = 0;
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving BytesSubmitted\n",
@@ -141,13 +141,13 @@ int metricRetrBytesSubmitted( int mid,
 	  sscanf(ptr,
 		 " %[^:]: %lld %lld %lld %*s %*s %*s %*s %*s %lld %lld %lld",
 		 port,
-		 &receive_byte,&receive_packets,&receive_error,
-		 &trans_byte,&trans_packets,&trans_error);
+		 &receive_byte, &receive_packets, &receive_error,
+		 &trans_byte, &trans_packets, &trans_error);
 	  
 	  /*	  fprintf(stderr,"[%i] port: %s %lld %lld\n",i,port,receive_byte,receive_packets);*/
 	  
 	  memset(values,0,sizeof(values));
-	  sprintf(values,"%lld:%lld:%lld:%lld:%lld:%lld",
+	  sprintf(values,"%lld:%lld:%lld:%lld:%lld:%lld:",
 		  receive_byte,trans_byte,receive_error,trans_error,receive_packets,trans_packets);
 	  
 	  mv = calloc(1, sizeof(MetricValue) + 

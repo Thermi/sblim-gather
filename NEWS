@@ -8,6 +8,7 @@ Bugs fixed:
 - 3397109 UnixProcess plugins occasionally crashes
 - 3429346 libvirt race conditions
 - 3429347 initscript incorrect return code
+- 3438050 clean up IPProtocolEP raw data parsing
 
 Changes in Version 2.2.3
 ========================
