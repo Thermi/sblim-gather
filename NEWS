@@ -10,6 +10,9 @@ Bugs fixed:
 - 3429347 initscript incorrect return code
 - 3438050 clean up IPProtocolEP raw data parsing
 
+Features added:
+- 3438074 add packet drop metrics to IPProtocolEP
+
 Changes in Version 2.2.3
 ========================
 

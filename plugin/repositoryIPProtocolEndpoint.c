@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryIPProtocolEndpoint.c,v 1.9 2011/11/15 04:20:53 tyreld Exp $
+ * $Id: repositoryIPProtocolEndpoint.c,v 1.10 2011/11/15 04:57:17 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009, 2011
  *
@@ -16,7 +16,7 @@
  * Description:
  * Repository Plugin of the following IP Protocol Endpoint specific metrics :
  *
- * BytesSubmitted
+ * _BytesSubmitted
  * BytesTransmitted
  * BytesReceived
  * ErrorRate
@@ -24,6 +24,10 @@
  * PacketsReceived
  * PacketTransmitRate
  * PacketReceiveRate
+ * ReceivePacketsDropped
+ * TransmitPacketsDropped
+ * ReceivePacketDropRate
+ * TransmitPacketDropRate
  *
  */
 
@@ -36,7 +40,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[10];
+static MetricCalculationDefinition metricCalcDef[14];
 
 /* --- BytesSubmitted is base for :
  * BytesTransmitted, BytesReceived, ErrorRate,
@@ -52,7 +56,10 @@ static MetricCalculator  metricCalcPacketTransRate;
 static MetricCalculator  metricCalcPacketRecRate;
 static MetricCalculator  metricCalcByteTransRate;
 static MetricCalculator  metricCalcByteRecRate;
-
+static MetricCalculator  metricCalcReceiveDrop;
+static MetricCalculator  metricCalcTransmitDrop;
+static MetricCalculator  metricCalcRecDropRate;
+static MetricCalculator  metricCalcTransDropRate;
 
 /* unit definitions */
 static char * muBytes = "Bytes";
@@ -199,8 +206,56 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[9].mcAliasId=metricCalcDef[0].mcId;
   metricCalcDef[9].mcCalc=metricCalcByteRecRate;
   metricCalcDef[9].mcUnits=muBytesPerSecond;
+  
+  metricCalcDef[10].mcVersion=MD_VERSION;
+  metricCalcDef[10].mcName="ReceivePacketsDropped";
+  metricCalcDef[10].mcId=mr(pluginname,metricCalcDef[10].mcName);
+  metricCalcDef[10].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[10].mcChangeType=MD_GAUGE;
+  metricCalcDef[10].mcIsContinuous=MD_TRUE;
+  metricCalcDef[10].mcCalculable=MD_SUMMABLE;
+  metricCalcDef[10].mcDataType=MD_UINT64;
+  metricCalcDef[10].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[10].mcCalc=metricCalcReceiveDrop;
+  metricCalcDef[10].mcUnits=muPackets;
 
-  *mcnum=10;
+  metricCalcDef[11].mcVersion=MD_VERSION;
+  metricCalcDef[11].mcName="TransmitPacketsDropped";
+  metricCalcDef[11].mcId=mr(pluginname,metricCalcDef[11].mcName);
+  metricCalcDef[11].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[11].mcChangeType=MD_GAUGE;
+  metricCalcDef[11].mcIsContinuous=MD_TRUE;
+  metricCalcDef[11].mcCalculable=MD_SUMMABLE;
+  metricCalcDef[11].mcDataType=MD_UINT64;
+  metricCalcDef[11].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[11].mcCalc=metricCalcTransmitDrop;
+  metricCalcDef[11].mcUnits=muPackets;
+
+  metricCalcDef[12].mcVersion=MD_VERSION;
+  metricCalcDef[12].mcName="ReceiveDropRate";
+  metricCalcDef[12].mcId=mr(pluginname,metricCalcDef[12].mcName);
+  metricCalcDef[12].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[12].mcChangeType=MD_GAUGE;
+  metricCalcDef[12].mcIsContinuous=MD_TRUE;
+  metricCalcDef[12].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[12].mcDataType=MD_UINT32;
+  metricCalcDef[12].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[12].mcCalc=metricCalcRecDropRate;
+  metricCalcDef[12].mcUnits=muPacketsPerSecond;
+
+  metricCalcDef[13].mcVersion=MD_VERSION;
+  metricCalcDef[13].mcName="TransmitDropRate";
+  metricCalcDef[13].mcId=mr(pluginname,metricCalcDef[13].mcName);
+  metricCalcDef[13].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[13].mcChangeType=MD_GAUGE;
+  metricCalcDef[13].mcIsContinuous=MD_TRUE;
+  metricCalcDef[13].mcCalculable=MD_NONSUMMABLE;
+  metricCalcDef[13].mcDataType=MD_UINT32;
+  metricCalcDef[13].mcAliasId=metricCalcDef[0].mcId;
+  metricCalcDef[13].mcCalc=metricCalcTransDropRate;
+  metricCalcDef[13].mcUnits=muPacketsPerSecond;
+
+  *mcnum=14;
   *mc=metricCalcDef;
   return 0;
 }
@@ -520,6 +575,131 @@ size_t metricCalcPacketsReceived( MetricValue *mv,
     return sizeof(unsigned long long);
   }
   return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* ReceivePacketsDropped                                                      */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcReceiveDrop( MetricValue *mv,   
+				  int mnum,
+				  void *v, 
+				  size_t vlen ) {
+  unsigned long long pr = 0;
+  unsigned long long p1 = 0;
+  unsigned long long p2 = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PacketsReceived\n",
+	  __FILE__,__LINE__);
+#endif
+
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    p1 = ip_getData(mv[0].mvData, RX_DROP);
+    if( mnum > 1 ) {
+      p2 = ip_getData(mv[mnum-1].mvData, RX_DROP);
+      pr = p1-p2;
+    }
+    else { pr = p1; }
+
+    //fprintf(stderr,"packets received: %lld\n",pr);
+    memcpy(v,&pr,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* TransmitPacketsDropped                                                     */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcTransmitDrop( MetricValue *mv,   
+				     int mnum,
+				     void *v, 
+				     size_t vlen ) {
+  unsigned long long pt = 0;
+  unsigned long long p1 = 0;
+  unsigned long long p2 = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PacketsTransmitted\n",
+	  __FILE__,__LINE__);
+#endif  
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    p1 = ip_getData(mv[0].mvData, TX_DROP);
+    if( mnum > 1 ) {
+      p2 = ip_getData(mv[mnum-1].mvData, TX_DROP);
+      pt = p1-p2;
+    }
+    else { pt = p1; }
+
+    //fprintf(stderr,"packets transmitted: %lld\n",pt);
+    memcpy(v,&pt,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* TransmitPacketDropRate                                                     */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcTransDropRate(MetricValue * mv,
+								 int mnum,
+								 void * v,
+								 size_t vlen)
+{
+	unsigned long long p1, p2;
+	unsigned long rate;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PacketTransmitRate\n",
+	  __FILE__,__LINE__);
+#endif
+	if (mv && (vlen >= sizeof(unsigned long)) && (mnum >= 2)) {
+		p1 = ip_getData(mv[0].mvData, TX_DROP);
+		p2 = ip_getData(mv[mnum-1].mvData, TX_DROP);
+		
+		rate = (p1 - p2) / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
+		
+		memcpy(v, &rate, sizeof(unsigned long ));
+		return sizeof(unsigned long);
+	}
+	return -1;
+}
+
+
+/* ---------------------------------------------------------------------------*/
+/* ReceivePacketDropRate                                                      */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcRecDropRate(MetricValue * mv,
+								 int mnum,
+								 void * v,
+								 size_t vlen)
+{
+	unsigned long long p1, p2;
+	unsigned long rate;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate PacketTransmitRate\n",
+	  __FILE__,__LINE__);
+#endif
+	if (mv && (vlen >= sizeof(unsigned long)) && (mnum >= 2)) {
+		p1 = ip_getData(mv[0].mvData, RX_DROP);
+		p2 = ip_getData(mv[mnum-1].mvData, RX_DROP);
+		
+		rate = (p1 - p2) / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
+		
+		memcpy(v, &rate, sizeof(unsigned long ));
+		return sizeof(unsigned long);
+	}
+	return -1;
 }
 
 

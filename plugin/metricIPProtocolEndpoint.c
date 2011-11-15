@@ -1,7 +1,7 @@
 /*
- * $Id: metricIPProtocolEndpoint.c,v 1.7 2011/11/15 04:20:53 tyreld Exp $
+ * $Id: metricIPProtocolEndpoint.c,v 1.8 2011/11/15 04:57:17 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2004, 2009
+ * (C) Copyright IBM Corp. 2004, 2009, 2011
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -11,7 +11,7 @@
  * http://www.opensource.org/licenses/eclipse-1.0.php
  *
  * Author:       Heidi Neumann <heidineu@de.ibm.com>
- * Contributors: 
+ * Contributors: Tyrel Datwyler <tyreld@us.ibm.com>
  *
  * Description:
  * Metrics Gatherer Plugin of the following IP Protocol Endpoint specific 
@@ -114,8 +114,8 @@ int metricRetrBytesSubmitted( int mid,
   char   values[(6*ULL_CHAR_MAX)+6];
   size_t bytes_read = 0;
   int    i          = 0;
-  unsigned long long receive_byte, receive_packets, receive_error = 0;
-  unsigned long long trans_byte, trans_packets, trans_error = 0;
+  unsigned long long receive_byte, receive_packets, receive_error, receive_drop = 0;
+  unsigned long long trans_byte, trans_packets, trans_error, trans_drop = 0;
 
 #ifdef DEBUG
   fprintf(stderr,"--- %s(%i) : Retrieving BytesSubmitted\n",
@@ -139,16 +139,17 @@ int metricRetrBytesSubmitted( int mid,
 	  
 	while( (end = strchr(ptr,'\n')) != NULL ) {
 	  sscanf(ptr,
-		 " %[^:]: %lld %lld %lld %*s %*s %*s %*s %*s %lld %lld %lld",
+		 " %[^:]: %lld %lld %lld %lld %*s %*s %*s %*s %lld %lld %lld %lld",
 		 port,
-		 &receive_byte, &receive_packets, &receive_error,
-		 &trans_byte, &trans_packets, &trans_error);
+		 &receive_byte, &receive_packets, &receive_error, &receive_drop,
+		 &trans_byte, &trans_packets, &trans_error, &trans_drop);
 	  
 	  /*	  fprintf(stderr,"[%i] port: %s %lld %lld\n",i,port,receive_byte,receive_packets);*/
 	  
 	  memset(values,0,sizeof(values));
-	  sprintf(values,"%lld:%lld:%lld:%lld:%lld:%lld:",
-		  receive_byte,trans_byte,receive_error,trans_error,receive_packets,trans_packets);
+	  sprintf(values,"%lld:%lld:%lld:%lld:%lld:%lld:%lld:%lld:",
+		  receive_byte,trans_byte,receive_error,trans_error,receive_packets,trans_packets,
+		  receive_drop, trans_drop);
 	  
 	  mv = calloc(1, sizeof(MetricValue) + 
 		      (strlen(values)+1) +

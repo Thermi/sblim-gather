@@ -1,5 +1,5 @@
 /*
- * $Id: metricIPProtocolEndpoint.readme,v 1.4 2011/04/19 23:37:38 tyreld Exp $
+ * $Id: metricIPProtocolEndpoint.readme,v 1.5 2011/11/15 04:57:17 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -23,7 +23,6 @@
 The Plugin offers the following metrics :
 
 
-- BytesSubmitted
 - BytesTransmitted
 - BytesReceived
 - ErrorRate
@@ -33,7 +32,14 @@ The Plugin offers the following metrics :
 - PacketReceiveRate
 - ByteTransmitRate
 - ByteReceiveRate
+- ReceivePacketsDropped
+- TransmitPacketsDropped
+- ReceivePacketDropRate
+- TransmitPacketDropRate
 
+Internal metrics not meant to be consumed :
+
+- _BytesSubmitted
 
 /* ---------------------------------------------------------------------------*/
 
@@ -50,7 +56,8 @@ Value Source    : the corresponding line of /proc/net/dev contains the values
 
 Syntax          : <bytes received>:<bytes transmitted>:
 		  <errors received>:<errors transmitted>:
-		  <packets received>:<packets transmitted>
+		  <packets received>:<packets transmitted>:
+		  <dropped receive>:<dropped transmit>:
 
 
 BytesTransmitted
