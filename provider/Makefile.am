@@ -1,6 +1,6 @@
-# $Id: Makefile.am,v 1.18 2009/08/18 23:16:59 tyreld Exp $
+# $Id: Makefile.am,v 1.19 2011/11/17 01:01:26 tyreld Exp $
 # ==================================================================
-# (C) Copyright IBM Corp. 2005, 2009
+# (C) Copyright IBM Corp. 2005, 2009, 2011
 #
 # THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
 # ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -60,14 +60,16 @@ BASE_MOFS = $(srcdir)/mof/Linux_IPProtocolEndpointMetric.mof \
             $(srcdir)/mof/Linux_NetworkPortMetric.mof \
             $(srcdir)/mof/Linux_OperatingSystemMetric.mof \
             $(srcdir)/mof/Linux_ProcessorMetric.mof \
-            $(srcdir)/mof/Linux_UnixProcessMetric.mof
+            $(srcdir)/mof/Linux_UnixProcessMetric.mof \
+	    $(srcdir)/mof/Linux_Storage.mof
 
 BASE_REGS = $(srcdir)/mof/Linux_IPProtocolEndpointMetric.registration \
             $(srcdir)/mof/Linux_LocalFileSystemMetric.registration \
             $(srcdir)/mof/Linux_NetworkPortMetric.registration \
             $(srcdir)/mof/Linux_OperatingSystemMetric.registration \
             $(srcdir)/mof/Linux_ProcessorMetric.registration \
-            $(srcdir)/mof/Linux_UnixProcessMetric.registration
+            $(srcdir)/mof/Linux_UnixProcessMetric.registration \
+	    $(srcdir)/mof/Linux_Storage.registration
 endif
 
 if VIRT_METRICS

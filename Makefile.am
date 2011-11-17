@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.23 2011/08/19 00:17:54 tyreld Exp $
+# $Id: Makefile.am,v 1.24 2011/11/17 01:01:26 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -55,14 +55,16 @@ BASE_METRIC_LIBS=libmetricIPProtocolEndpoint.la \
                  libmetricLocalFileSystem.la \
                  libmetricProcessor.la \
                  libmetricOperatingSystem.la \
-                 libmetricUnixProcess.la
+                 libmetricUnixProcess.la \
+		 libmetricStorage.la
 
 BASE_REPOS_LIBS=librepositoryIPProtocolEndpoint.la \
                 librepositoryNetworkPort.la \
                 librepositoryLocalFileSystem.la \
                 librepositoryProcessor.la \
                 librepositoryOperatingSystem.la \
-                librepositoryUnixProcess.la
+                librepositoryUnixProcess.la \
+		librepositoryStorage.la 
 endif
 
 if VIRT_METRICS
@@ -263,6 +265,11 @@ libmetriczCH_la_LIBADD=$(srcdir)/libchannelutil.la $(srcdir)/libgatherutil.la
 libmetriczCH_la_DEPENDENCIES=libchannelutil.la
 libmetriczCH_la_LDFLAGS=$(PLUG_FLAGS)
 
+libmetricStorage_la_SOURCES=plugin/metricStorage.c
+libmetricStorage_la_LIBADD=$(srcdir)/libgatherutil.la
+libmetricStorage_la_DEPENDENCIES=libgatherutil.la
+libmetricStorage_la_LDFLAGS=$(PLUG_FLAGS) -lm
+
 reposplugin_LTLIBRARIES = $(BASE_REPOS_LIBS) \
                           $(VIRT_REPOS_LIBS) \
                           $(Z_REPOS_LIBS)
@@ -317,6 +324,11 @@ librepositoryzCH_la_SOURCES=plugin/repositoryzCH.c
 librepositoryzCH_la_LIBADD=$(srcdir)/libchannelutil.la $(srcdir)/libgatherutil.la -lm
 librepositoryzCH_la_DEPENDENCIES=libchannelutil.la
 librepositoryzCH_la_LDFLAGS=$(PLUG_FLAGS)
+
+librepositoryStorage_la_SOURCES=plugin/repositoryStorage.c
+librepositoryStorage_la_LIBADD=$(srcdir)/libgatherutil.la
+librepositoryStorage_la_DEPENDENCIES=libgatherutil.la
+librepositoryStorage_la_LDFLAGS=$(PLUG_FLAGS)
 
 # Gather utility test programs (not installed)
 noinst_PROGRAMS = mcfgtest mtracetest merrnotest mcstest mcctest \
