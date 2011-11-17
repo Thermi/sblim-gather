@@ -1,5 +1,5 @@
 /*
- * $Id: metricIPProtocolEndpoint.c,v 1.8 2011/11/15 04:57:17 tyreld Exp $
+ * $Id: metricIPProtocolEndpoint.c,v 1.9 2011/11/17 02:15:21 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009, 2011
  *
@@ -111,7 +111,7 @@ int metricRetrBytesSubmitted( int mid,
   char * end        = NULL;
   char   port[64];
   char   buf[60000];
-  char   values[(6*ULL_CHAR_MAX)+6];
+  char   values[(8*ULL_CHAR_MAX)+9];
   size_t bytes_read = 0;
   int    i          = 0;
   unsigned long long receive_byte, receive_packets, receive_error, receive_drop = 0;
