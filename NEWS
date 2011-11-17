@@ -9,6 +9,7 @@ Bugs fixed:
 - 3429346 libvirt race conditions
 - 3429347 initscript incorrect return code
 - 3438050 clean up IPProtocolEP raw data parsing
+- 3439114 storage plugin leaks file descriptors
 
 Features added:
 - 3438074 add packet drop metrics to IPProtocolEP

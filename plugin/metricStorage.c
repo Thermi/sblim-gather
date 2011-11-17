@@ -1,5 +1,5 @@
 /*
- * $Id: metricStorage.c,v 1.1 2011/11/17 01:01:26 tyreld Exp $
+ * $Id: metricStorage.c,v 1.2 2011/11/17 01:06:35 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2011
  *
@@ -141,6 +141,7 @@ int metricRetrBlockStorage( int mid, MetricReturner mret ) {
           if (fd > -1) {
 	  	ioctl(fd, BLKGETSIZE64, &capacity);
 	  }
+	  close(fd);
 	  
 	  read = read / 2;   /* convert form sectors to kb */
 	  write = write / 2; /* 512 bytes/sector, 1kb/1024 bytes = 1kb/2 sectors */
