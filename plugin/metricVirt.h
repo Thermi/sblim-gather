@@ -1,7 +1,7 @@
 /*
- * $Id: metricVirt.h,v 1.7 2011/10/07 00:08:52 tyreld Exp $
+ * $Id: metricVirt.h,v 1.8 2011/11/29 06:28:09 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2009
+ * (C) Copyright IBM Corp. 2009, 2011
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -33,6 +33,15 @@
 #define VIRT_NOUPD   1
 #define VIRT_FAIL    -1
 
+struct vdisk_type {
+	char * source;
+	char * target;
+	unsigned long long read;
+	unsigned long long write;
+	unsigned long long capacity;
+	struct vdisk_type * next;
+};
+
 struct node_statistics_type {
 	int num_active_domains;
 	int num_inactive_domains;
@@ -51,6 +60,7 @@ struct domain_statistics_type {
 	unsigned char  state[MAX_DOMAINS];
 	unsigned long long cpu_used[MAX_DOMAINS];
 	unsigned long long cpu_ready[MAX_DOMAINS];
+	struct vdisk_type * blkio[MAX_DOMAINS];
 } domain_statistics;
 
 int testHypervisor(int type);
@@ -63,5 +73,6 @@ MetricRetriever virtMetricRetrHostFreePhysicalMemory;
 MetricRetriever virtMetricRetrVirtualSystemState;
 MetricRetriever virtMetricRetrCPUUsedTimeCounter;
 MetricRetriever virtMetricRetrCPUReadyTimeCounter;
+MetricRetriever virtMetricRetrVirtualBlockIOStats;
 
 #endif

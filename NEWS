@@ -14,6 +14,7 @@ Bugs fixed:
 Features added:
 - 3438074 add packet drop metrics to IPProtocolEP
 - 3439075 add Host Block IO metrics
+- 3444879 add VM Block IO Metrics
 
 Changes in Version 2.2.3
 ========================

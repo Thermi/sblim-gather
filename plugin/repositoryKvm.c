@@ -1,7 +1,7 @@
 /*
- * $Id: repositoryKvm.c,v 1.8 2011/05/11 01:42:58 tyreld Exp $
+ * $Id: repositoryKvm.c,v 1.9 2011/11/29 06:28:09 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2009
+ * (C) Copyright IBM Corp. 2009, 2011
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -50,7 +50,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[17];
+static MetricCalculationDefinition metricCalcDef[21];
 
 // metric _Internal_CPUTime
 static MetricCalculator metricCalcCPUTime;
@@ -94,14 +94,27 @@ static MetricCalculator metricCalcSchedulerStats;
 // metric WaitSum
 // static MetricCalculator metricCalcWaitSum
 
+// metric VirtualBlockIOStats
+static MetricCalculator metricCalcVirtualBlockIOStats;
+static MetricCalculator metricCalcBlockRead;
+static MetricCalculator metricCalcBlockWrite;
+static MetricCalculator metricCalcBlockCapacity;
+
 
 /* unit definitions */
 static char *muKiloBytes = "Kilobytes";
+static char *muBytes = "Bytes";
 static char *muPercent = "Percent";
 static char *muMicroSeconds = "MicroSeconds";
 static char *muMilliSeconds = "MilliSeconds";
 static char *muSeconds = "Seconds";
 static char *muNA = "N/A";
+
+/* ---------------------------------------------------------------------------*/
+
+enum indices { BLK_READ, BLK_WRITE, BLK_CAP };
+static unsigned long long kvm_getData(char * data, char index);
+
 
 /* ---------------------------------------------------------------------------*/
 
@@ -328,8 +341,57 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[16].mcDataType = MD_UINT64;
     metricCalcDef[16].mcCalc = metricCalcSchedulerStats;
     metricCalcDef[16].mcUnits = muMicroSeconds;
+    
+    metricCalcDef[17].mcVersion = MD_VERSION;
+    metricCalcDef[17].mcName = "_VirtualBlockIOStats";
+    metricCalcDef[17].mcId = mr(pluginname, metricCalcDef[17].mcName);
+    metricCalcDef[17].mcMetricType =
+	MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+    metricCalcDef[17].mcIsContinuous = MD_FALSE;
+    metricCalcDef[17].mcCalculable = MD_NONCALCULABLE;
+    metricCalcDef[17].mcDataType = MD_STRING;
+    metricCalcDef[17].mcCalc = metricCalcVirtualBlockIOStats;
+    metricCalcDef[17].mcUnits = muNA;
+    
+    metricCalcDef[18].mcVersion = MD_VERSION;
+    metricCalcDef[18].mcName = "BlockRead";
+    metricCalcDef[18].mcId = mr(pluginname, metricCalcDef[18].mcName);
+    metricCalcDef[18].mcMetricType =
+	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
+    metricCalcDef[18].mcChangeType = MD_GAUGE;
+    metricCalcDef[18].mcIsContinuous = MD_TRUE;
+    metricCalcDef[18].mcCalculable = MD_SUMMABLE;
+    metricCalcDef[18].mcDataType = MD_UINT64;
+    metricCalcDef[18].mcAliasId=metricCalcDef[17].mcId;
+    metricCalcDef[18].mcCalc = metricCalcBlockRead;
+    metricCalcDef[18].mcUnits = muKiloBytes;
+    
+    metricCalcDef[19].mcVersion = MD_VERSION;
+    metricCalcDef[19].mcName = "BlockWrite";
+    metricCalcDef[19].mcId = mr(pluginname, metricCalcDef[19].mcName);
+    metricCalcDef[19].mcMetricType =
+	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
+    metricCalcDef[19].mcChangeType = MD_GAUGE;
+    metricCalcDef[19].mcIsContinuous = MD_TRUE;
+    metricCalcDef[19].mcCalculable = MD_SUMMABLE;
+    metricCalcDef[19].mcDataType = MD_UINT64;
+    metricCalcDef[19].mcAliasId=metricCalcDef[17].mcId;
+    metricCalcDef[19].mcCalc = metricCalcBlockWrite;
+    metricCalcDef[19].mcUnits = muKiloBytes;
+    
+    metricCalcDef[20].mcVersion=MD_VERSION;
+    metricCalcDef[20].mcName="BlockCapacity";
+    metricCalcDef[20].mcId=mr(pluginname,metricCalcDef[20].mcName);
+    metricCalcDef[20].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+    metricCalcDef[20].mcChangeType=MD_GAUGE;
+    metricCalcDef[20].mcIsContinuous=MD_TRUE;
+    metricCalcDef[20].mcCalculable=MD_NONSUMMABLE;
+    metricCalcDef[20].mcDataType=MD_UINT64;
+    metricCalcDef[20].mcAliasId=metricCalcDef[17].mcId;
+    metricCalcDef[20].mcCalc=metricCalcBlockCapacity;
+    metricCalcDef[20].mcUnits=muBytes;
 
-    *mcnum = 17;
+    *mcnum = 21;
     *mc = metricCalcDef;
     return 0;
 }
@@ -689,6 +751,145 @@ size_t metricCalcSchedulerStats(MetricValue * mv,
     }
 
     return -1;
+}
+
+/* ---------------------------------------------------------------------------*/
+/* Virtual Block IO Stats                                                     */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcVirtualBlockIOStats( MetricValue *mv,   
+				 int mnum,
+				 void *v, 
+				 size_t vlen ) {
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate VirtualBlockIOStats\n",
+	  __FILE__,__LINE__);
+#endif
+  /* plain copy */
+  if (mv && (vlen>=mv->mvDataLength) && (mnum==1) ) {
+    memcpy(v,mv->mvData,mv->mvDataLength);
+    return mv->mvDataLength;
+  }
+  return -1;
+}
+
+/* ---------------------------------------------------------------------------*/
+/* BlockRead                                                                  */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcBlockRead( MetricValue *mv,   
+				int mnum,
+				void *v, 
+				size_t vlen ) 
+{
+  unsigned long long br = 0;
+  unsigned long long b1 = 0;
+  unsigned long long b2 = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate BlockRead\n",
+	  __FILE__,__LINE__);
+#endif
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    b1 = kvm_getData(mv[0].mvData, BLK_READ);
+    if( mnum > 1 ) {
+      b2 = kvm_getData(mv[mnum-1].mvData, BLK_READ);
+      br = b1-b2;
+    }
+    else { br = b1; }
+
+    memcpy(v,&br,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+/* ---------------------------------------------------------------------------*/
+/* BlockWrite                                                                 */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcBlockWrite( MetricValue *mv,   
+				int mnum,
+				void *v, 
+				size_t vlen ) 
+{
+  unsigned long long br = 0;
+  unsigned long long b1 = 0;
+  unsigned long long b2 = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate BlockWrite\n",
+	  __FILE__,__LINE__);
+#endif
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    b1 = kvm_getData(mv[0].mvData, BLK_WRITE);
+    if( mnum > 1 ) {
+      b2 = kvm_getData(mv[mnum-1].mvData, BLK_WRITE);
+      br = b1-b2;
+    }
+    else { br = b1; }
+
+    memcpy(v,&br,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+/* ---------------------------------------------------------------------------*/
+/* BlockCapacity                                                                   */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcBlockCapacity( MetricValue *mv,   
+				   int mnum,
+				   void *v, 
+				   size_t vlen )
+{
+  unsigned long long ct = 0;
+
+#ifdef DEBUG
+  fprintf(stderr,"--- %s(%i) : Calculate BlockCapacity\n",
+	  __FILE__,__LINE__);
+#endif  
+  if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+
+    ct = kvm_getData(mv[0].mvData, BLK_CAP);
+
+    memcpy(v,&ct,sizeof(unsigned long long));
+    return sizeof(unsigned long long);
+  }
+  return -1;
+}
+
+/* ---------------------------------------------------------------------------*/
+/* tool function on internal raw metrics                                      */
+/* ---------------------------------------------------------------------------*/
+
+unsigned long long kvm_getData(char * data, char index)
+{
+	char * hlp = NULL;
+	char * end = NULL;
+	char bytes[128];
+	unsigned long long val = 0;
+	int i = 0;
+
+	hlp = data;
+	if ((end = strchr(hlp, ':')) != NULL) {
+		for (i = 0; i < index; i++) {
+			hlp = ++end;
+			if ((end = strchr(hlp, ':')) == NULL) {
+				return val;
+			}
+		}
+
+		memset(bytes, 0, sizeof(bytes));
+		strncpy(bytes, hlp, strlen(hlp) - strlen(end));
+		val = strtoll(bytes, (char**) NULL, 10);
+	}
+
+	return val;
 }
 
 /* ---------------------------------------------------------------------------*/

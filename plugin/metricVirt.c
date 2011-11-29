@@ -1,7 +1,7 @@
 /*
- * $Id: metricVirt.c,v 1.15 2011/10/27 16:33:10 hellerda Exp $
+ * $Id: metricVirt.c,v 1.16 2011/11/29 06:28:09 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2009, 2009
+ * (C) Copyright IBM Corp. 2009, 2011
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -104,11 +104,122 @@ int testHypervisor(int type) {
     return tconn;
 }
 
+
+/* ---------------------------------------------------------------------------*/
+/* parseDomainXML                                                             */
+/* parse domain XML and collect block io stats                                */
+/* ---------------------------------------------------------------------------*/
+static struct vdisk_type *parseDomainXML(virDomainPtr domain)
+{
+    char *cur;
+    char *end;
+    char *temp;
+    virDomainBlockInfo blkinfo;
+    virDomainBlockStatsStruct blkstats;
+    struct vdisk_type *disk = NULL;
+    struct vdisk_type *head = NULL;
+    int parse = 0;
+    int type = 0;
+
+    parse = 1;
+    cur = virDomainGetXMLDesc(domain, 0);
+
+    while (parse) {
+	if ((cur = strstr(cur, "<disk"))) {
+	    cur = strstr(cur, "type=\'");
+	    cur = cur + 6;
+
+	    switch (*cur) {
+	    case 'f':
+		type = 0;
+		break;
+	    case 'b':
+		type = 1;
+		break;
+	    default:
+		continue;
+	    }
+
+	    end = strstr(cur, "</disk");
+
+	    temp = strstr(cur, "<source");
+	    if (temp > end) {
+		continue;
+	    }
+
+	    cur = temp;
+
+	    if (type) {
+		cur = strstr(cur, "dev=\'");
+		cur = cur + 5;
+	    } else {
+		cur = strstr(cur, "file=\'");
+		cur = cur + 6;
+	    }
+
+	    end = strstr(cur, "\'");
+
+	    if (!disk) {
+		disk = malloc(sizeof(struct vdisk_type));
+		disk->next = NULL;
+		head = disk;
+	    } else {
+		disk->next = malloc(sizeof(struct vdisk_type));
+		disk = disk->next;
+		disk->next = NULL;
+	    }
+
+	    disk->source = malloc(end - cur + 1);
+	    disk->source = strncpy(disk->source, cur, end - cur);
+	    disk->source[end - cur] = 0;
+
+	    cur = strstr(cur, "<target");
+	    cur = strstr(cur, "dev=\'");
+	    cur = cur + 5;
+
+	    end = strstr(cur, "\'");
+
+	    disk->target = malloc(end - cur + 1);
+	    disk->target = strncpy(disk->target, cur, end - cur);
+	    disk->target[end - cur] = 0;
+
+	    virDomainGetBlockInfo(domain, disk->source, &blkinfo, 0);
+	    disk->capacity = blkinfo.capacity;
+	    virDomainBlockStats(domain, disk->target, &blkstats,
+				sizeof(virDomainBlockStatsStruct));
+
+	    /* Convert to Kilobytes */
+	    disk->read = blkstats.rd_bytes / 1024;
+	    disk->write = blkstats.wr_bytes / 1024;
+	} else {
+	    parse = 0;
+	}
+    }
+
+    return head;
+}
+
+static void freeBlkIOData(int domains)
+{
+    struct vdisk_type * cur, * head;
+    int i;
+    
+    for (i = 0; i < domains; i++) {
+        head = domain_statistics.blkio[i];
+        
+        while (head) {
+            cur = head;
+            head = cur->next;
+            free(cur);
+        }
+    }
+}
+            
+
 /* ---------------------------------------------------------------------------*/
 /* collectDomainSchedStats                                                    */
 /* get scheduler statistics for a given domain                                */
 /* ---------------------------------------------------------------------------*/
-
 static void collectDomainSchedStats(int cnt)
 {
     FILE * fd = NULL;
@@ -276,7 +387,11 @@ static int collectDomainStats()
         virConnectClose(conn);
 		return VIRT_NOUPD;
     } else {
-		node_statistics.num_active_domains = 0;	// reset number of domains
+        /* free previous running domain vdisk data */
+        freeBlkIOData(node_statistics.num_active_domains);
+        
+        /* reset domain numbers */
+		node_statistics.num_active_domains = 0;
 		node_statistics.num_inactive_domains = 0;
 		node_statistics.total_domains = 0;
 		last_time_sampled = time(NULL);
@@ -338,6 +453,7 @@ static int collectDomainStats()
 		domain_statistics.state[cnt] = dinfo.state;
 		
 		collectDomainSchedStats(cnt);
+		domain_statistics.blkio[cnt] = parseDomainXML(domain);
 		
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : %s (%d)\n\t claimed %lu  max %lu\n\t time %f  cpus %hu\n",
@@ -890,6 +1006,82 @@ int virtMetricRetrCPUReadyTimeCounter(int mid, MetricReturner mret)
                 mv->mvResource = (char *) mv + sizeof(MetricValue) + sizeof(unsigned long long);
                 strcpy(mv->mvResource, domain_statistics.domain_name[i]);
                 mret(mv);
+            }
+        }
+
+        return 1;
+    }
+
+    return -1;
+}
+
+int virtMetricRetrVirtualBlockIOStats(int mid, MetricReturner mret)
+{
+    MetricValue *mv = NULL;
+    struct vdisk_type * disk;
+    char values[25*3+4];
+    char * resource;
+
+#ifdef DEBUG
+    fprintf(stderr,
+            "--- %s(%i) : Retrieving VirtualBlockIOStats\n",
+            __FILE__, __LINE__);
+#endif
+
+    if (collectDomainStats() == VIRT_FAIL)
+        return -1;
+
+    if (mret == NULL) {
+#ifdef DEBUG
+        fprintf(stderr, 
+                "--- %s(%i) : Returner pointer is NULL\n", 
+                __FILE__, __LINE__);
+#endif
+    } else {
+#ifdef DEBUG
+        fprintf(stderr,
+                "--- %s(%i) : Sampling for VirtualBlockIOStats\n",
+                __FILE__, __LINE__);
+#endif
+
+        int i;
+
+#ifdef DEBUG
+        fprintf(stderr,
+                "--- %s(%i) : num_active_domains %d\n",
+                __FILE__, __LINE__, node_statistics.num_active_domains);
+#endif
+
+        for (i = 0; i < node_statistics.total_domains; i++) {
+        
+            disk = domain_statistics.blkio[i];
+
+            while (disk) {
+            
+                memset(values,0,sizeof(values));
+	            sprintf(values,"%lld:%lld:%lld:", disk->read, disk->write, disk->capacity);
+	            
+	            resource = malloc(strlen(domain_statistics.domain_name[i]) +
+	                                strlen(disk->source) + strlen(disk->target) + 3);
+	            sprintf(resource,"%s:%s:%s", domain_statistics.domain_name[i], disk->source, disk->target);
+
+                mv = calloc(1, sizeof(MetricValue) +
+                        (strlen(values) + 1) +
+                        (strlen(resource) + 1));
+
+                if (mv) {
+                    mv->mvId = mid;
+                    mv->mvTimeStamp = time(NULL);
+                    mv->mvDataType = MD_STRING;
+                    mv->mvDataLength = strlen(values) + 1;
+                    mv->mvData = (char *) mv + sizeof(MetricValue);
+                    strcpy(mv->mvData, values);
+                    mv->mvResource = (char *) mv + sizeof(MetricValue) + (strlen(values) + 1);
+                    strcpy(mv->mvResource, resource);
+                    mret(mv);
+                }
+                
+                disk = disk->next;
             }
         }
 

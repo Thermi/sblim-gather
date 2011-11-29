@@ -1,7 +1,8 @@
 /*
- * $Id: metricKvm.c,v 1.6 2011/05/12 00:46:29 tyreld Exp $
+ * $Id: metricKvm.c,v 1.7 2011/11/29 06:28:09 tyreld Exp $
  *
- * (C) Copyright IBM Corp. 2009
+ * (C) Copyright IBM Corp. 2009, 2011
+ *
  *
  * THIS FILE IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC LICENSE
  * ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
@@ -45,7 +46,7 @@
 #include <ctype.h>
 
 /* --- metric callback retrievers to be exported --- */
-static MetricDefinition metricDef[10];
+static MetricDefinition metricDef[11];
 
 /* --- required plugin functions --- */
 int _DefinedMetrics(MetricRegisterId * mr,
@@ -156,8 +157,16 @@ int _DefinedMetrics(MetricRegisterId * mr,
     metricDef[9].mdSampleInterval = 60;
     metricDef[9].mproc = virtMetricRetrCPUReadyTimeCounter;
     metricDef[9].mdeal = free;
+    
+    metricDef[10].mdVersion = MD_VERSION;
+    metricDef[10].mdName = "_VirtualBlockIOStats";
+    metricDef[10].mdReposPluginName = "librepositoryKvm.so";
+    metricDef[10].mdId = mr(pluginname, metricDef[10].mdName);
+    metricDef[10].mdSampleInterval = 60;
+    metricDef[10].mproc = virtMetricRetrVirtualBlockIOStats;
+    metricDef[10].mdeal = free;   
 
-	*mdnum = 10;
+	*mdnum = 11;
     } else {
 	*mdnum = 0;
     }
