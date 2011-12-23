@@ -1,3 +1,109 @@
+2011-12-22  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, configure.ac, plugin/metricUnixProcess.c:
+
+	Rejected 3098510: add process name to UnixProcessMetric (reverted
+	to revision 1.13 of metricUnixProcess)
+
+2011-11-28  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricKvm.c, plugin/metricVirt.c,
+	plugin/metricVirt.h, plugin/repositoryKvm.c:
+
+	Fixed 3444879: add VM Block IO Metrics
+
+2011-11-16  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* plugin/metricIPProtocolEndpoint.c:
+
+	Fixed under allocation of data buffer for BytesSubmitted
+
+2011-11-16  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricStorage.c:
+
+	Fixed 3439114: storage plugin leaks file descriptors
+
+2011-11-16  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* Makefile.am, NEWS, plugin/metricStorage.c,
+	plugin/repositoryStorage.c, provider/Makefile.am,
+	provider/mof/Linux_Storage.mof,
+	provider/mof/Linux_Storage.registration:
+
+	Fixed 3439075: add Host Block IO metrics
+
+2011-11-14  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricIPProtocolEndpoint.c,
+	plugin/metricIPProtocolEndpoint.readme,
+	plugin/repositoryIPProtocolEndpoint.c:
+
+	Fixed 3438074: add packet drop metrics to IPProtocolEP
+
+2011-11-14  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricIPProtocolEndpoint.c,
+	plugin/repositoryIPProtocolEndpoint.c:
+
+	Fixed 3438050: clean up IPProtocolEP raw data parsing
+
+2011-10-27  hellerda
+
+	* NEWS, gatherer.init-redhat.in:
+
+	Fixed 3429347: initscript incorrect return code
+
+2011-10-27  hellerda
+
+	* NEWS, plugin/metricVirt.c:
+
+	Fixed 3429346: libvirt race conditions
+
+2011-10-18  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricUnixProcess.c:
+
+	Fixed 3397109 UnixProcess plugins occasionally crashes	(patch by
+	Vitezslav Crhonek)
+
+2011-10-06  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricVirt.c, plugin/metricVirt.h:
+
+	Fixed 3419837: bad alloc and usigned returns in metricVirt
+
+2011-09-22  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricUnixProcess.c:
+
+	Rolled back 3397109: UnixProcess plugins occasionally crashes
+
+2011-09-21  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricVirt.c:
+
+	Fixed 3412635: bad string allocations
+
+2011-08-23  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricUnixProcess.c:
+
+	Fixed 3397109: gcc extensions not available on new distros
+
+2011-08-18  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* Makefile.am, NEWS, plugin/metricIPProtocolEndpoint.c,
+	plugin/metricNetworkPort.c:
+
+	Fixed 3394202: large network counters overflow raw metric buffer
+
+2011-05-17  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* ChangeLog, NEWS, configure.ac:
+
+	Updated for release version 2.2.3
+
 2011-05-16  Tyrel Datwyler <tyreld@us.ibm.com>
 
 	* Makefile.am, NEWS, plugin/metricVirt.c:
@@ -627,7 +733,7 @@
 
 	[ 2065755 ] gatherer: getInstance always reports zero plugins
 
-2008-03-04  nsharoff
+2008-03-04  Narasimmha Sharoff <nsharoff@us.ibm.com>
 
 	* configure.ac:
 
