@@ -16,6 +16,9 @@ Features added:
 - 3439075 add Host Block IO metrics
 - 3444879 add VM Block IO Metrics
 
+Features removed:
+- 3098510 add process name to UnixProcessMetric
+
 Changes in Version 2.2.3
 ========================
 
