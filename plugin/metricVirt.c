@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.16 2011/11/29 06:28:09 tyreld Exp $
+ * $Id: metricVirt.c,v 1.17 2012/02/01 20:03:47 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2011
  *
@@ -109,7 +109,7 @@ int testHypervisor(int type) {
 /* parseDomainXML                                                             */
 /* parse domain XML and collect block io stats                                */
 /* ---------------------------------------------------------------------------*/
-static struct vdisk_type *parseDomainXML(virDomainPtr domain)
+static struct vdisk_type *parseDomainXML(virDomainPtr domain, int active)
 {
     char *cur;
     char *end;
@@ -185,12 +185,19 @@ static struct vdisk_type *parseDomainXML(virDomainPtr domain)
 
 	    virDomainGetBlockInfo(domain, disk->source, &blkinfo, 0);
 	    disk->capacity = blkinfo.capacity;
-	    virDomainBlockStats(domain, disk->target, &blkstats,
+
+            /* virDomainBlockStats only works on running domains */
+            if (active) {
+	        virDomainBlockStats(domain, disk->target, &blkstats,
 				sizeof(virDomainBlockStatsStruct));
 
-	    /* Convert to Kilobytes */
-	    disk->read = blkstats.rd_bytes / 1024;
-	    disk->write = blkstats.wr_bytes / 1024;
+	        /* Convert to Kilobytes */
+	        disk->read = blkstats.rd_bytes / 1024;
+	        disk->write = blkstats.wr_bytes / 1024;
+            } else {
+                disk->read = 0;
+                disk->write = 0;
+            }
 	} else {
 	    parse = 0;
 	}
@@ -212,6 +219,8 @@ static void freeBlkIOData(int domains)
             head = cur->next;
             free(cur);
         }
+
+        domain_statistics.blkio[i] = NULL;
     }
 }
             
@@ -388,7 +397,7 @@ static int collectDomainStats()
 		return VIRT_NOUPD;
     } else {
         /* free previous running domain vdisk data */
-        freeBlkIOData(node_statistics.num_active_domains);
+        freeBlkIOData(node_statistics.total_domains);
         
         /* reset domain numbers */
 		node_statistics.num_active_domains = 0;
@@ -453,7 +462,7 @@ static int collectDomainStats()
 		domain_statistics.state[cnt] = dinfo.state;
 		
 		collectDomainSchedStats(cnt);
-		domain_statistics.blkio[cnt] = parseDomainXML(domain);
+		domain_statistics.blkio[cnt] = parseDomainXML(domain, 1);
 		
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : %s (%d)\n\t claimed %lu  max %lu\n\t time %f  cpus %hu\n",
@@ -504,6 +513,7 @@ static int collectDomainStats()
 		domain_statistics.cpu_used[cnt] = 0;
 		domain_statistics.cpu_ready[cnt] = 0;
 
+                domain_statistics.blkio[cnt] = parseDomainXML(domain, 0);
 		virDomainFree(domain);
 
 		/* free strdup'ed memory */

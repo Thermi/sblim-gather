@@ -1,3 +1,9 @@
+Changes in Version 2.2.5
+========================
+
+Bugs fixed:
+- 3482806 blkio not updated for inactive domains
+
 Changes in Version 2.2.4
 ========================
 
