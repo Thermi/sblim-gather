@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.18 2012/02/02 00:00:25 tyreld Exp $
+ * $Id: metricVirt.c,v 1.19 2012/02/02 00:11:35 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2011
  *
@@ -124,7 +124,7 @@ static struct vdisk_type *parseDomainXML(virDomainPtr domain, int active)
     parse = 1;
     cur = virDomainGetXMLDesc(domain, 0);
 
-    while (parse) {
+    while (parse && cur) {
 	if ((cur = strstr(cur, "<disk"))) {
 	    cur = strstr(cur, "type=\'");
 	    cur = cur + 6;
