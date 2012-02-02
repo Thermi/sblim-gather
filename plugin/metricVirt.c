@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.17 2012/02/01 20:03:47 tyreld Exp $
+ * $Id: metricVirt.c,v 1.18 2012/02/02 00:00:25 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2011
  *
@@ -186,17 +186,18 @@ static struct vdisk_type *parseDomainXML(virDomainPtr domain, int active)
 	    virDomainGetBlockInfo(domain, disk->source, &blkinfo, 0);
 	    disk->capacity = blkinfo.capacity;
 
+            disk->read = 0;
+            disk->write = 0;
+
             /* virDomainBlockStats only works on running domains */
-            if (active) {
-	        virDomainBlockStats(domain, disk->target, &blkstats,
-				sizeof(virDomainBlockStatsStruct));
+            if (active && (!virDomainBlockStats(domain, 
+                                      disk->target, 
+                                      &blkstats,
+				      sizeof(virDomainBlockStatsStruct)))) {
 
 	        /* Convert to Kilobytes */
 	        disk->read = blkstats.rd_bytes / 1024;
 	        disk->write = blkstats.wr_bytes / 1024;
-            } else {
-                disk->read = 0;
-                disk->write = 0;
             }
 	} else {
 	    parse = 0;

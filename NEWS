@@ -3,6 +3,7 @@ Changes in Version 2.2.5
 
 Bugs fixed:
 - 3482806 blkio not updated for inactive domains
+- 3482867 virDomainBlkStats garbage if domain undefined
 
 Changes in Version 2.2.4
 ========================
