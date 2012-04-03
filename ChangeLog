@@ -1,3 +1,39 @@
+2012-04-03  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* plugin/metricVirt.c, NEWS:
+
+	Fixed 3514701: segv parsing xml if no defined source media
+
+2012-02-01  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricVirt.c:
+
+	Fixed 3482875: virDomBlkInfo garbage if domain undefined
+
+2012-02-01  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricVirt.c:
+
+	Fixed 3482869: segv parsing xml if domain becomes undefined
+
+2012-02-01  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricVirt.c:
+
+	Fixed 3482867: virDomainBlkStats garbage if domain undefined
+
+2012-02-01  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/metricVirt.c:
+
+	Fixed 3482806: blkio not updated for inactive domains
+
+2011-12-22  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* ChangeLog:
+
+	updated ChangeLog for 2.2.4 release
+
 2011-12-22  Tyrel Datwyler <tyreld@us.ibm.com>
 
 	* NEWS, configure.ac, plugin/metricUnixProcess.c:
