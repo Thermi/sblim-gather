@@ -1,5 +1,5 @@
 /*
- * $Id: metricVirt.c,v 1.20 2012/02/02 00:39:47 tyreld Exp $
+ * $Id: metricVirt.c,v 1.21 2012/04/03 20:19:26 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2011
  *
@@ -142,8 +142,9 @@ static struct vdisk_type *parseDomainXML(virDomainPtr domain, int active)
 
 	    end = strstr(cur, "</disk");
 
+            /* check that we found a 'source' tag and it is part of the current disk block */
 	    temp = strstr(cur, "<source");
-	    if (temp > end) {
+	    if (!temp || temp > end) {
 		continue;
 	    }
 

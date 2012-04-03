@@ -6,6 +6,7 @@ Bugs fixed:
 - 3482867 virDomainBlkStats garbage if domain undefined
 - 3482869 segv parsing xml if domain becomes undefined
 - 3482875 virDomBlkInfo garbage if domain undefined
+- 3514701 segv parsing xml if no defined source media
 
 Changes in Version 2.2.4
 ========================
