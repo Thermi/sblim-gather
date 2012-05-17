@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricValueProvider.c,v 1.15 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: OSBase_MetricValueProvider.c,v 1.16 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2003, 2007, 2009
  *
@@ -69,6 +69,7 @@ static void returnInstances(const CMPIBroker *_broker,
 			    COMMHEAP *ch,
 			    const CMPIObjectPath *ref,
 			    const CMPIResult *rslt,
+                            const char ** props,
 			    CMPIStatus *rc);
 
 /* ---------------------------------------------------------------------------*/
@@ -143,7 +144,7 @@ CMPIStatus OSBase_MetricValueProviderEnumInstances( CMPIInstanceMI * mi,
     pnum = getPluginNamesForValueClass(_broker,ctx,ref,&pnames);
     for (i=0; i<pnum; i++) {
       rdefnum = rreposplugin_list(pnames[i],&rdef,ch);
-      returnInstances(_broker,ctx,rdef,rdefnum,ch,ref,rslt,&rc);
+      returnInstances(_broker,ctx,rdef,rdefnum,ch,ref,rslt,properties,&rc);
     }
     releasePluginNames(pnames);
     ch_release(ch);
@@ -190,7 +191,7 @@ CMPIStatus OSBase_MetricValueProviderGetInstance( CMPIInstanceMI * mi,
 	  fprintf( stderr, "::: got %d values for id \n", vr.vsId);
 	if (vr.vsNumValues>=1) {
 	  ci = makeMetricValueInst( _broker, ctx, vName, vId, &vr.vsValues[0], vr.vsDataType,
-				    cop, &rc );    
+				    cop, properties, &rc );    
 	  if( ci == NULL ) {
 	    if( _debug ) {
 	      if( rc.msg != NULL )
@@ -363,6 +364,7 @@ static void returnInstances(const CMPIBroker *_broker,
 			    COMMHEAP *ch,
 			    const CMPIObjectPath *ref,
 			    const CMPIResult *rslt,
+                            const char ** props,
 			    CMPIStatus *rc)
 {
   int i,j;
@@ -383,7 +385,7 @@ static void returnInstances(const CMPIBroker *_broker,
       for (j=0; j< vr.vsNumValues; j++) {
 	ci = makeMetricValueInst( _broker, ctx, rdef[i].rdName, rdef[i].rdId,
 				  &vr.vsValues[j], vr.vsDataType,
-				  ref, rc );
+				  ref, props, rc );
 	if( ci == NULL ) {
 	  if( _debug ) {
 	    if( rc->msg != NULL )

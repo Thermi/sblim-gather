@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.h,v 1.11 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: OSBase_MetricUtil.h,v 1.12 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -87,6 +87,7 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
 				   const ValueItem *val,
 				   unsigned   datatype,
 				   const CMPIObjectPath *cop,
+                                   const char ** props,
 				   CMPIStatus * rc);
 CMPIObjectPath * makeMetricValuePath(const CMPIBroker * broker,
 				     const CMPIContext * ctx,
@@ -107,6 +108,7 @@ CMPIInstance * makeMetricDefInst(const CMPIBroker * broker,
 				 const char * defname,
 				 int defid,
 				 const char * namesp,
+                                 const char ** props,
 				 CMPIStatus * rc);
 
 CMPIObjectPath * makeResourcePath(const CMPIBroker * broker,

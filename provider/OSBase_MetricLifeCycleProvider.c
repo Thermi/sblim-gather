@@ -1,6 +1,6 @@
 
 /*
- * $Id: OSBase_MetricLifeCycleProvider.c,v 1.3 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: OSBase_MetricLifeCycleProvider.c,v 1.4 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2003, 2007, 2009
  *
@@ -491,7 +491,7 @@ static void metricIndicationCB(int corrid, ValueRequest *vr)
 
 	parseMetricDefId(mdefId,mName,&mId);
 	mvci = makeMetricValueInst(_broker, ctx, mName, mId, vr->vsValues, 
-				   vr->vsDataType, co, NULL);
+				   vr->vsDataType, co, NULL, NULL);
 	if (mvci) {
 	  CMSetProperty(ci,"SourceInstance",&mvci,CMPI_instance);
 	  if (_debug)

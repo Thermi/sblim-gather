@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricServiceCapabilitiesProvider.c,v 1.2 2011/05/11 01:23:53 tyreld Exp $
+ * $Id: OSBase_MetricServiceCapabilitiesProvider.c,v 1.3 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -68,7 +68,7 @@ static CMPIObjectPath * make_path(const CMPIObjectPath * op)
 	return NULL;
 }
 
-static CMPIInstance * make_inst(const CMPIObjectPath * op)
+static CMPIInstance * make_inst(const CMPIObjectPath * op, const char **props)
 {
 	CMPIObjectPath * cop;
 	CMPIInstance * ci = NULL;
@@ -76,16 +76,17 @@ static CMPIInstance * make_inst(const CMPIObjectPath * op)
     CMPIArray * array_string = NULL;
 	
 	cop = CMNewObjectPath(_broker,
-						  CMGetCharPtr(CMGetNameSpace(op, NULL)),
-						  _CLASSNAME,
-						  NULL);
+			  CMGetCharPtr(CMGetNameSpace(op, NULL)),
+			  _CLASSNAME,
+			  NULL);
 						  
 	if (cop) {
-		ci = CMNewInstance(_broker, cop, NULL);
+            CMAddKey(cop, "InstanceID", _INSTANCEID, CMPI_chars);
+	    ci = CMNewInstance(_broker, cop, NULL);
 	}
 	
 	if (ci) {
-        CMSetProperty(ci, "InstanceID", _INSTANCEID, CMPI_chars);
+            CMSetPropertyFilter(ci, props, NULL);
 		CMSetProperty(ci, "ElementName", _CLASSNAME, CMPI_chars);
 
         array_string = CMNewArray(_broker, 0, CMPI_string, NULL);
@@ -143,7 +144,7 @@ static CMPIStatus EnumInstances(CMPIInstanceMI * mi,
     CMPIInstance * ci;
     CMPIStatus rc = {CMPI_RC_OK, NULL};
 
- 	ci = make_inst(op);
+ 	ci = make_inst(op, props);
 
     if (ci) {
         CMReturnInstance(rslt, ci);
@@ -171,7 +172,7 @@ static CMPIStatus GetInstance(CMPIInstanceMI * mi,
 		return rc;
 	}
 	
-	ci = make_inst(op);
+	ci = make_inst(op, props);
 
     if (ci) {
         CMReturnInstance(rslt, ci);

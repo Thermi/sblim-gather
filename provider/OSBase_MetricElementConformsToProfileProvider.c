@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricElementConformsToProfileProvider.c,v 1.1 2009/07/17 22:15:39 tyreld Exp $
+ * $Id: OSBase_MetricElementConformsToProfileProvider.c,v 1.2 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -115,22 +115,26 @@ static char * _INTEROP = "root/interop";
 static char * _CIMV2 = "root/cimv2";
 
 static CMPIInstance * make_ref_inst(const CMPIObjectPath * op,
-									CMPIData cap,
-									CMPIData manelm)
+					CMPIData cap,
+					CMPIData manelm,
+                                        const char ** props)
 {
 	CMPIObjectPath * cop;
 	CMPIInstance * inst;
 	
 	cop = CMNewObjectPath(_broker,
-						  CMGetCharPtr(CMGetNameSpace(op, NULL)),
-						  _CLASSNAME,
-						  NULL);
+				  CMGetCharPtr(CMGetNameSpace(op, NULL)),
+				  _CLASSNAME,
+				  NULL);
 	if (cop) {
+		CMAddKey(cop, _LEFTPROP, &cap.value, CMPI_ref);
+		CMAddKey(cop, _RIGHTROP, &manelm.value, CMPI_ref);
 		inst = CMNewInstance(_broker, cop, NULL);
-		CMSetProperty(inst, _LEFTPROP, &cap.value, CMPI_ref);
-		CMSetProperty(inst, _RIGHTROP, &manelm.value, CMPI_ref);
 		
-		return inst;
+                if (inst) {
+                    CMSetPropertyFilter(inst, props, NULL);
+		    return inst;
+                }
 	}
 	
 	return NULL;
@@ -191,14 +195,14 @@ static CMPIStatus Associators(CMPIAssociationMI * mi,
 							  _RIGHTREF,
 							  NULL);
 							  
-		assoc = CBEnumInstances(_broker, ctx, cop, NULL, &rc);
+		assoc = CBEnumInstances(_broker, ctx, cop, properties, &rc);
 	} else if (CMClassPathIsA(_broker, op, _RIGHTREF, NULL)) {
 		cop = CMNewObjectPath(_broker,
 							  _INTEROP,
 							  _LEFTREF,
 							  NULL);
 							  
-		assoc = CBEnumInstances(_broker, ctx, cop, NULL, &rc);
+		assoc = CBEnumInstances(_broker, ctx, cop, properties, &rc);
 	} else {
 		return rc;
 	}
@@ -303,11 +307,11 @@ static CMPIStatus References(CMPIAssociationMI * mi,
 		if (CMHasNext(manelm, &rc)) {
 			enumdata = CMGetNext(manelm, NULL);
 			
-			rinst = make_ref_inst(op, instdata, enumdata);
+			rinst = make_ref_inst(op, instdata, enumdata, properties);
 			if (rinst) {
 				CMReturnInstance(rslt, rinst);
 			}
-			rinst = make_ref_inst(cop, instdata, enumdata);
+			rinst = make_ref_inst(cop, instdata, enumdata, properties);
 			if (rinst) {
 				CMReturnInstance(rslt, rinst);
 			}
@@ -326,11 +330,11 @@ static CMPIStatus References(CMPIAssociationMI * mi,
 		if (CMHasNext(profile, &rc)) {
 			enumdata = CMGetNext(profile, NULL);
 			
-			rinst = make_ref_inst(op, enumdata, instdata);
+			rinst = make_ref_inst(op, enumdata, instdata, properties);
 			if (rinst) {
 				CMReturnInstance(rslt, rinst);
 			}
-			rinst = make_ref_inst(cop, enumdata, instdata);
+			rinst = make_ref_inst(cop, enumdata, instdata, properties);
 			if (rinst) {
 				CMReturnInstance(rslt, rinst);
 			}

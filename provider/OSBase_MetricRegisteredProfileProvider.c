@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRegisteredProfileProvider.c,v 1.1 2009/07/17 22:15:39 tyreld Exp $
+ * $Id: OSBase_MetricRegisteredProfileProvider.c,v 1.2 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -71,7 +71,7 @@ static CMPIObjectPath * make_path(const CMPIObjectPath * op)
 	return NULL;
 }
 
-static CMPIInstance * make_inst(const CMPIObjectPath * op)
+static CMPIInstance * make_inst(const CMPIObjectPath * op, const char ** props)
 {
 	CMPIObjectPath * cop;
 	CMPIInstance * ci = NULL;
@@ -85,11 +85,12 @@ static CMPIInstance * make_inst(const CMPIObjectPath * op)
 						  NULL);
 						  
 	if (cop) {
+		CMAddKey(cop, "InstanceId", _INSTANCEID, CMPI_chars);
 		ci = CMNewInstance(_broker, cop, NULL);
 	}
 	
 	if (ci) {
-		CMSetProperty(ci, "InstanceId", _INSTANCEID, CMPI_chars);
+        CMSetPropertyFilter(ci, props, NULL);
 		
         CMSetProperty(ci, "RegisteredOrganization", 
                       &regorg, CMPI_uint16);
@@ -153,7 +154,7 @@ static CMPIStatus EnumInstances(CMPIInstanceMI * mi,
     CMPIInstance * ci = NULL;
     CMPIStatus rc = {CMPI_RC_OK, NULL};
 
-	ci = make_inst(op);
+	ci = make_inst(op, props);
 	
 	if (ci) {
 		CMReturnInstance(rslt, ci);
@@ -181,7 +182,7 @@ static CMPIStatus GetInstance(CMPIInstanceMI * mi,
 		return rc;
 	}
 
-	ci = make_inst(op);
+	ci = make_inst(op, props);
 	
     if (ci) {
         CMReturnInstance(rslt, ci);

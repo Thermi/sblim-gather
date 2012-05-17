@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.19 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.20 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -853,6 +853,7 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
 				   const ValueItem *val, 
 				   unsigned   datatype,
 				   const CMPIObjectPath *cop,
+                                   const char ** props,
 				   CMPIStatus * rc)
 {
   CMPIObjectPath * co;
@@ -871,15 +872,18 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
   
   co = CMNewObjectPath(broker,namesp,valclsname,rc);
   if (co) {
+    CMAddKey(co,"InstanceId",
+        makeMetricValueId(instid,defname,defid,val->viResource,
+	                val->viSystemId,
+			val->viCaptureTime),
+		        CMPI_chars);
+    CMAddKey(co,"MetricDefinitionId",makeMetricDefId(defidstr,defname,defid),
+                        CMPI_chars);
     ci = CMNewInstance(broker,co,rc);
-    if (ci) {
-      CMSetProperty(ci,"InstanceId",
-		    makeMetricValueId(instid,defname,defid,val->viResource,
-				      val->viSystemId,
-				      val->viCaptureTime),
-		    CMPI_chars);
-      CMSetProperty(ci,"MetricDefinitionId",makeMetricDefId(defidstr,defname,defid),
-		    CMPI_chars);
+
+    if (ci) {  
+      CMSetPropertyFilter(ci, props, NULL);
+
       CMSetProperty(ci,"MeasuredElementName",val->viResource,CMPI_chars);
       datetime = 
 	CMNewDateTimeFromBinary(broker,
@@ -1008,6 +1012,7 @@ CMPIInstance * makeMetricDefInst(const CMPIBroker * broker,
 				 const char * defname,
 				 int    defid,
 				 const char *namesp,
+                                 const char **props,
 				 CMPIStatus * rc)
 {
   CMPIObjectPath * co;
@@ -1024,11 +1029,13 @@ CMPIInstance * makeMetricDefInst(const CMPIBroker * broker,
   
   /* get plugin's metric definition */
   if (co) {
+    CMAddKey(co,"Id",
+	    makeMetricDefId(instid,defname,defid),
+	    CMPI_chars);
     ci = CMNewInstance(broker,co,rc);
     if (ci) {
-      CMSetProperty(ci,"Id",
-		    makeMetricDefId(instid,defname,defid),
-		    CMPI_chars);
+      CMSetPropertyFilter(ci, props, NULL);
+
       CMSetProperty(ci,"Name",defname,CMPI_chars);
       /* DataType */
       for (dt=0;dt<sizeof(typetable)/sizeof(int);dt++) {

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricDefinitionProvider.c,v 1.9 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: OSBase_MetricDefinitionProvider.c,v 1.10 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2003, 2007, 2009
  *
@@ -123,7 +123,7 @@ CMPIStatus OSBase_MetricDefinitionProviderEnumInstances( CMPIInstanceMI * mi,
     metricnums=getMetricDefsForClass(_broker,ctx,ref,&metricnames,&metricids);
     for (i=0; i<metricnums;i++) {
       ci = makeMetricDefInst(_broker,ctx,metricnames[i],metricids[i],
-			     CMGetCharPtr(CMGetNameSpace(ref,NULL)),&rc);
+			     CMGetCharPtr(CMGetNameSpace(ref,NULL)),properties,&rc);
       if (ci) {
 	CMReturnInstance(rslt,ci);
       } else {
@@ -158,7 +158,7 @@ CMPIStatus OSBase_MetricDefinitionProviderGetInstance( CMPIInstanceMI * mi,
   if (idData.value.string && checkRepositoryConnection()) {
     if (parseMetricDefId(CMGetCharPtr(idData.value.string),mname,&mid) == 0) {
       ci=makeMetricDefInst(_broker,ctx,mname,mid,
-			   CMGetCharPtr(CMGetNameSpace(cop,NULL)),&rc);
+			   CMGetCharPtr(CMGetNameSpace(cop,NULL)),properties,&rc);
       if( ci == NULL ) {
 	if( _debug ) {
 	  if( rc.msg != NULL )

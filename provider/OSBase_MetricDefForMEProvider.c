@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricDefForMEProvider.c,v 1.6 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: OSBase_MetricDefForMEProvider.c,v 1.7 2012/05/17 01:02:42 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -40,16 +40,19 @@ static const CMPIBroker * _broker;
  * ------------------------------------------------------------------ */
 
 static CMPIInstance * _makeRefInstance(const CMPIObjectPath *defp,
-				       const CMPIObjectPath *valp)
+				       const CMPIObjectPath *valp,
+                                       const char ** props)
 {
   CMPIObjectPath *co = CMNewObjectPath(_broker,NULL,LOCALCLASSNAME,NULL);
   CMPIInstance   *ci = NULL;
   if (co) {
     CMSetNameSpaceFromObjectPath(co,defp);
+    CMAddKey(co,"Antecedent",&defp,CMPI_ref);
+    CMAddKey(co,"Dependent",&valp,CMPI_ref);
+
     ci = CMNewInstance(_broker,co, NULL);
     if (ci) {
-      CMSetProperty(ci,"Antecedent",&defp,CMPI_ref);
-      CMSetProperty(ci,"Dependent",&valp,CMPI_ref);
+        CMSetPropertyFilter(ci, props, NULL);
     }
   }
   return ci;
@@ -70,6 +73,7 @@ static CMPIObjectPath * _makeRefPath(const CMPIObjectPath *defp,
 static CMPIStatus associatorHelper( const CMPIResult * rslt,
 				    const CMPIContext * ctx,
 				    const CMPIObjectPath * cop,
+                                    const char **props,
 				    int associators, int names ) 
 {
   CMPIStatus      st = {CMPI_RC_OK,NULL};
@@ -124,7 +128,7 @@ static CMPIStatus associatorHelper( const CMPIResult * rslt,
 	    } else if (names) {
 	      CMReturnObjectPath(rslt,_makeRefPath(co, cop));
 	    } else {
-	      CMReturnInstance(rslt,_makeRefInstance(co, cop));
+	      CMReturnInstance(rslt,_makeRefInstance(co, cop, props));
 	    }
 	  }
 	}
@@ -154,6 +158,7 @@ static CMPIStatus associatorHelper( const CMPIResult * rslt,
 				metricnames[i], 
 				metricids[i],
 				CMGetCharPtr(namesp),
+                                props,
 				&st );
 	if (ci) {
 	  CMReturnInstance(rslt,ci);	      
@@ -161,7 +166,7 @@ static CMPIStatus associatorHelper( const CMPIResult * rslt,
       } else if (names) {
 	CMReturnObjectPath(rslt,_makeRefPath(cop, co));
       } else {
-	CMReturnInstance(rslt,_makeRefInstance(cop, co));
+	CMReturnInstance(rslt,_makeRefInstance(cop, co, props));
       }
     }
     releaseMetricIds(metricnames,metricids,resources,systems);
@@ -278,7 +283,7 @@ CMPIStatus OSBase_MetricDefForMEProviderAssociators( CMPIAssociationMI * mi,
 				       const char * resultRole,
 				       const char ** propertyList ) 
 {
-  return associatorHelper(rslt,ctx,cop,1,0);
+  return associatorHelper(rslt,ctx,cop,propertyList,1,0);
 }
 
 CMPIStatus OSBase_MetricDefForMEProviderAssociatorNames( CMPIAssociationMI * mi,
@@ -290,7 +295,7 @@ CMPIStatus OSBase_MetricDefForMEProviderAssociatorNames( CMPIAssociationMI * mi,
 					   const char * role,
 					   const char * resultRole ) 
 {
-  return associatorHelper(rslt,ctx,cop,1,1);
+  return associatorHelper(rslt,ctx,cop,NULL,1,1);
 }
 
 CMPIStatus OSBase_MetricDefForMEProviderReferences( CMPIAssociationMI * mi,
@@ -301,7 +306,7 @@ CMPIStatus OSBase_MetricDefForMEProviderReferences( CMPIAssociationMI * mi,
 				      const char * role,
 				      const char ** propertyList ) 
 {
-  return associatorHelper(rslt,ctx,cop,0,0);
+  return associatorHelper(rslt,ctx,cop,propertyList,0,0);
 }
 
 
@@ -312,7 +317,7 @@ CMPIStatus OSBase_MetricDefForMEProviderReferenceNames( CMPIAssociationMI * mi,
 					  const char * assocClass,
 					  const char * role) 
 {
-  return associatorHelper(rslt,ctx,cop,0,1);
+  return associatorHelper(rslt,ctx,cop,NULL,0,1);
 }
 
 /* ------------------------------------------------------------------ *
