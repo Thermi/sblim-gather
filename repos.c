@@ -1,5 +1,5 @@
 /*
- * $Id: repos.c,v 1.29 2010/12/15 00:41:09 tyreld Exp $
+ * $Id: repos.c,v 1.30 2012/05/29 21:50:43 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -373,8 +373,7 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	  if (useIntervals) {
 	    vs->vsValues[actnum].viCaptureTime=mv[j][0].mvTimeStamp;
 	    vs->vsValues[actnum].viDuration=
-	      mv[j][0].mvTimeStamp -
-	      vs->vsValues[actnum].viCaptureTime;
+	      vs->vsValues[actnum].viCaptureTime - mv[j][numv[j]-1].mvTimeStamp;
 	    vs->vsValues[actnum].viValueLen=100; /* TODO : calc meaningful length */
 	    vs->vsValues[actnum].viSystemId=ch_alloc(ch,syslen);	    
 	    memcpy(vs->vsValues[actnum].viSystemId,mv[j][numv[j]-1].mvSystemId,syslen);
