@@ -3,6 +3,7 @@ Changes in Version 2.2.6
 
 Bugs fixed:
 - 3530668 Duration values always reported as zero
+- 3545751 BaseMetricValue.Volatile should be false
 
 Features added:
 - 3031802 add support for CIM property filters

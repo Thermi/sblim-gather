@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.20 2012/05/17 01:02:42 tyreld Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.21 2012/07/19 05:37:34 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -864,6 +864,7 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
   char           * namesp;
   CMPIDateTime   * datetime;
   CMPIString     * valstring;
+  unsigned char    CMPI_false = 0;
 
   namesp=CMGetCharPtr(CMGetNameSpace(cop,NULL));
   if (metricValueClassName(broker,ctx,namesp,valclsname,defname,defid)) {
@@ -901,6 +902,8 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
       valstring = val2string(broker,val,datatype);
       if (valstring)
 	CMSetProperty(ci,"MetricValue",&valstring,CMPI_string);
+
+      CMSetProperty(ci,"Volatile",&CMPI_false,CMPI_boolean);
     }
   }
   return ci;
