@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.21 2012/07/19 05:37:34 tyreld Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.22 2012/07/31 23:26:46 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -1039,7 +1039,12 @@ CMPIInstance * makeMetricDefInst(const CMPIBroker * broker,
     if (ci) {
       CMSetPropertyFilter(ci, props, NULL);
 
-      CMSetProperty(ci,"Name",defname,CMPI_chars);
+      if (metricDefinitionList[i].mdef_metrictype&MD_ORGSBLIM) {
+        sprintf(instid,"SBLIM:%s",defname);
+        CMSetProperty(ci,"Name",instid,CMPI_chars);
+      } else {
+        CMSetProperty(ci,"Name",defname,CMPI_chars);
+      }
       /* DataType */
       for (dt=0;dt<sizeof(typetable)/sizeof(int);dt++) {
 	if (metricDefinitionList[i].mdef_datatype==typetable[dt])

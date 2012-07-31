@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryOperatingSystem.c,v 1.19 2010/04/19 23:56:27 tyreld Exp $
+ * $Id: repositoryOperatingSystem.c,v 1.20 2012/07/31 23:26:46 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -183,7 +183,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcVersion=MD_VERSION;
   metricCalcDef[0].mcName="NumberOfUsers";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
-  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[0].mcChangeType=MD_GAUGE;
   metricCalcDef[0].mcIsContinuous=MD_TRUE;
   metricCalcDef[0].mcCalculable=MD_NONSUMMABLE;
@@ -194,7 +194,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="NumberOfProcesses";
   metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
-  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
   metricCalcDef[1].mcCalculable=MD_NONSUMMABLE;
@@ -205,7 +205,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="CPUTime";
   metricCalcDef[2].mcId=mr(pluginname,metricCalcDef[2].mcName);
-  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[2].mcIsContinuous=MD_FALSE;
   metricCalcDef[2].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[2].mcDataType=MD_STRING;
@@ -215,7 +215,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcVersion=MD_VERSION;
   metricCalcDef[3].mcName="KernelModeTime";
   metricCalcDef[3].mcId=mr(pluginname,metricCalcDef[3].mcName);
-  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[3].mcChangeType=MD_GAUGE;
   metricCalcDef[3].mcIsContinuous=MD_TRUE;
   metricCalcDef[3].mcCalculable=MD_SUMMABLE;
@@ -227,7 +227,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="UserModeTime";
   metricCalcDef[4].mcId=mr(pluginname,metricCalcDef[4].mcName);
-  metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[4].mcChangeType=MD_GAUGE;
   metricCalcDef[4].mcIsContinuous=MD_TRUE;
   metricCalcDef[4].mcCalculable=MD_SUMMABLE;
@@ -239,7 +239,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcVersion=MD_VERSION;
   metricCalcDef[5].mcName="TotalCPUTime";
   metricCalcDef[5].mcId=mr(pluginname,metricCalcDef[5].mcName);
-  metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[5].mcChangeType=MD_GAUGE;
   metricCalcDef[5].mcIsContinuous=MD_TRUE;
   metricCalcDef[5].mcCalculable=MD_SUMMABLE;
@@ -251,7 +251,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[6].mcVersion=MD_VERSION;
   metricCalcDef[6].mcName="MemorySize";
   metricCalcDef[6].mcId=mr(pluginname,metricCalcDef[6].mcName);
-  metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[6].mcIsContinuous=MD_FALSE;
   metricCalcDef[6].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[6].mcDataType=MD_STRING;
@@ -261,7 +261,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[7].mcVersion=MD_VERSION;
   metricCalcDef[7].mcName="TotalVisibleMemorySize";
   metricCalcDef[7].mcId=mr(pluginname,metricCalcDef[7].mcName);
-  metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[7].mcChangeType=MD_GAUGE;
   metricCalcDef[7].mcIsContinuous=MD_TRUE;
   metricCalcDef[7].mcCalculable=MD_NONSUMMABLE;
@@ -273,7 +273,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[8].mcVersion=MD_VERSION;
   metricCalcDef[8].mcName="FreePhysicalMemory";
   metricCalcDef[8].mcId=mr(pluginname,metricCalcDef[8].mcName);
-  metricCalcDef[8].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[8].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[8].mcChangeType=MD_GAUGE;
   metricCalcDef[8].mcIsContinuous=MD_TRUE;
   metricCalcDef[8].mcCalculable=MD_NONSUMMABLE;
@@ -285,7 +285,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[9].mcVersion=MD_VERSION;
   metricCalcDef[9].mcName="SizeStoredInPagingFiles";
   metricCalcDef[9].mcId=mr(pluginname,metricCalcDef[9].mcName);
-  metricCalcDef[9].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[9].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[9].mcChangeType=MD_GAUGE;
   metricCalcDef[9].mcIsContinuous=MD_TRUE;
   metricCalcDef[9].mcCalculable=MD_NONSUMMABLE;
@@ -297,7 +297,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[10].mcVersion=MD_VERSION;
   metricCalcDef[10].mcName="FreeSpaceInPagingFiles";
   metricCalcDef[10].mcId=mr(pluginname,metricCalcDef[10].mcName);
-  metricCalcDef[10].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[10].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[10].mcChangeType=MD_GAUGE;
   metricCalcDef[10].mcIsContinuous=MD_TRUE;
   metricCalcDef[10].mcCalculable=MD_NONSUMMABLE;
@@ -309,7 +309,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[11].mcVersion=MD_VERSION;
   metricCalcDef[11].mcName="TotalVirtualMemorySize";
   metricCalcDef[11].mcId=mr(pluginname,metricCalcDef[11].mcName);
-  metricCalcDef[11].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[11].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[11].mcChangeType=MD_GAUGE;
   metricCalcDef[11].mcIsContinuous=MD_TRUE;
   metricCalcDef[11].mcCalculable=MD_NONSUMMABLE;
@@ -321,7 +321,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[12].mcVersion=MD_VERSION;
   metricCalcDef[12].mcName="FreeVirtualMemory";
   metricCalcDef[12].mcId=mr(pluginname,metricCalcDef[12].mcName);
-  metricCalcDef[12].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[12].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[12].mcChangeType=MD_GAUGE;
   metricCalcDef[12].mcIsContinuous=MD_TRUE;
   metricCalcDef[12].mcCalculable=MD_NONSUMMABLE;
@@ -333,7 +333,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[13].mcVersion=MD_VERSION;
   metricCalcDef[13].mcName="PageInCounter";
   metricCalcDef[13].mcId=mr(pluginname,metricCalcDef[13].mcName);
-  metricCalcDef[13].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[13].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[13].mcChangeType=MD_COUNTER;
   metricCalcDef[13].mcIsContinuous=MD_TRUE;
   metricCalcDef[13].mcCalculable=MD_NONCALCULABLE;
@@ -344,7 +344,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[14].mcVersion=MD_VERSION;
   metricCalcDef[14].mcName="PageInRate";
   metricCalcDef[14].mcId=mr(pluginname,metricCalcDef[14].mcName);
-  metricCalcDef[14].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[14].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[14].mcChangeType=MD_GAUGE;
   metricCalcDef[14].mcIsContinuous=MD_TRUE;
   metricCalcDef[14].mcCalculable=MD_NONSUMMABLE;
@@ -356,7 +356,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[15].mcVersion=MD_VERSION;
   metricCalcDef[15].mcName="LoadCounter";
   metricCalcDef[15].mcId=mr(pluginname,metricCalcDef[15].mcName);
-  metricCalcDef[15].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[15].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[15].mcChangeType=MD_COUNTER;
   metricCalcDef[15].mcIsContinuous=MD_TRUE;
   metricCalcDef[15].mcCalculable=MD_NONCALCULABLE;
@@ -367,7 +367,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[16].mcVersion=MD_VERSION;
   metricCalcDef[16].mcName="LoadAverage";
   metricCalcDef[16].mcId=mr(pluginname,metricCalcDef[16].mcName);
-  metricCalcDef[16].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_AVERAGE;
+  metricCalcDef[16].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_AVERAGE|MD_ORGSBLIM;
   metricCalcDef[16].mcChangeType=MD_GAUGE;
   metricCalcDef[16].mcIsContinuous=MD_TRUE;
   metricCalcDef[16].mcCalculable=MD_NONSUMMABLE;
@@ -379,7 +379,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[17].mcVersion=MD_VERSION;
   metricCalcDef[17].mcName="InternalViewKernelModePercentage";
   metricCalcDef[17].mcId=mr(pluginname,metricCalcDef[17].mcName);
-  metricCalcDef[17].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[17].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[17].mcChangeType=MD_GAUGE;
   metricCalcDef[17].mcIsContinuous=MD_TRUE;
   metricCalcDef[17].mcCalculable=MD_NONSUMMABLE;
@@ -391,7 +391,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[18].mcVersion=MD_VERSION;
   metricCalcDef[18].mcName="InternalViewUserModePercentage";
   metricCalcDef[18].mcId=mr(pluginname,metricCalcDef[18].mcName);
-  metricCalcDef[18].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[18].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[18].mcChangeType=MD_GAUGE;
   metricCalcDef[18].mcIsContinuous=MD_TRUE;
   metricCalcDef[18].mcCalculable=MD_NONSUMMABLE;
@@ -403,7 +403,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[19].mcVersion=MD_VERSION;
   metricCalcDef[19].mcName="InternalViewIdlePercentage";
   metricCalcDef[19].mcId=mr(pluginname,metricCalcDef[19].mcName);
-  metricCalcDef[19].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[19].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[19].mcChangeType=MD_GAUGE;
   metricCalcDef[19].mcIsContinuous=MD_TRUE;
   metricCalcDef[19].mcCalculable=MD_NONSUMMABLE;
@@ -415,7 +415,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[20].mcVersion=MD_VERSION;
   metricCalcDef[20].mcName="InternalViewTotalCPUPercentage";
   metricCalcDef[20].mcId=mr(pluginname,metricCalcDef[20].mcName);
-  metricCalcDef[20].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[20].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[20].mcChangeType=MD_GAUGE;
   metricCalcDef[20].mcIsContinuous=MD_TRUE;
   metricCalcDef[20].mcCalculable=MD_NONSUMMABLE;
@@ -427,7 +427,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[21].mcVersion=MD_VERSION;
   metricCalcDef[21].mcName="ExternalViewKernelModePercentage";
   metricCalcDef[21].mcId=mr(pluginname,metricCalcDef[21].mcName);
-  metricCalcDef[21].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[21].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[21].mcChangeType=MD_GAUGE;
   metricCalcDef[21].mcIsContinuous=MD_TRUE;
   metricCalcDef[21].mcCalculable=MD_NONSUMMABLE;
@@ -439,7 +439,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[22].mcVersion=MD_VERSION;
   metricCalcDef[22].mcName="ExternalViewUserModePercentage";
   metricCalcDef[22].mcId=mr(pluginname,metricCalcDef[22].mcName);
-  metricCalcDef[22].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[22].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[22].mcChangeType=MD_GAUGE;
   metricCalcDef[22].mcIsContinuous=MD_TRUE;
   metricCalcDef[22].mcCalculable=MD_NONSUMMABLE;
@@ -451,7 +451,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[23].mcVersion=MD_VERSION;
   metricCalcDef[23].mcName="ExternalViewTotalCPUPercentage";
   metricCalcDef[23].mcId=mr(pluginname,metricCalcDef[23].mcName);
-  metricCalcDef[23].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[23].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[23].mcChangeType=MD_GAUGE;
   metricCalcDef[23].mcIsContinuous=MD_TRUE;
   metricCalcDef[23].mcCalculable=MD_NONSUMMABLE;
@@ -463,7 +463,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[24].mcVersion=MD_VERSION;
   metricCalcDef[24].mcName="PageOutCounter";
   metricCalcDef[24].mcId=mr(pluginname,metricCalcDef[24].mcName);
-  metricCalcDef[24].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[24].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[24].mcChangeType=MD_COUNTER;
   metricCalcDef[24].mcIsContinuous=MD_TRUE;
   metricCalcDef[24].mcCalculable=MD_NONCALCULABLE;
@@ -474,7 +474,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[25].mcVersion=MD_VERSION;
   metricCalcDef[25].mcName="PageOutRate";
   metricCalcDef[25].mcId=mr(pluginname,metricCalcDef[25].mcName);
-  metricCalcDef[25].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[25].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[25].mcChangeType=MD_GAUGE;
   metricCalcDef[25].mcIsContinuous=MD_TRUE;
   metricCalcDef[25].mcCalculable=MD_NONSUMMABLE;
@@ -486,7 +486,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[26].mcVersion=MD_VERSION;
   metricCalcDef[26].mcName="CPUConsumptionIndex";
   metricCalcDef[26].mcId=mr(pluginname,metricCalcDef[26].mcName);
-  metricCalcDef[26].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[26].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[26].mcChangeType=MD_GAUGE;
   metricCalcDef[26].mcIsContinuous=MD_TRUE;
   metricCalcDef[26].mcCalculable=MD_NONSUMMABLE;
@@ -498,7 +498,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[27].mcVersion=MD_VERSION;
   metricCalcDef[27].mcName="ContextSwitchCounter";
   metricCalcDef[27].mcId=mr(pluginname,metricCalcDef[27].mcName);
-  metricCalcDef[27].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[27].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[27].mcChangeType=MD_COUNTER;
   metricCalcDef[27].mcIsContinuous=MD_TRUE;
   metricCalcDef[27].mcCalculable=MD_NONCALCULABLE;
@@ -509,7 +509,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[28].mcVersion=MD_VERSION;
   metricCalcDef[28].mcName="ContextSwitchRate";
   metricCalcDef[28].mcId=mr(pluginname,metricCalcDef[28].mcName);
-  metricCalcDef[28].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[28].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[28].mcChangeType=MD_GAUGE;
   metricCalcDef[28].mcIsContinuous=MD_TRUE;
   metricCalcDef[28].mcCalculable=MD_NONSUMMABLE;
@@ -521,7 +521,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[29].mcVersion=MD_VERSION;
   metricCalcDef[29].mcName="HardwareInterruptCounter";
   metricCalcDef[29].mcId=mr(pluginname,metricCalcDef[29].mcName);
-  metricCalcDef[29].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[29].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[29].mcChangeType=MD_COUNTER;
   metricCalcDef[29].mcIsContinuous=MD_TRUE;
   metricCalcDef[29].mcCalculable=MD_NONCALCULABLE;
@@ -532,7 +532,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[30].mcVersion=MD_VERSION;
   metricCalcDef[30].mcName="HardwareInterruptRate";
   metricCalcDef[30].mcId=mr(pluginname,metricCalcDef[30].mcName);
-  metricCalcDef[30].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[30].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[30].mcChangeType=MD_GAUGE;
   metricCalcDef[30].mcIsContinuous=MD_TRUE;
   metricCalcDef[30].mcCalculable=MD_NONSUMMABLE;
@@ -544,7 +544,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[31].mcVersion=MD_VERSION;
   metricCalcDef[31].mcName="UsedPhysicalMemory";
   metricCalcDef[31].mcId=mr(pluginname,metricCalcDef[31].mcName);
-  metricCalcDef[31].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[31].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[31].mcChangeType=MD_GAUGE;
   metricCalcDef[31].mcIsContinuous=MD_TRUE;
   metricCalcDef[31].mcCalculable=MD_NONSUMMABLE;
@@ -556,7 +556,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[32].mcVersion=MD_VERSION;
   metricCalcDef[32].mcName="UsedVirtualMemory";
   metricCalcDef[32].mcId=mr(pluginname,metricCalcDef[32].mcName);
-  metricCalcDef[32].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[32].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[32].mcChangeType=MD_GAUGE;
   metricCalcDef[32].mcIsContinuous=MD_TRUE;
   metricCalcDef[32].mcCalculable=MD_NONSUMMABLE;
@@ -568,7 +568,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[33].mcVersion=MD_VERSION;
   metricCalcDef[33].mcName="IOWaitTime";
   metricCalcDef[33].mcId=mr(pluginname,metricCalcDef[33].mcName);
-  metricCalcDef[33].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[33].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[33].mcChangeType=MD_GAUGE;
   metricCalcDef[33].mcIsContinuous=MD_TRUE;
   metricCalcDef[33].mcCalculable=MD_SUMMABLE;

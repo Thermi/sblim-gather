@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryIPProtocolEndpoint.c,v 1.10 2011/11/15 04:57:17 tyreld Exp $
+ * $Id: repositoryIPProtocolEndpoint.c,v 1.11 2012/07/31 23:26:45 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009, 2011
  *
@@ -92,7 +92,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcVersion=MD_VERSION;
   metricCalcDef[0].mcName="_BytesSubmitted";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
-  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[0].mcIsContinuous=MD_FALSE;
   metricCalcDef[0].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[0].mcDataType=MD_STRING;
@@ -102,7 +102,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="BytesTransmitted";
   metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
-  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
   metricCalcDef[1].mcCalculable=MD_SUMMABLE;
@@ -114,7 +114,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="BytesReceived";
   metricCalcDef[2].mcId=mr(pluginname,metricCalcDef[2].mcName);
-  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[2].mcChangeType=MD_GAUGE;
   metricCalcDef[2].mcIsContinuous=MD_TRUE;
   metricCalcDef[2].mcCalculable=MD_SUMMABLE;
@@ -126,7 +126,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcVersion=MD_VERSION;
   metricCalcDef[3].mcName="ErrorRate";
   metricCalcDef[3].mcId=mr(pluginname,metricCalcDef[3].mcName);
-  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[3].mcChangeType=MD_GAUGE;
   metricCalcDef[3].mcIsContinuous=MD_TRUE;
   metricCalcDef[3].mcCalculable=MD_NONSUMMABLE;
@@ -138,7 +138,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="PacketsTransmitted";
   metricCalcDef[4].mcId=mr(pluginname,metricCalcDef[4].mcName);
-  metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[4].mcChangeType=MD_GAUGE;
   metricCalcDef[4].mcIsContinuous=MD_TRUE;
   metricCalcDef[4].mcCalculable=MD_SUMMABLE;
@@ -150,7 +150,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcVersion=MD_VERSION;
   metricCalcDef[5].mcName="PacketsReceived";
   metricCalcDef[5].mcId=mr(pluginname,metricCalcDef[5].mcName);
-  metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[5].mcChangeType=MD_GAUGE;
   metricCalcDef[5].mcIsContinuous=MD_TRUE;
   metricCalcDef[5].mcCalculable=MD_SUMMABLE;
@@ -162,7 +162,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[6].mcVersion=MD_VERSION;
   metricCalcDef[6].mcName="PacketTransmitRate";
   metricCalcDef[6].mcId=mr(pluginname,metricCalcDef[6].mcName);
-  metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[6].mcChangeType=MD_GAUGE;
   metricCalcDef[6].mcIsContinuous=MD_TRUE;
   metricCalcDef[6].mcCalculable=MD_NONSUMMABLE;
@@ -174,7 +174,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[7].mcVersion=MD_VERSION;
   metricCalcDef[7].mcName="PacketReceiveRate";
   metricCalcDef[7].mcId=mr(pluginname,metricCalcDef[7].mcName);
-  metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[7].mcChangeType=MD_GAUGE;
   metricCalcDef[7].mcIsContinuous=MD_TRUE;
   metricCalcDef[7].mcCalculable=MD_NONSUMMABLE;
@@ -186,7 +186,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[8].mcVersion=MD_VERSION;
   metricCalcDef[8].mcName="ByteTransmitRate";
   metricCalcDef[8].mcId=mr(pluginname,metricCalcDef[8].mcName);
-  metricCalcDef[8].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[8].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[8].mcChangeType=MD_GAUGE;
   metricCalcDef[8].mcIsContinuous=MD_TRUE;
   metricCalcDef[8].mcCalculable=MD_NONSUMMABLE;
@@ -198,7 +198,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[9].mcVersion=MD_VERSION;
   metricCalcDef[9].mcName="ByteReceiveRate";
   metricCalcDef[9].mcId=mr(pluginname,metricCalcDef[9].mcName);
-  metricCalcDef[9].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[9].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[9].mcChangeType=MD_GAUGE;
   metricCalcDef[9].mcIsContinuous=MD_TRUE;
   metricCalcDef[9].mcCalculable=MD_NONSUMMABLE;
@@ -210,7 +210,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[10].mcVersion=MD_VERSION;
   metricCalcDef[10].mcName="ReceivePacketsDropped";
   metricCalcDef[10].mcId=mr(pluginname,metricCalcDef[10].mcName);
-  metricCalcDef[10].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[10].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[10].mcChangeType=MD_GAUGE;
   metricCalcDef[10].mcIsContinuous=MD_TRUE;
   metricCalcDef[10].mcCalculable=MD_SUMMABLE;
@@ -222,7 +222,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[11].mcVersion=MD_VERSION;
   metricCalcDef[11].mcName="TransmitPacketsDropped";
   metricCalcDef[11].mcId=mr(pluginname,metricCalcDef[11].mcName);
-  metricCalcDef[11].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[11].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[11].mcChangeType=MD_GAUGE;
   metricCalcDef[11].mcIsContinuous=MD_TRUE;
   metricCalcDef[11].mcCalculable=MD_SUMMABLE;
@@ -234,7 +234,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[12].mcVersion=MD_VERSION;
   metricCalcDef[12].mcName="ReceiveDropRate";
   metricCalcDef[12].mcId=mr(pluginname,metricCalcDef[12].mcName);
-  metricCalcDef[12].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[12].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[12].mcChangeType=MD_GAUGE;
   metricCalcDef[12].mcIsContinuous=MD_TRUE;
   metricCalcDef[12].mcCalculable=MD_NONSUMMABLE;
@@ -246,7 +246,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[13].mcVersion=MD_VERSION;
   metricCalcDef[13].mcName="TransmitDropRate";
   metricCalcDef[13].mcId=mr(pluginname,metricCalcDef[13].mcName);
-  metricCalcDef[13].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE;
+  metricCalcDef[13].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_RATE|MD_ORGSBLIM;
   metricCalcDef[13].mcChangeType=MD_GAUGE;
   metricCalcDef[13].mcIsContinuous=MD_TRUE;
   metricCalcDef[13].mcCalculable=MD_NONSUMMABLE;

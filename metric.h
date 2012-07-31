@@ -1,5 +1,5 @@
 /*
- * $Id: metric.h,v 1.12 2009/05/20 19:39:55 tyreld Exp $
+ * $Id: metric.h,v 1.13 2012/07/31 23:26:45 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004, 2009
  *
@@ -47,6 +47,8 @@ extern "C" {
 #define MD_RATE            0x0800   // 32768 (Rate)
 #define MD_AVERAGE         0x1000   // 32769 (Average)
 
+// CIM_BaseMetricDefinition.Name
+#define MD_ORGSBLIM        0x10000  // Prepened SBLIM: to metric name
 
 // CIM_BaseMetricDefinition.IsContinuous
 #define MD_FALSE           0x0000

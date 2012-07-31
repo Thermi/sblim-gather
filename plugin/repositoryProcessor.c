@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryProcessor.c,v 1.6 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: repositoryProcessor.c,v 1.7 2012/07/31 23:26:46 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2004, 2009
  *
@@ -64,7 +64,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcVersion=MD_VERSION;
   metricCalcDef[0].mcName="CPUTime";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
-  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[0].mcIsContinuous=MD_FALSE;
   metricCalcDef[0].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[0].mcDataType=MD_STRING;
@@ -74,7 +74,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="TotalCPUTimePercentage";
   metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
-  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
   metricCalcDef[1].mcCalculable=MD_NONSUMMABLE;

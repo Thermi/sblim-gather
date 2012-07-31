@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryStorage.c,v 1.1 2011/11/17 01:01:26 tyreld Exp $
+ * $Id: repositoryStorage.c,v 1.2 2012/07/31 23:26:46 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2011
  *
@@ -64,7 +64,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcVersion=MD_VERSION;
   metricCalcDef[0].mcName="_BlockStorage";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
-  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[0].mcIsContinuous=MD_FALSE;
   metricCalcDef[0].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[0].mcDataType=MD_STRING;
@@ -74,7 +74,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="Read";
   metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
-  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
   metricCalcDef[1].mcCalculable=MD_SUMMABLE;
@@ -86,7 +86,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="Write";
   metricCalcDef[2].mcId=mr(pluginname,metricCalcDef[2].mcName);
-  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[2].mcChangeType=MD_GAUGE;
   metricCalcDef[2].mcIsContinuous=MD_TRUE;
   metricCalcDef[2].mcCalculable=MD_SUMMABLE;
@@ -98,7 +98,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcVersion=MD_VERSION;
   metricCalcDef[3].mcName="Capacity";
   metricCalcDef[3].mcId=mr(pluginname,metricCalcDef[3].mcName);
-  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[3].mcChangeType=MD_GAUGE;
   metricCalcDef[3].mcIsContinuous=MD_TRUE;
   metricCalcDef[3].mcCalculable=MD_NONSUMMABLE;

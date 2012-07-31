@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryzCH.c,v 1.4 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: repositoryzCH.c,v 1.5 2012/07/31 23:26:46 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2006, 2009
  *
@@ -70,7 +70,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[0].mcVersion=MD_VERSION;
   metricCalcDef[0].mcName="_CUE_CMC";
   metricCalcDef[0].mcId=mr(pluginname,metricCalcDef[0].mcName);
-  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT;
+  metricCalcDef[0].mcMetricType=MD_PERIODIC|MD_RETRIEVED|MD_POINT|MD_ORGSBLIM;
   metricCalcDef[0].mcIsContinuous=MD_FALSE;
   metricCalcDef[0].mcCalculable=MD_NONCALCULABLE;
   metricCalcDef[0].mcDataType=MD_STRING;
@@ -80,7 +80,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[1].mcVersion=MD_VERSION;
   metricCalcDef[1].mcName="PartitionUtilizationPercentage";
   metricCalcDef[1].mcId=mr(pluginname,metricCalcDef[1].mcName);
-  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[1].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[1].mcChangeType=MD_GAUGE;
   metricCalcDef[1].mcIsContinuous=MD_TRUE;
   metricCalcDef[1].mcCalculable=MD_NONSUMMABLE;
@@ -92,7 +92,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[2].mcVersion=MD_VERSION;
   metricCalcDef[2].mcName="TotalUtilizationPercentage";
   metricCalcDef[2].mcId=mr(pluginname,metricCalcDef[2].mcName);
-  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[2].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[2].mcChangeType=MD_GAUGE;
   metricCalcDef[2].mcIsContinuous=MD_TRUE;
   metricCalcDef[2].mcCalculable=MD_NONSUMMABLE;
@@ -104,7 +104,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[3].mcVersion=MD_VERSION;
   metricCalcDef[3].mcName="BusUtilizationPercentage";
   metricCalcDef[3].mcId=mr(pluginname,metricCalcDef[3].mcName);
-  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[3].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[3].mcChangeType=MD_GAUGE;
   metricCalcDef[3].mcIsContinuous=MD_TRUE;
   metricCalcDef[3].mcCalculable=MD_NONSUMMABLE;
@@ -116,7 +116,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[4].mcVersion=MD_VERSION;
   metricCalcDef[4].mcName="PartitionReadThroughput";
   metricCalcDef[4].mcId=mr(pluginname,metricCalcDef[4].mcName);
-  metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[4].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[4].mcChangeType=MD_GAUGE;
   metricCalcDef[4].mcIsContinuous=MD_TRUE;
   metricCalcDef[4].mcCalculable=MD_NONSUMMABLE;
@@ -128,7 +128,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[5].mcVersion=MD_VERSION;
   metricCalcDef[5].mcName="PartitionWriteThroughput";
   metricCalcDef[5].mcId=mr(pluginname,metricCalcDef[5].mcName);
-  metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[5].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[5].mcChangeType=MD_GAUGE;
   metricCalcDef[5].mcIsContinuous=MD_TRUE;
   metricCalcDef[5].mcCalculable=MD_NONSUMMABLE;
@@ -140,7 +140,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[6].mcVersion=MD_VERSION;
   metricCalcDef[6].mcName="TotalReadThroughput";
   metricCalcDef[6].mcId=mr(pluginname,metricCalcDef[6].mcName);
-  metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[6].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[6].mcChangeType=MD_GAUGE;
   metricCalcDef[6].mcIsContinuous=MD_TRUE;
   metricCalcDef[6].mcCalculable=MD_NONSUMMABLE;
@@ -152,7 +152,7 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[7].mcVersion=MD_VERSION;
   metricCalcDef[7].mcName="TotalWriteThroughput";
   metricCalcDef[7].mcId=mr(pluginname,metricCalcDef[7].mcName);
-  metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL;
+  metricCalcDef[7].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
   metricCalcDef[7].mcChangeType=MD_GAUGE;
   metricCalcDef[7].mcIsContinuous=MD_TRUE;
   metricCalcDef[7].mcCalculable=MD_SUMMABLE;

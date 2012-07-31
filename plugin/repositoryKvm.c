@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryKvm.c,v 1.10 2012/07/31 01:28:08 tyreld Exp $
+ * $Id: repositoryKvm.c,v 1.11 2012/07/31 23:26:45 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2011
  *
@@ -139,7 +139,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[0].mcVersion = MD_VERSION;
     metricCalcDef[0].mcName = "_Internal_CPUTime";
     metricCalcDef[0].mcId = mr(pluginname, metricCalcDef[0].mcName);
-    metricCalcDef[0].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+    metricCalcDef[0].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[0].mcChangeType = MD_COUNTER;
     metricCalcDef[0].mcIsContinuous = MD_TRUE;
     metricCalcDef[0].mcCalculable = MD_NONSUMMABLE;
@@ -150,7 +150,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[1].mcVersion = MD_VERSION;
     metricCalcDef[1].mcName = "_Internal_TotalCPUTime";
     metricCalcDef[1].mcId = mr(pluginname, metricCalcDef[1].mcName);
-    metricCalcDef[1].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+    metricCalcDef[1].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[1].mcChangeType = MD_COUNTER;
     metricCalcDef[1].mcIsContinuous = MD_TRUE;
     metricCalcDef[1].mcCalculable = MD_NONSUMMABLE;
@@ -174,7 +174,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[3].mcVersion = MD_VERSION;
     metricCalcDef[3].mcName = "_Internal10m_TotalCPUTime";
     metricCalcDef[3].mcId = mr(pluginname, metricCalcDef[3].mcName);
-    metricCalcDef[3].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+    metricCalcDef[3].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[3].mcChangeType = MD_COUNTER;
     metricCalcDef[3].mcIsContinuous = MD_TRUE;
     metricCalcDef[3].mcCalculable = MD_NONSUMMABLE;
@@ -186,7 +186,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[4].mcName = "ActiveVirtualProcessors";
     metricCalcDef[4].mcId = mr(pluginname, metricCalcDef[4].mcName);
     metricCalcDef[4].mcMetricType =
-	MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+	MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[4].mcChangeType = MD_GAUGE;
     metricCalcDef[4].mcIsContinuous = MD_TRUE;
     metricCalcDef[4].mcCalculable = MD_NONSUMMABLE;
@@ -198,7 +198,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[5].mcName = "ExternalViewTotalCPUTimePercentage";
     metricCalcDef[5].mcId = mr(pluginname, metricCalcDef[5].mcName);
     metricCalcDef[5].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
+	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL|MD_ORGSBLIM;
     metricCalcDef[5].mcChangeType = MD_GAUGE;
     metricCalcDef[5].mcIsContinuous = MD_TRUE;
     metricCalcDef[5].mcCalculable = MD_NONSUMMABLE;
@@ -210,7 +210,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[6].mcVersion = MD_VERSION;
     metricCalcDef[6].mcName = "_Internal10m_CPUTime";
     metricCalcDef[6].mcId = mr(pluginname, metricCalcDef[6].mcName);
-    metricCalcDef[6].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+    metricCalcDef[6].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[6].mcChangeType = MD_COUNTER;
     metricCalcDef[6].mcIsContinuous = MD_TRUE;
     metricCalcDef[6].mcCalculable = MD_NONSUMMABLE;
@@ -223,7 +223,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[7].mcVersion = MD_VERSION;
     metricCalcDef[7].mcName = "_Internal_Memory";
     metricCalcDef[7].mcId = mr(pluginname, metricCalcDef[7].mcName);
-    metricCalcDef[7].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+    metricCalcDef[7].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[7].mcIsContinuous = MD_FALSE;
     metricCalcDef[7].mcCalculable = MD_NONCALCULABLE;
     metricCalcDef[7].mcDataType = MD_STRING;
@@ -233,7 +233,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[8].mcVersion = MD_VERSION;
     metricCalcDef[8].mcName = "PhysicalMemoryAllocatedToVirtualSystem";
     metricCalcDef[8].mcId = mr(pluginname, metricCalcDef[8].mcName);
-    metricCalcDef[8].mcMetricType = MD_PERIODIC | MD_CALCULATED | MD_POINT;
+    metricCalcDef[8].mcMetricType = MD_PERIODIC | MD_CALCULATED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[8].mcChangeType = MD_GAUGE;
     metricCalcDef[8].mcIsContinuous = MD_TRUE;
     metricCalcDef[8].mcCalculable = MD_NONSUMMABLE;
@@ -245,7 +245,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[9].mcVersion = MD_VERSION;
     metricCalcDef[9].mcName = "HostFreePhysicalMemory";
     metricCalcDef[9].mcId = mr(pluginname, metricCalcDef[9].mcName);
-    metricCalcDef[9].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+    metricCalcDef[9].mcMetricType = MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[9].mcChangeType = MD_GAUGE;
     metricCalcDef[9].mcIsContinuous = MD_TRUE;
     metricCalcDef[9].mcCalculable = MD_NONSUMMABLE;
@@ -257,7 +257,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[10].mcName = "PhysicalMemoryAllocatedToVirtualSystemPercentage";
     metricCalcDef[10].mcId = mr(pluginname, metricCalcDef[10].mcName);
     metricCalcDef[10].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_POINT;
+	MD_PERIODIC | MD_CALCULATED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[10].mcChangeType = MD_GAUGE;
     metricCalcDef[10].mcIsContinuous = MD_TRUE;
     metricCalcDef[10].mcCalculable = MD_NONSUMMABLE;
@@ -270,7 +270,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[11].mcName = "HostMemoryPercentage";
     metricCalcDef[11].mcId = mr(pluginname, metricCalcDef[11].mcName);
     metricCalcDef[11].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_POINT;
+	MD_PERIODIC | MD_CALCULATED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[11].mcChangeType = MD_GAUGE;
     metricCalcDef[11].mcIsContinuous = MD_TRUE;
     metricCalcDef[11].mcCalculable = MD_NONSUMMABLE;
@@ -283,7 +283,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[12].mcName = "TenMinuteTotalCPUTime";
     metricCalcDef[12].mcId = mr(pluginname, metricCalcDef[12].mcName);
     metricCalcDef[12].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
+	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL|MD_ORGSBLIM;
     metricCalcDef[12].mcChangeType = MD_GAUGE;
     metricCalcDef[12].mcIsContinuous = MD_TRUE;
     metricCalcDef[12].mcCalculable = MD_SUMMABLE;
@@ -297,7 +297,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
 	"TenMinuteExternalViewTotalCPUTimePercentage";
     metricCalcDef[13].mcId = mr(pluginname, metricCalcDef[13].mcName);
     metricCalcDef[13].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
+	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL|MD_ORGSBLIM;
     metricCalcDef[13].mcChangeType = MD_GAUGE;
     metricCalcDef[13].mcIsContinuous = MD_TRUE;
     metricCalcDef[13].mcCalculable = MD_NONSUMMABLE;
@@ -310,7 +310,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[14].mcName = "VirtualSystemState";
     metricCalcDef[14].mcId = mr(pluginname, metricCalcDef[14].mcName);
     metricCalcDef[14].mcMetricType =
-	MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+	MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[14].mcIsContinuous = MD_FALSE;
     metricCalcDef[14].mcCalculable = MD_NONCALCULABLE;
     metricCalcDef[14].mcDataType = MD_UINT32;
@@ -321,7 +321,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[15].mcName = "CPUUsedTimeCounter";
     metricCalcDef[15].mcId = mr(pluginname, metricCalcDef[15].mcName);
     metricCalcDef[15].mcMetricType =
-	MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+	MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[15].mcChangeType = MD_COUNTER;
     metricCalcDef[15].mcIsContinuous = MD_TRUE;
     metricCalcDef[15].mcCalculable = MD_NONSUMMABLE;
@@ -333,7 +333,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[16].mcName = "CPUReadyTimeCounter";
     metricCalcDef[16].mcId = mr(pluginname, metricCalcDef[16].mcName);
     metricCalcDef[16].mcMetricType =
-	MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+	MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[16].mcChangeType = MD_COUNTER;
     metricCalcDef[16].mcIsContinuous = MD_TRUE;
     metricCalcDef[16].mcCalculable = MD_NONSUMMABLE;
@@ -345,7 +345,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[17].mcName = "_VirtualBlockIOStats";
     metricCalcDef[17].mcId = mr(pluginname, metricCalcDef[17].mcName);
     metricCalcDef[17].mcMetricType =
-	MD_PERIODIC | MD_RETRIEVED | MD_POINT;
+	MD_PERIODIC | MD_RETRIEVED | MD_POINT|MD_ORGSBLIM;
     metricCalcDef[17].mcIsContinuous = MD_FALSE;
     metricCalcDef[17].mcCalculable = MD_NONCALCULABLE;
     metricCalcDef[17].mcDataType = MD_STRING;
@@ -356,7 +356,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[18].mcName = "BlockRead";
     metricCalcDef[18].mcId = mr(pluginname, metricCalcDef[18].mcName);
     metricCalcDef[18].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
+	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL|MD_ORGSBLIM;
     metricCalcDef[18].mcChangeType = MD_GAUGE;
     metricCalcDef[18].mcIsContinuous = MD_TRUE;
     metricCalcDef[18].mcCalculable = MD_SUMMABLE;
@@ -369,7 +369,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[19].mcName = "BlockWrite";
     metricCalcDef[19].mcId = mr(pluginname, metricCalcDef[19].mcName);
     metricCalcDef[19].mcMetricType =
-	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL;
+	MD_PERIODIC | MD_CALCULATED | MD_INTERVAL|MD_ORGSBLIM;
     metricCalcDef[19].mcChangeType = MD_GAUGE;
     metricCalcDef[19].mcIsContinuous = MD_TRUE;
     metricCalcDef[19].mcCalculable = MD_SUMMABLE;
@@ -381,7 +381,7 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[20].mcVersion=MD_VERSION;
     metricCalcDef[20].mcName="BlockCapacity";
     metricCalcDef[20].mcId=mr(pluginname,metricCalcDef[20].mcName);
-    metricCalcDef[20].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT;
+    metricCalcDef[20].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_POINT|MD_ORGSBLIM;
     metricCalcDef[20].mcChangeType=MD_GAUGE;
     metricCalcDef[20].mcIsContinuous=MD_TRUE;
     metricCalcDef[20].mcCalculable=MD_NONSUMMABLE;
