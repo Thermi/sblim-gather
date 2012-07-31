@@ -1,5 +1,5 @@
 /*
- * $Id: repositoryKvm.c,v 1.9 2011/11/29 06:28:09 tyreld Exp $
+ * $Id: repositoryKvm.c,v 1.10 2012/07/31 01:28:08 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2009, 2011
  *
@@ -311,9 +311,8 @@ int _DefinedRepositoryMetrics(MetricRegisterId * mr,
     metricCalcDef[14].mcId = mr(pluginname, metricCalcDef[14].mcName);
     metricCalcDef[14].mcMetricType =
 	MD_PERIODIC | MD_RETRIEVED | MD_POINT;
-    metricCalcDef[14].mcChangeType = MD_GAUGE;
-    metricCalcDef[14].mcIsContinuous = MD_TRUE;
-    metricCalcDef[14].mcCalculable = MD_NONSUMMABLE;
+    metricCalcDef[14].mcIsContinuous = MD_FALSE;
+    metricCalcDef[14].mcCalculable = MD_NONCALCULABLE;
     metricCalcDef[14].mcDataType = MD_UINT32;
     metricCalcDef[14].mcCalc = metricCalcVirtualSystemState;
     metricCalcDef[14].mcUnits = muNA;
