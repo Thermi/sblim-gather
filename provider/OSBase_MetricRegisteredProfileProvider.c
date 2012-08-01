@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRegisteredProfileProvider.c,v 1.2 2012/05/17 01:02:42 tyreld Exp $
+ * $Id: OSBase_MetricRegisteredProfileProvider.c,v 1.3 2012/08/01 00:00:59 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -28,7 +28,9 @@
 const CMPIBroker * _broker;
 
 static const char * _CLASSNAME = "Linux_MetricRegisteredProfile";
-static const char * _INSTANCEID = "CIM:DSP1053-BaseMetrics-1.0.0";
+static const char * _INSTANCEID = "CIM:DSP1053-BaseMetrics-1.0.1";
+
+static const char * _VERSION = "1.0.1";
 
 /* Instance Provider Interface */
 
@@ -99,7 +101,7 @@ static CMPIInstance * make_inst(const CMPIObjectPath * op, const char ** props)
                       "Base Metrics", CMPI_chars);
 
         CMSetProperty(ci, "RegisteredVersion", 
-                      "1.0.0", CMPI_chars);
+                      _VERSION, CMPI_chars);
 
         array = CMNewArray(_broker, 1, CMPI_uint16, NULL);
         if (CMIsNullObject(array)) {
