@@ -6,6 +6,7 @@ Bugs fixed:
 - 3545751 BaseMetricValue.Volatile should be false
 - 3552310 incorrect metric definition for VirtualState
 - 2811884 dsp1053 unique BaseMetricDefinition.Name
+- 3554130 sample interval config warning
 
 Features added:
 - 3031802 add support for CIM property filters
