@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.22 2012/07/31 23:26:46 tyreld Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.23 2012/08/04 00:07:02 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -35,6 +35,8 @@
 #define PLUGINCLASSNAME "Linux_RepositoryPlugin"
 #define VALDEFCLASSNAME "Linux_MetricValueDefinition"
 
+static unsigned char CMPI_false = 0;
+static unsigned char CMPI_true  = 1;
 
 int checkRepositoryConnection()
 {
@@ -864,7 +866,6 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
   char           * namesp;
   CMPIDateTime   * datetime;
   CMPIString     * valstring;
-  unsigned char    CMPI_false = 0;
 
   namesp=CMGetCharPtr(CMGetNameSpace(cop,NULL));
   if (metricValueClassName(broker,ctx,namesp,valclsname,defname,defid)) {
@@ -962,9 +963,6 @@ CMPIObjectPath * makeMetricDefPath(const CMPIBroker * broker,
   return co;
 }
 
-
-static unsigned char CMPI_false = 0;
-static unsigned char CMPI_true  = 1;
 
 static int metrictypetable[] = {
   -1,

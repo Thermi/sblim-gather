@@ -7,6 +7,7 @@ Bugs fixed:
 - 3552310 incorrect metric definition for VirtualState
 - 2811884 dsp1053 unique BaseMetricDefinition.Name
 - 3554130 sample interval config warning
+- 3554137 multiple definitions of CMPI_false
 
 Features added:
 - 3031802 add support for CIM property filters
