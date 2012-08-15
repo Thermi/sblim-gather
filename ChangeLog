@@ -1,3 +1,85 @@
+2012-08-14  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* Makefile.am, NEWS, provider/Makefile.am:
+
+	Fixed 3557552: make distcheck fails
+
+2012-08-03  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, provider/OSBase_MetricUtil.c:
+
+	Fixed 3554137: multiple definitions of CMPI_false
+
+2012-08-03  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, gatherd.conf:
+
+	Fixed 3554130: sample interval config warning
+
+2012-07-31  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, provider/OSBase_MetricRegisteredProfileProvider.c:
+
+	Fixed 3552873: DSP1053 v1.0.1 profile conformance
+
+2012-07-31  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, metric.h, plugin/repositoryIPProtocolEndpoint.c,
+	plugin/repositoryKvm.c, plugin/repositoryLocalFileSystem.c,
+	plugin/repositoryNetworkPort.c, plugin/repositoryOperatingSystem.c,
+	plugin/repositoryProcessor.c, plugin/repositoryStorage.c,
+	plugin/repositoryUnixProcess.c, plugin/repositoryXen.c,
+	plugin/repositoryzCEC.c, plugin/repositoryzCH.c,
+	plugin/repositoryzECKD.c, plugin/repositoryzLPAR.c,
+	provider/OSBase_MetricUtil.c:
+
+	Fixed 2811884: dsp1053 unique BaseMetricDefinition.Name
+
+2012-07-30  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, plugin/repositoryKvm.c:
+
+	Fixed 3552310: incorrect metric definition for VirtualState
+
+2012-07-18  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, provider/OSBase_MetricUtil.c:
+
+	Fixed 3545751: BaseMetricValue.Volatile should be false
+
+2012-05-29  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, repos.c:
+
+	Fixed 3530668: Duration values always reported as zero
+
+2012-05-16  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* NEWS, provider/OSBase_MetricDefForMEProvider.c,
+	provider/OSBase_MetricDefinitionProvider.c,
+	provider/OSBase_MetricElementCapabilitiesProvider.c,
+	provider/OSBase_MetricElementConformsToProfileProvider.c,
+	provider/OSBase_MetricForMEProvider.c,
+	provider/OSBase_MetricGathererProvider.c,
+	provider/OSBase_MetricHostedServiceProvider.c,
+	provider/OSBase_MetricInstanceProvider.c,
+	provider/OSBase_MetricLifeCycleProvider.c,
+	provider/OSBase_MetricRegisteredProfileProvider.c,
+	provider/OSBase_MetricRepositoryServiceProvider.c,
+	provider/OSBase_MetricServiceAffectsElementProvider.c,
+	provider/OSBase_MetricServiceCapabilitiesProvider.c,
+	provider/OSBase_MetricServiceProvider.c,
+	provider/OSBase_MetricUtil.c, provider/OSBase_MetricUtil.h,
+	provider/OSBase_MetricValueProvider.c:
+
+	Fixed 3031802: add support for CIM property filters
+
+2012-04-03  Tyrel Datwyler <tyreld@us.ibm.com>
+
+	* ChangeLog, configure.ac:
+
+	Updated for 2.2.5 release
+
 2012-04-03  Tyrel Datwyler <tyreld@us.ibm.com>
 
 	* plugin/metricVirt.c, NEWS:
