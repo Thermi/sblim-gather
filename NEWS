@@ -8,6 +8,7 @@ Bugs fixed:
 - 2811884 dsp1053 unique BaseMetricDefinition.Name
 - 3554130 sample interval config warning
 - 3554137 multiple definitions of CMPI_false
+- 3557552 make distcheck fails
 
 Features added:
 - 3031802 add support for CIM property filters

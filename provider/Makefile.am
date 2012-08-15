@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.19 2011/11/17 01:01:26 tyreld Exp $
+# $Id: Makefile.am,v 1.20 2012/08/15 02:13:58 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009, 2011
 #
@@ -122,7 +122,8 @@ libcimplugzLPAR_la_SOURCES=$(srcdir)/../plugin/cimplugzLPAR.c
 lib_LTLIBRARIES = libOSBase_MetricUtil.la
 libOSBase_MetricUtil_la_SOURCES=OSBase_MetricUtil.c
 libOSBase_MetricUtil_la_CPPFLAGS= $(AM_CPPFLAGS) -DCIM_PLUGINDIR=\"$(cimplugindir)\"
-libOSBase_MetricUtil_la_LIBADD=$(srcdir)/../librrepos.la -lcmpiOSBase_Common
+libOSBase_MetricUtil_la_LIBADD=../librrepos.la 
+libOSBase_MetricUtil_la_LDFLAGS=-lcmpiOSBase_Common
 
 # Gather CMPI provider libraries
 provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \
@@ -143,11 +144,11 @@ provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \
 	libOSBase_MetricLifeCycleProvider.la
 
 libOSBase_MetricDefinitionProvider_la_SOURCES = OSBase_MetricDefinitionProvider.c
-libOSBase_MetricDefinitionProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la
+libOSBase_MetricDefinitionProvider_la_LIBADD = libOSBase_MetricUtil.la
 libOSBase_MetricDefinitionProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricValueProvider_la_SOURCES = OSBase_MetricValueProvider.c
-libOSBase_MetricValueProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la
+libOSBase_MetricValueProvider_la_LIBADD = libOSBase_MetricUtil.la
 libOSBase_MetricValueProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricServiceProvider_la_SOURCES = OSBase_MetricServiceProvider.c
@@ -166,31 +167,31 @@ libOSBase_MetricRegisteredProfileProvider_la_SOURCES = OSBase_MetricRegisteredPr
 libOSBase_MetricElementConformsToProfileProvider_la_SOURCES = OSBase_MetricElementConformsToProfileProvider.c
 
 libOSBase_MetricGathererProvider_la_SOURCES = OSBase_MetricGathererProvider.c
-libOSBase_MetricGathererProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la $(srcdir)/../librgather.la @LIBSBLIMBASE@
+libOSBase_MetricGathererProvider_la_LIBADD = libOSBase_MetricUtil.la ../librgather.la @LIBSBLIMBASE@
 libOSBase_MetricGathererProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricRepositoryServiceProvider_la_SOURCES = OSBase_MetricRepositoryServiceProvider.c
-libOSBase_MetricRepositoryServiceProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la @LIBSBLIMBASE@
+libOSBase_MetricRepositoryServiceProvider_la_LIBADD = libOSBase_MetricUtil.la @LIBSBLIMBASE@
 libOSBase_MetricRepositoryServiceProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricForMEProvider_la_SOURCES = OSBase_MetricForMEProvider.c
-libOSBase_MetricForMEProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la
+libOSBase_MetricForMEProvider_la_LIBADD = libOSBase_MetricUtil.la
 libOSBase_MetricForMEProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricDefForMEProvider_la_SOURCES = OSBase_MetricDefForMEProvider.c
-libOSBase_MetricDefForMEProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la
+libOSBase_MetricDefForMEProvider_la_LIBADD = libOSBase_MetricUtil.la
 libOSBase_MetricDefForMEProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricInstanceProvider_la_SOURCES = OSBase_MetricInstanceProvider.c
-libOSBase_MetricInstanceProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la
+libOSBase_MetricInstanceProvider_la_LIBADD = libOSBase_MetricUtil.la
 libOSBase_MetricInstanceProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricIndicationProvider_la_SOURCES = OSBase_MetricIndicationProvider.c
-libOSBase_MetricIndicationProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la
+libOSBase_MetricIndicationProvider_la_LIBADD = libOSBase_MetricUtil.la
 libOSBase_MetricIndicationProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricLifeCycleProvider_la_SOURCES = OSBase_MetricLifeCycleProvider.c
-libOSBase_MetricLifeCycleProvider_la_LIBADD = $(srcdir)/libOSBase_MetricUtil.la
+libOSBase_MetricLifeCycleProvider_la_LIBADD = libOSBase_MetricUtil.la
 libOSBase_MetricLifeCycleProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 #
