@@ -1,3 +1,9 @@
+Chagnes in Version 2.2.7
+========================
+
+Bugs fixed:
+3557673 distcheck should check for system z plugins
+
 Changes in Version 2.2.6
 ========================
 

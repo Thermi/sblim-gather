@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.25 2012/08/15 02:13:57 tyreld Exp $
+# $Id: Makefile.am,v 1.26 2012/08/15 03:48:27 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -17,6 +17,9 @@
 # ==================================================================
 
 SUBDIRS=. $(PROVIDER_SUBDIR)
+
+# make sure that system z components are included
+DISTCHECK_CONFIGURE_FLAGS = --enable-z
 
 # Start from an empty extra distribution file list
 EXTRA_DIST=
