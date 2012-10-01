@@ -1,5 +1,5 @@
 /*
- * $Id: merrno.c,v 1.3 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: merrno.c,v 1.4 2012/10/01 02:59:11 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004, 2009
  *
@@ -37,8 +37,8 @@ static void m_errno_term(void *m_errno)
 
 static void m_errno_init()
 {
-  pthread_key_create(&m_errno_key,m_errno_term);
-  pthread_key_create(&m_errnostr_key,m_errno_term);
+  pthread_key_create(&m_errno_key,free);
+  pthread_key_create(&m_errnostr_key,free);
 }
 
 int m_errno()

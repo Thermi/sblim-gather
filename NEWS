@@ -4,6 +4,7 @@ Chagnes in Version 2.2.7
 Bugs fixed:
 3557673 distcheck should check for system z plugins
 3573309 large memory counters overflow raw metric buffer
+3573315 thread cleanup segv if gather libs unloaded
 
 Changes in Version 2.2.6
 ========================
