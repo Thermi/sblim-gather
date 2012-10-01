@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.26 2012/08/15 03:48:27 tyreld Exp $
+# $Id: Makefile.am,v 1.27 2012/10/01 02:15:35 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -218,7 +218,7 @@ metricplugin_LTLIBRARIES = $(BASE_METRIC_LIBS) \
 libmetricOperatingSystem_la_SOURCES=plugin/metricOperatingSystem.c
 libmetricOperatingSystem_la_LIBADD=libgatherutil.la
 libmetricOperatingSystem_la_DEPENDENCIES=libgatherutil.la
-libmetricOperatingSystem_la_LDFLAGS=$(PLUG_FLAGS)
+libmetricOperatingSystem_la_LDFLAGS=$(PLUG_FLAGS) -lm
 
 libmetricLocalFileSystem_la_SOURCES=plugin/metricLocalFileSystem.c
 libmetricLocalFileSystem_la_LIBADD=libgatherutil.la

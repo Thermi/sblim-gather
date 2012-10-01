@@ -1,5 +1,5 @@
 /*
- * $Id: metricOperatingSystem.c,v 1.20 2010/04/19 23:56:27 tyreld Exp $
+ * $Id: metricOperatingSystem.c,v 1.21 2012/10/01 02:15:36 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2009
  *
@@ -41,6 +41,14 @@
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <netinet/in.h>
+#include <limits.h>
+#include <math.h>
+
+#ifndef ULLONG_MAX
+#   define ULLONG_MAX 18446744073709551615ULL
+#endif
+
+#define ULL_CHAR_MAX ((int) ((log(ULLONG_MAX)) / (log(10)) + 1))
 
 /* ---------------------------------------------------------------------------*/
 
@@ -462,7 +470,7 @@ int metricRetrMemorySize( int mid,
     }
     else { return -1; }
 
-    str = calloc(1, ((4*sizeof(unsigned long long))+4) );
+    str = calloc(1, ((4*ULL_CHAR_MAX)+4) );
     sprintf( str,"%lld:%lld:%lld:%lld",
 	     totalPhysMem,freePhysMem,totalSwapMem,freeSwapMem);
     
