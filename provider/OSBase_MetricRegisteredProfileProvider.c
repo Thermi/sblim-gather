@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRegisteredProfileProvider.c,v 1.3 2012/08/01 00:00:59 tyreld Exp $
+ * $Id: OSBase_MetricRegisteredProfileProvider.c,v 1.4 2012/10/25 23:13:52 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -87,12 +87,12 @@ static CMPIInstance * make_inst(const CMPIObjectPath * op, const char ** props)
 						  NULL);
 						  
 	if (cop) {
-		CMAddKey(cop, "InstanceId", _INSTANCEID, CMPI_chars);
 		ci = CMNewInstance(_broker, cop, NULL);
 	}
 	
 	if (ci) {
         CMSetPropertyFilter(ci, props, NULL);
+	CMSetProperty(ci, "InstanceId", _INSTANCEID, CMPI_chars);
 		
         CMSetProperty(ci, "RegisteredOrganization", 
                       &regorg, CMPI_uint16);

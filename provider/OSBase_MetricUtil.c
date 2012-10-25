@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricUtil.c,v 1.23 2012/08/04 00:07:02 tyreld Exp $
+ * $Id: OSBase_MetricUtil.c,v 1.24 2012/10/25 23:13:52 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -874,18 +874,18 @@ CMPIInstance * makeMetricValueInst(const CMPIBroker * broker,
   
   co = CMNewObjectPath(broker,namesp,valclsname,rc);
   if (co) {
-    CMAddKey(co,"InstanceId",
-        makeMetricValueId(instid,defname,defid,val->viResource,
-	                val->viSystemId,
-			val->viCaptureTime),
-		        CMPI_chars);
-    CMAddKey(co,"MetricDefinitionId",makeMetricDefId(defidstr,defname,defid),
-                        CMPI_chars);
     ci = CMNewInstance(broker,co,rc);
 
     if (ci) {  
       CMSetPropertyFilter(ci, props, NULL);
 
+    CMSetProperty(ci,"InstanceId",
+        makeMetricValueId(instid,defname,defid,val->viResource,
+	                val->viSystemId,
+			val->viCaptureTime),
+		        CMPI_chars);
+    CMSetProperty(ci,"MetricDefinitionId",makeMetricDefId(defidstr,defname,defid),
+                        CMPI_chars);
       CMSetProperty(ci,"MeasuredElementName",val->viResource,CMPI_chars);
       datetime = 
 	CMNewDateTimeFromBinary(broker,
@@ -1030,12 +1030,12 @@ CMPIInstance * makeMetricDefInst(const CMPIBroker * broker,
   
   /* get plugin's metric definition */
   if (co) {
-    CMAddKey(co,"Id",
-	    makeMetricDefId(instid,defname,defid),
-	    CMPI_chars);
     ci = CMNewInstance(broker,co,rc);
     if (ci) {
       CMSetPropertyFilter(ci, props, NULL);
+
+      CMSetProperty(ci,"Id",
+              makeMetricDefId(instid,defname,defid),CMPI_chars);
 
       if (metricDefinitionList[i].mdef_metrictype&MD_ORGSBLIM) {
         sprintf(instid,"SBLIM:%s",defname);

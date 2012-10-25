@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricForMEProvider.c,v 1.11 2012/05/17 01:02:42 tyreld Exp $
+ * $Id: OSBase_MetricForMEProvider.c,v 1.12 2012/10/25 23:13:52 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -50,12 +50,12 @@ static CMPIInstance * _makeRefInstance(const CMPIObjectPath *defp,
   CMPIInstance   *ci = NULL;
   if (co) {
     CMSetNameSpaceFromObjectPath(co,defp);
-    CMAddKey(co,"Antecedent",&defp,CMPI_ref);
-    CMAddKey(co,"Dependent",&valp,CMPI_ref);
 
     ci = CMNewInstance(_broker,co, NULL);
     if (ci) {
         CMSetPropertyFilter(ci, props, NULL);
+        CMSetProperty(ci, "Antecedent", &defp, CMPI_ref);
+        CMSetProperty(ci, "Dependent", &valp, CMPI_ref);
     }
   }
   return ci;

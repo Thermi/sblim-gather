@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricServiceCapabilitiesProvider.c,v 1.3 2012/05/17 01:02:42 tyreld Exp $
+ * $Id: OSBase_MetricServiceCapabilitiesProvider.c,v 1.4 2012/10/25 23:13:52 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -81,12 +81,13 @@ static CMPIInstance * make_inst(const CMPIObjectPath * op, const char **props)
 			  NULL);
 						  
 	if (cop) {
-            CMAddKey(cop, "InstanceID", _INSTANCEID, CMPI_chars);
 	    ci = CMNewInstance(_broker, cop, NULL);
 	}
 	
 	if (ci) {
             CMSetPropertyFilter(ci, props, NULL);
+            CMSetProperty(ci, "InstanceID", _INSTANCEID, CMPI_chars);
+
 		CMSetProperty(ci, "ElementName", _CLASSNAME, CMPI_chars);
 
         array_string = CMNewArray(_broker, 0, CMPI_string, NULL);

@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricDefinitionProvider.c,v 1.10 2012/05/17 01:02:42 tyreld Exp $
+ * $Id: OSBase_MetricDefinitionProvider.c,v 1.11 2012/10/25 23:13:52 tyreld Exp $
  *
  * © Copyright IBM Corp. 2003, 2007, 2009
  *
@@ -129,7 +129,7 @@ CMPIStatus OSBase_MetricDefinitionProviderEnumInstances( CMPIInstanceMI * mi,
       } else {
 	CMSetStatusWithChars( _broker, &rc, 
 			      CMPI_RC_ERR_FAILED, 
-			      "Could not construct instance." ); 
+			      "Could not construct instance." );
       }
     } 
   } else {

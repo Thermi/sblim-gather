@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricElementCapabilitiesProvider.c,v 1.2 2012/05/17 01:02:42 tyreld Exp $
+ * $Id: OSBase_MetricElementCapabilitiesProvider.c,v 1.3 2012/10/25 23:13:52 tyreld Exp $
  *
  * © Copyright IBM Corp. 2009
  *
@@ -124,12 +124,12 @@ static CMPIInstance * make_ref_inst(const CMPIObjectPath * op,
 				  _CLASSNAME,
 				  NULL);
 	if (cop) {
-		CMAddKey(cop, _LEFTPROP, &cap.value, CMPI_ref);
-		CMAddKey(cop, _RIGHTROP, &manelm.value, CMPI_ref);
 		inst = CMNewInstance(_broker, cop, NULL);
 		
                 if (inst) {
                     CMSetPropertyFilter(inst, props, NULL);
+                    CMSetProperty(inst, _LEFTPROP, &cap.value, CMPI_ref);
+                    CMSetProperty(inst, _RIGHTROP, &manelm.value, CMPI_ref);
 		    return inst;
                 }
 	}

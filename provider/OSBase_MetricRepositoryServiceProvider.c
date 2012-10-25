@@ -1,5 +1,5 @@
 /*
- * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.12 2012/05/17 01:02:42 tyreld Exp $
+ * $Id: OSBase_MetricRepositoryServiceProvider.c,v 1.13 2012/10/25 23:13:52 tyreld Exp $
  *
  * © Copyright IBM Corp. 2004, 2007, 2009
  *
@@ -120,15 +120,17 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderEnumInstances( CMPIInstanceMI *
   op=CMNewObjectPath(_broker,CMGetCharPtr(CMGetNameSpace(ref,NULL)),_ClassName,
 		     NULL);
   if (op) {
-    CMAddKey(op,"CreationClassName",_ClassName,CMPI_chars);
-    CMAddKey(op,"Name",_Name,CMPI_chars);
-    CMAddKey(op,"SystemCreationClassName",CSCreationClassName,CMPI_chars);
-    CMAddKey(op,"SystemName",get_system_name(),CMPI_chars);
     
     ci=CMNewInstance(_broker,op,NULL);
   } 
   if (ci) {
     CMSetPropertyFilter(ci, properties, NULL);
+    
+    CMSetProperty(ci,"CreationClassName",_ClassName,CMPI_chars);
+    CMSetProperty(ci,"Name",_Name,CMPI_chars);
+    CMSetProperty(ci,"SystemCreationClassName",CSCreationClassName,CMPI_chars);
+    CMSetProperty(ci,"SystemName",get_system_name(),CMPI_chars);
+
     CMSetProperty(ci,"Release",PACKAGE_VERSION,CMPI_chars);
 
     if (rrepos_status(&rs)) {
@@ -183,15 +185,16 @@ CMPIStatus OSBase_MetricRepositoryServiceProviderGetInstance( CMPIInstanceMI * m
   op=CMNewObjectPath(_broker,CMGetCharPtr(CMGetNameSpace(ref,NULL)),_ClassName,
 		     NULL);
   if (op) {
-    CMAddKey(op,"CreationClassName",_ClassName,CMPI_chars);
-    CMAddKey(op,"Name",_Name,CMPI_chars);
-    CMAddKey(op,"SystemCreationClassName",CSCreationClassName,CMPI_chars);
-    CMAddKey(op,"SystemName",get_system_name(),CMPI_chars);
 
     ci=CMNewInstance(_broker,op,NULL);
   } 
   if (ci) {
     CMSetPropertyFilter(ci, properties, NULL);
+
+    CMSetProperty(ci,"CreationClassName",_ClassName,CMPI_chars);
+    CMSetProperty(ci,"Name",_Name,CMPI_chars);
+    CMSetProperty(ci,"SystemCreationClassName",CSCreationClassName,CMPI_chars);
+    CMSetProperty(ci,"SystemName",get_system_name(),CMPI_chars);
 
     CMSetProperty(ci,"Release",PACKAGE_VERSION,CMPI_chars);
 
