@@ -1,5 +1,5 @@
 /*
- * $Id: mcclt_unix.c,v 1.15 2009/05/20 19:39:56 tyreld Exp $
+ * $Id: mcclt_unix.c,v 1.16 2012/10/27 00:52:12 tyreld Exp $
  *
  * (C) Copyright IBM Corp. 2003, 2004, 2009
  *
@@ -73,6 +73,7 @@ int mcc_init(const char *commid)
 	m_setstrerror("mcc_init could not complete socket name %s",commid);
 	M_TRACE(MTRACE_ERROR,MTRACE_COMM,
 		("mcc_init could not complete socket name %s"));
+        /* TODO do we need a mutex unlock here? */
 	return -1;
       }
       if (!_sigpipe_h_installed) {
@@ -80,6 +81,7 @@ int mcc_init(const char *commid)
 	sigact.sa_handler = _sigpipe_h;
 	sigact.sa_flags = 0;
 	sigaction(SIGPIPE,&sigact,NULL);
+        /* TODO does _sigpipe_h_installed need to be set to true? */
       }
       pthread_mutex_unlock(&sockname_mutex);
       M_TRACE(MTRACE_DETAILED,MTRACE_COMM,("mcc_init return handle %d",i));
