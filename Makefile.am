@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.27 2012/10/01 02:15:35 tyreld Exp $
+# $Id: Makefile.am,v 1.28 2012/10/27 01:08:30 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -44,6 +44,9 @@ pkgincludedir=$(includedir)/gather
 # Automake instructions for documentation
 #
 doc_DATA=README AUTHORS COPYING README.TEST reposd2csv.pl
+
+MANFILES=man/gatherd.8 man/gatherctl.8 man/gatherd.conf.5 \
+	 man/reposd.8 man/reposctl.8 man/reposd.conf.5
 
 if BASE_METRICS
 BASE_DOC=plugin/metricIPProtocolEndpoint.readme \
@@ -383,12 +386,27 @@ channelclt_LDFLAGS = -lsysfs
 # Gather init scripts
 EXTRA_DIST += gatherer.init-suse.in gatherer.init-redhat.in \
 				gatherer.init-none.in
+if GENMAN
+man_MANS=$(MANFILES)
+endif
 
 init_SCRIPTS=gatherer
 
 gatherer: gatherer.$(INIT_STYLE)
 	sed -e s?$$\{prefix\}?$(prefix)?g \
 	-e s?$$\{exec_prefix\}?$(prefix)?g $< > $@
+
+SUFFIXES = .xml .xml.pre .5.xml .8.xml .5 .8
+
+.xml.pre.xml:
+	sed -e s?$$\{prefix\}?$(prefix)?g \
+	-e s?$$\{exec_prefix\}?$(prefix)?g $< > $@
+
+.5.xml.5:
+	xmlto -o man man $<
+
+.8.xml.8:
+	xmlto -o man man $<
 
 # Gather config files
 sysconf_DATA = gatherd.conf reposd.conf
@@ -409,7 +427,8 @@ preuninstall:
 	$(MAKE) -C $(PROVIDER_SUBDIR) preuninstall
 
 clean-local:
-	rm -f gatherer gatherer.init-redhat gatherer.init-suse gatherer.init-none
+	rm -f gatherer gatherer.init-redhat gatherer.init-suse gatherer.init-none \
+	    man/*.8 man/*.5 
 
 dist-hook:
 	test -d "$(distdir)" &&	rm -rf `find $(distdir) -type d -name CVS`

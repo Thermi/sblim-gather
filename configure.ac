@@ -24,6 +24,8 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AM_PROG_CC_C_O
 
+AC_CHECK_PROG(enable_man,xmlto,"yes","no")
+
 # Features
 AC_ARG_ENABLE(base, 
       [AS_HELP_STRING([--disable-base], 
@@ -166,7 +168,10 @@ AC_SUBST(INIT_STYLE)
 CHECK_TESTSUITE
 
 AC_CONFIG_FILES([Makefile sblim-gather.spec gatherer.init-suse
-				gatherer.init-redhat gatherer.init-none])
+		gatherer.init-redhat gatherer.init-none
+                man/gatherd.8.xml.pre man/gatherctl.8.xml.pre
+                man/gatherd.conf.5.xml.pre man/reposd.8.xml.pre
+                man/reposctl.8.xml.pre man/reposd.conf.5.xml.pre])
 
 AC_SUBST(ARCHDEF)
 
@@ -174,6 +179,7 @@ AM_CONDITIONAL(BASE_METRICS, [test "$enable_base" == "yes"])
 AM_CONDITIONAL(VIRT_METRICS, [test "$enable_virt" == "yes"])
 AM_CONDITIONAL(Z_METRICS, [test "$enable_z" == "yes"])
 AM_CONDITIONAL(PROVIDER,[test "$enable_provider" == "yes"]) 
+AM_CONDITIONAL(GENMAN,[test "$enable_man" == "yes"])
 
 if test "$enable_debug" == "yes"
 then
@@ -195,6 +201,8 @@ echo "Enable zLinux metrics: " $enable_z
 echo ""
 echo "Enable Provider: " $enable_provider
 echo "Enable Debug: " $enable_debug
+echo ""
+echo "Build manpages (requires xmlto): " $enable_man
 echo ""
 if test $enable_provider == yes
 then

@@ -7,6 +7,9 @@ Bugs fixed:
 3573315 thread cleanup segv if gather libs unloaded
 3580235 use setProperty for instance keys under Pegasus
 
+Features added:
+- 3019058 add man pages/help for gatherd and reposd
+
 Changes in Version 2.2.6
 ========================
 
