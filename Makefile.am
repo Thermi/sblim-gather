@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.29 2012/11/29 07:14:58 tyreld Exp $
+# $Id: Makefile.am,v 1.30 2012/11/29 08:03:26 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -15,6 +15,8 @@
 #               Tyrel Datwyler <tyreld@us.ibm.com>
 # Description:  Automake input file for Files and Directories sample provider
 # ==================================================================
+
+AUTOMAKE_OPTIONS = no-dist-gzip dist-bzip2
 
 SUBDIRS=. $(PROVIDER_SUBDIR)
 
