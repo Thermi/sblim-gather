@@ -30,3 +30,5 @@ reposdump
 sblim-gather.spec
 stamp-h1
 gatherer*
+man/*.[851]
+man/*.xml.pre
