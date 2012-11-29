@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.28 2012/10/27 01:08:30 tyreld Exp $
+# $Id: Makefile.am,v 1.29 2012/11/29 07:14:58 tyreld Exp $
 # ==================================================================
 # (C) Copyright IBM Corp. 2005, 2009
 #
@@ -46,7 +46,8 @@ pkgincludedir=$(includedir)/gather
 doc_DATA=README AUTHORS COPYING README.TEST reposd2csv.pl
 
 MANFILES=man/gatherd.8 man/gatherctl.8 man/gatherd.conf.5 \
-	 man/reposd.8 man/reposctl.8 man/reposd.conf.5
+	 man/reposd.8 man/reposctl.8 man/reposd.conf.5 \
+	 man/reposdump.1
 
 if BASE_METRICS
 BASE_DOC=plugin/metricIPProtocolEndpoint.readme \
@@ -396,11 +397,14 @@ gatherer: gatherer.$(INIT_STYLE)
 	sed -e s?$$\{prefix\}?$(prefix)?g \
 	-e s?$$\{exec_prefix\}?$(prefix)?g $< > $@
 
-SUFFIXES = .xml .xml.pre .5.xml .8.xml .5 .8
+SUFFIXES = .xml .xml.pre .1.xml .5.xml .8.xml .1 .5 .8
 
 .xml.pre.xml:
 	sed -e s?$$\{prefix\}?$(prefix)?g \
 	-e s?$$\{exec_prefix\}?$(prefix)?g $< > $@
+
+.1.xml.1:
+	xmlto -o man man $<
 
 .5.xml.5:
 	xmlto -o man man $<
@@ -428,7 +432,7 @@ preuninstall:
 
 clean-local:
 	rm -f gatherer gatherer.init-redhat gatherer.init-suse gatherer.init-none \
-	    man/*.8 man/*.5 
+	    man/*.8 man/*.5 man/*.1
 
 dist-hook:
 	test -d "$(distdir)" &&	rm -rf `find $(distdir) -type d -name CVS`

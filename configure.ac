@@ -171,7 +171,8 @@ AC_CONFIG_FILES([Makefile sblim-gather.spec gatherer.init-suse
 		gatherer.init-redhat gatherer.init-none
                 man/gatherd.8.xml.pre man/gatherctl.8.xml.pre
                 man/gatherd.conf.5.xml.pre man/reposd.8.xml.pre
-                man/reposctl.8.xml.pre man/reposd.conf.5.xml.pre])
+                man/reposctl.8.xml.pre man/reposd.conf.5.xml.pre
+                man/reposdump.1.xml.pre])
 
 AC_SUBST(ARCHDEF)
 

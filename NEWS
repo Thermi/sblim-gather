@@ -9,6 +9,7 @@ Bugs fixed:
 
 Features added:
 - 3019058 add man pages/help for gatherd and reposd
+- 3590926 add man page for reposdump utility
 
 Changes in Version 2.2.6
 ========================
