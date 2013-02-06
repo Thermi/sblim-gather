@@ -64,7 +64,7 @@
 
 /* ---------------------------------------------------------------------------*/
 
-static MetricCalculationDefinition metricCalcDef[34];
+static MetricCalculationDefinition metricCalcDef[35];
 
 /* --- NumberOfUsers --- */
 static MetricCalculator metricCalcNumOfUser;
@@ -86,6 +86,7 @@ static MetricCalculator metricCalcKernelTime;
 static MetricCalculator metricCalcUserTime;
 static MetricCalculator metricCalcIOWaitTime;
 static MetricCalculator metricCalcTotalCPUTime;
+static MetricCalculator metricCalcStealTime;
 
 static MetricCalculator metricCalcInternKernelTimePerc;
 static MetricCalculator metricCalcInternUserTimePerc;
@@ -156,6 +157,7 @@ static unsigned long long os_getCPUUserTime( char * data );
 static unsigned long long os_getCPUNiceTime( char * data );
 #endif
 static unsigned long long os_getCPUKernelTime( char * data );
+static unsigned long long os_getCPUStealTime( char * data );
 static unsigned long long os_getCPUIdleTime( char * data );
 static unsigned long long os_getCPUIOWaitTime( char * data );
 static unsigned long long os_getCPUTotalTime( char * data );
@@ -577,7 +579,20 @@ int _DefinedRepositoryMetrics( MetricRegisterId *mr,
   metricCalcDef[33].mcCalc=metricCalcIOWaitTime;
   metricCalcDef[33].mcUnits=muMilliSeconds;
 
-  *mcnum=34;
+  metricCalcDef[34].mcVersion=MD_VERSION;
+  metricCalcDef[34].mcName="CPUStealTime";
+  metricCalcDef[34].mcId=mr(pluginname,metricCalcDef[34].mcName);
+  metricCalcDef[34].mcMetricType=MD_PERIODIC|MD_CALCULATED|MD_INTERVAL|MD_ORGSBLIM;
+  metricCalcDef[34].mcChangeType=MD_GAUGE;
+  metricCalcDef[34].mcIsContinuous=MD_TRUE;
+  metricCalcDef[34].mcCalculable=MD_SUMMABLE;
+  metricCalcDef[34].mcDataType=MD_UINT64;
+  metricCalcDef[34].mcAliasId=metricCalcDef[2].mcId;
+  metricCalcDef[34].mcCalc=metricCalcStealTime;
+  metricCalcDef[34].mcUnits=muMilliSeconds;
+
+
+  *mcnum=35;
   *mc=metricCalcDef;
   return 0;
 }
@@ -703,6 +718,40 @@ size_t metricCalcKernelTime( MetricValue *mv,
   return -1;
 }
 
+
+/* ---------------------------------------------------------------------------*/
+/* CPUStealTime                                                             */
+/* ---------------------------------------------------------------------------*/
+
+size_t metricCalcStealTime( MetricValue *mv,   
+                int mnum,
+                void *v, 
+                size_t vlen ) {
+
+    unsigned long long kt = 0;
+    unsigned long long k1 = 0;
+    unsigned long long k2 = 0;
+
+#ifdef DEBUG
+    fprintf(stderr,"--- %s(%i) : Calculate StealTime\n",__FILE__,__LINE__);
+#endif
+    /* 
+     * CPUStealTime is based on the eighth entry of the CPUTime value
+    */
+
+    if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=1) ) {
+        k1 = os_getCPUStealTime(mv[0].mvData);
+        if( mnum > 1 ) {
+            k2 = os_getCPUStealTime(mv[mnum-1].mvData);
+            kt = k1-k2;
+        }
+        else { kt = k1; }
+
+        memcpy(v,&kt,sizeof(unsigned long long));
+        return sizeof(unsigned long long);
+    }
+    return -1;
+}
 
 /* ---------------------------------------------------------------------------*/
 /* UserModeTime                                                               */
@@ -1947,6 +1996,36 @@ unsigned long long os_getCPUTotalTime( char * data ) {
         os_getCPUKernelTime(data);
 
   return val;
+}
+
+unsigned long long os_getCPUStealTime( char * data ) {
+
+    char * hlp = NULL;
+    char * end = NULL;
+    char   time[128];
+    unsigned long long val = 0;
+
+    if( (hlp = strchr(data, ':')) != NULL ) {
+        hlp++;
+        hlp = strchr(hlp, ':');
+        hlp++;
+        hlp = strchr(hlp, ':');
+        hlp++;
+        hlp = strchr(hlp, ':');
+        hlp++;
+        hlp = strchr(hlp, ':');
+        hlp++;
+        hlp = strchr(hlp, ':');
+        hlp++;
+        hlp = strchr(hlp, ':');
+        hlp++;
+        end = strchr(hlp, ':');
+        memset(time,0,sizeof(time));
+        strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+        val = strtoll(time,(char**)NULL,10)*10;
+    }
+
+    return val;
 }
 
 /* ---------------------------------------------------------------------------*/

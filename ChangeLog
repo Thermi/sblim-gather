@@ -1,3 +1,9 @@
+2013-02-06  Michael Chase-Salerno <bratac@linux.vnet.ibm.com>
+
+	* plugin/repositoryOperatingSystem.c:
+
+	2284848 CPU utilization should account for steal-time
+
 2012-11-28  Tyrel Datwyler <tyreld@us.ibm.com>
 
 	* .cvsignore, man/.cvsignore:
