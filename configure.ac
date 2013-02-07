@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT([sblim-gather],[2.2.7],[sblim-devel@lists.sourceforge.net])
+AC_PREREQ(2.63)
+AC_INIT([sblim-gather],[2.2.8pre],[sblim-devel@lists.sourceforge.net])
 AC_CONFIG_SRCDIR([cimplug.h])
 AC_CONFIG_HEADER([gather-config.h])
 AM_INIT_AUTOMAKE
@@ -21,7 +21,7 @@ AC_DISABLE_STATIC
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
-AC_PROG_LIBTOOL
+LT_INIT
 AM_PROG_CC_C_O
 
 AC_CHECK_PROG(enable_man,xmlto,"yes","no")
@@ -60,14 +60,21 @@ AC_ARG_VAR([PROVIDERDIR],[the directory where the CMPI providers will be install
 AC_ARG_VAR([CIMSERVER],[the target CIM server (pegasus|sfcb|openwbem|sniacimom).])
 
 # Checks for libraries.
-AC_CHECK_LIB([pthread], [pthread_create])
-AC_CHECK_LIB([dl], [dlopen])
-AC_CHECK_LIB([sysfs], [sysfs_open_driver])
+AC_CHECK_LIB([pthread], [pthread_create], [ GATHERLIBS="-lpthread" ])
+AC_CHECK_LIB([dl], [dlopen], [ GATHERLIBS="-ldl $GATHERLIBS" ])
 
+if test "$enable_z" == "yes"; then
+   AC_CHECK_LIB([sysfs], [sysfs_open_driver], [ ZHYPLIBS="-lsysfs" ], [AC_MSG_ERROR([Cannot find library -lsysfs. Is libsysfs installed?])])
+fi
+   
 if test "$enable_virt" == "yes"; then
    AC_CHECK_HEADERS([libvirt/libvirt.h], [], [AC_MSG_ERROR([Cannot find header file <libvirt/libvirt.h>. Is libvirt-devel installed?])])
-   AC_CHECK_LIB([virt], [virConnectOpen], [], [AC_MSG_ERROR([Cannot find library -lvirt. Is libvirt installed?])])
+   AC_CHECK_LIB([virt], [virConnectOpen], [ VIRTLIBS="-lvirt" ], [AC_MSG_ERROR([Cannot find library -lvirt. Is libvirt installed?])])
 fi
+
+AC_SUBST(GATHERLIBS)
+AC_SUBST(ZHYPLIBS)
+AC_SUBST(VIRTLIBS)
 
 # Checks for header files.
 AC_HEADER_DIRENT

@@ -145,11 +145,9 @@ provider_LTLIBRARIES = libOSBase_MetricDefinitionProvider.la \
 
 libOSBase_MetricDefinitionProvider_la_SOURCES = OSBase_MetricDefinitionProvider.c
 libOSBase_MetricDefinitionProvider_la_LIBADD = libOSBase_MetricUtil.la
-libOSBase_MetricDefinitionProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricValueProvider_la_SOURCES = OSBase_MetricValueProvider.c
 libOSBase_MetricValueProvider_la_LIBADD = libOSBase_MetricUtil.la
-libOSBase_MetricValueProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricServiceProvider_la_SOURCES = OSBase_MetricServiceProvider.c
 libOSBase_MetricServiceProvider_la_LIBADD = @LIBSBLIMBASE@
@@ -168,31 +166,24 @@ libOSBase_MetricElementConformsToProfileProvider_la_SOURCES = OSBase_MetricEleme
 
 libOSBase_MetricGathererProvider_la_SOURCES = OSBase_MetricGathererProvider.c
 libOSBase_MetricGathererProvider_la_LIBADD = libOSBase_MetricUtil.la ../librgather.la @LIBSBLIMBASE@
-libOSBase_MetricGathererProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricRepositoryServiceProvider_la_SOURCES = OSBase_MetricRepositoryServiceProvider.c
 libOSBase_MetricRepositoryServiceProvider_la_LIBADD = libOSBase_MetricUtil.la @LIBSBLIMBASE@
-libOSBase_MetricRepositoryServiceProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricForMEProvider_la_SOURCES = OSBase_MetricForMEProvider.c
 libOSBase_MetricForMEProvider_la_LIBADD = libOSBase_MetricUtil.la
-libOSBase_MetricForMEProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricDefForMEProvider_la_SOURCES = OSBase_MetricDefForMEProvider.c
 libOSBase_MetricDefForMEProvider_la_LIBADD = libOSBase_MetricUtil.la
-libOSBase_MetricDefForMEProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricInstanceProvider_la_SOURCES = OSBase_MetricInstanceProvider.c
 libOSBase_MetricInstanceProvider_la_LIBADD = libOSBase_MetricUtil.la
-libOSBase_MetricInstanceProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricIndicationProvider_la_SOURCES = OSBase_MetricIndicationProvider.c
 libOSBase_MetricIndicationProvider_la_LIBADD = libOSBase_MetricUtil.la
-libOSBase_MetricIndicationProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 libOSBase_MetricLifeCycleProvider_la_SOURCES = OSBase_MetricLifeCycleProvider.c
 libOSBase_MetricLifeCycleProvider_la_LIBADD = libOSBase_MetricUtil.la
-libOSBase_MetricLifeCycleProvider_la_DEPENDENCIES = libOSBase_MetricUtil.la
 
 #
 # Automake instructions for ./mof subdir
