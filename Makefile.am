@@ -102,6 +102,14 @@ Z_REPOS_LIBS=librepositoryzECKD.la \
              librepositoryzCEC.la \
              librepositoryzLPAR.la \
              librepositoryzCH.la
+
+Z_LTLIBS=libsysfswrapper.la \
+	 libhypfs.la \
+	 liblparutil.la \
+	 libchannelutil.la
+
+Z_PROGS=hyptest \
+	channelclt
 endif
 
 # ADD EXTRA DOC FILES IF PRESENT
@@ -140,7 +148,7 @@ noinst_HEADERS = gatherc.h marshal.h mlist.h mplugmgr.h \
 # Gather support utility libraries
 lib_LTLIBRARIES = libgatherutil.la libmcserv.la librcserv.la \
 	librrepos.la librepos.la libgather.la librgather.la \
-	libsysfswrapper.la libhypfs.la liblparutil.la libchannelutil.la
+	$(Z_LTLIBS)
 
 libgatherutil_la_SOURCES = util/mrwlock.c util/commheap.c util/commutil.c \
 	util/gatherutil.c util/mcfg.c util/gathercfg.c util/reposcfg.c \
@@ -180,7 +188,7 @@ liblparutil_la_LIBADD = libhypfs.la
 
 libchannelutil_la_SOURCES = plugin/channelutil.c plugin/channelutil.h
 libchannelutil_la_LIBADD = libsysfswrapper.la
-libchannelutil_la_LDFLAGS = -lsysfs
+libchannelutil_la_LDFLAGS = $(ZHYPLIBS)
 
 # Gather daemons
 sbin_PROGRAMS = gatherd reposd
@@ -314,7 +322,7 @@ librepositoryStorage_la_LDFLAGS=$(PLUG_FLAGS)
 # Gather utility test programs (not installed)
 noinst_PROGRAMS = mcfgtest mtracetest merrnotest mcstest mcctest \
 	rcstest rcctest \
-        hyptest channelclt
+        $(Z_PROGS)
 
 mcfgtest_SOURCES = util/mcfgtest.c
 mcfgtest_LDADD = libgatherutil.la

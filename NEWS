@@ -3,6 +3,7 @@ Changes in Version 2.2.8
 
 Bugs fixed:
 - 3603719 Clean up configuration toolchain and fix DSO linking
+- 3196679 remove sysfs dependency when not building z plugins		
 
 Features added:
 - 2284848 CPU utilization should account for steal-time
