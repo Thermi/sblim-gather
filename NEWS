@@ -20,7 +20,6 @@ Bugs fixed:
 Features added:
 - 3019058 add man pages/help for gatherd and reposd
 - 3590926 add man page for reposdump utility
-- 2284848 CPU utilization should account for steal-time
 
 Changes in Version 2.2.6
 ========================
