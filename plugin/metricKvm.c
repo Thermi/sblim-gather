@@ -178,7 +178,6 @@ int _DefinedMetrics(MetricRegisterId * mr,
 int _StartStopMetrics(int starting)
 {
 
-    int i;
 #ifdef DEBUG
     fprintf(stderr, "--- %s(%i) : %s metric processing\n",
 	    __FILE__, __LINE__, starting ? "Starting" : "Stopping");

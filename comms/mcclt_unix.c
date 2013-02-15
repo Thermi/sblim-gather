@@ -37,7 +37,7 @@
 static int _sigpipe_h_installed = 0;
 static int _sigpipe_h_received = 0;
 
-static void _sigpipe_h(int signal)
+static void _sigpipe_h(int __attribute__ ((unused)) signal)
 {
   _sigpipe_h_received++; 
 }
@@ -51,7 +51,7 @@ static struct {
   /* runtime statistics */
   int  sn_connects;
   int  sn_requests;
-} sockname[MAXCONN] = {{{0},0}};
+} sockname[MAXCONN] = {{{0},0,0,0}};
 
 /* writev helper for partial writes */
 static int mc_writev(int handle, struct iovec *iov, ssize_t numblock);
@@ -237,7 +237,7 @@ int mcc_request(int commhandle, MC_REQHDR *hdr,
       sentlen = mc_writev(sockname[commhandle].sn_handle,iov,3);
     }
   }
-  if (sentlen == (reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR))) {
+  if ((size_t) sentlen == (reqdatalen+sizeof(size_t)+sizeof(MC_REQHDR))) {
     M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
 	    ("mcc_request for %s succeeded, count=%d",
 	     sockname[commhandle].sn_name,
@@ -268,7 +268,7 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
   int    cltsock;
   int    readlen=0;
   size_t  recvlen=0;
-  int    maxlen=0;
+  size_t  maxlen=0;
 
   M_TRACE(MTRACE_FLOW,MTRACE_COMM,
 	  ("mcc_response(%p,%p,%u) called",hdr,respdata,respdatalen));
@@ -302,7 +302,7 @@ int mcc_response(MC_REQHDR *hdr, void *respdata, size_t *respdatalen)
       return -1;
     }
     recvlen += readlen;
-    if (iov[0].iov_len < readlen) {
+    if (iov[0].iov_len < (size_t) readlen) {
       readlen -= iov[0].iov_len;
       iov[0].iov_len=0; 
       iov[1].iov_len-=readlen;

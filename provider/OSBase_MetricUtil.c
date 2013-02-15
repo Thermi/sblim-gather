@@ -1019,7 +1019,7 @@ CMPIInstance * makeMetricDefInst(const CMPIBroker * broker,
   CMPIObjectPath * co;
   CMPIInstance   * ci = NULL;
   char             instid[500];
-  short            dt;
+  size_t           dt;
   int              i;
 
   i = metricDefClassIndex(broker,ctx,namesp,defname,defid);

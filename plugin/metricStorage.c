@@ -33,6 +33,7 @@
 #include <sys/ioctl.h>
 #include <linux/fs.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #ifndef ULLONG_MAX
 #   define ULLONG_MAX 18446744073709551615ULL

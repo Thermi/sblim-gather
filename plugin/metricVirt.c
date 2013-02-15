@@ -383,7 +383,8 @@ static int collectDomainStats()
 	virDomainInfo dinfo;
 	char **defdomlist = NULL;
 	int  * ids, *ids_ptr;
-	int  cnt, j;
+	size_t cnt, j;
+        int num_dom;
 
 #ifdef DEBUG
 	fprintf(stderr, "collectDomainStats()\n");
@@ -433,12 +434,13 @@ static int collectDomainStats()
 		ids_ptr=ids;
     }
 
-	if ((node_statistics.num_active_domains = virConnectListDomains(conn, ids_ptr,
-			                                   node_statistics.num_active_domains)) < 0)
+	if ((num_dom = virConnectListDomains(conn, ids_ptr,
+			                     node_statistics.num_active_domains)) < 0)
 	{
         virConnectClose(conn);
 		return VIRT_FAIL;
 	}
+        node_statistics.num_active_domains = num_dom;
 
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : num_active_domains  %d\n", __FILE__, __LINE__, node_statistics.num_active_domains);
@@ -493,12 +495,13 @@ static int collectDomainStats()
 		return VIRT_FAIL;
     }
     
-	if ((node_statistics.num_inactive_domains = virConnectListDefinedDomains(conn, defdomlist,
+	if ((num_dom = virConnectListDefinedDomains(conn, defdomlist,
 	                                       node_statistics.num_inactive_domains)) < 0)
 	{
         virConnectClose(conn);
 		return VIRT_FAIL;
 	}
+        node_statistics.num_inactive_domains = num_dom;
 
 	for (j = 0 ; j < node_statistics.num_inactive_domains; j++, cnt++ )
 	{
@@ -562,7 +565,7 @@ int virtMetricRetrCPUTime(int mid, MetricReturner mret)
 		__FILE__, __LINE__, mid);
 #endif
 
-	int i;
+	size_t i;
 
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
@@ -629,7 +632,7 @@ int virtMetricRetrTotalCPUTime(int mid, MetricReturner mret)
 		__FILE__, __LINE__, mid);
 #endif
 
-	int i;
+	size_t i;
 
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
@@ -698,7 +701,7 @@ int virtMetricRetrActiveVirtualProcessors(int mid, MetricReturner mret)
 		__FILE__, __LINE__, mid);
 #endif
 
-	int i;
+	size_t i;
 
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
@@ -751,7 +754,7 @@ int virtMetricRetrInternalMemory(int mid, MetricReturner mret)
 	fprintf(stderr, "Returner pointer is NULL\n");
 #endif
     } else {
-	int i;
+	size_t i;
 
 #ifdef DEBUG
 	fprintf(stderr, "--- %s(%i) : num_active_domains %d\n",
@@ -877,7 +880,7 @@ int virtMetricRetrVirtualSystemState(int mid, MetricReturner mret)
     			__FILE__, __LINE__, mid);
 #endif
 
-    	int i;
+        size_t i;
 
 #ifdef DEBUG
     	fprintf(stderr, "--- %s(%i) : total_domains %d\n",
@@ -938,7 +941,7 @@ int virtMetricRetrCPUUsedTimeCounter(int mid, MetricReturner mret)
                 __FILE__, __LINE__);
 #endif
 
-        int i;
+        size_t i;
 
 #ifdef DEBUG
         fprintf(stderr,
@@ -997,7 +1000,7 @@ int virtMetricRetrCPUReadyTimeCounter(int mid, MetricReturner mret)
                 __FILE__, __LINE__);
 #endif
 
-        int i;
+        size_t i;
 
 #ifdef DEBUG
         fprintf(stderr,
@@ -1059,7 +1062,7 @@ int virtMetricRetrVirtualBlockIOStats(int mid, MetricReturner mret)
                 __FILE__, __LINE__);
 #endif
 
-        int i;
+        size_t i;
 
 #ifdef DEBUG
         fprintf(stderr,

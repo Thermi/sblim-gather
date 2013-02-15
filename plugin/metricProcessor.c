@@ -188,7 +188,7 @@ int enum_all_proc() {
   char * id         = NULL;
   char * cmd        = NULL;
   char   buf[60000];
-  size_t bytes_read = 0;
+  ssize_t bytes_read = 0;
   int    i          = 0;
   int    fd_out[2]; 
   int    fd_stdout;

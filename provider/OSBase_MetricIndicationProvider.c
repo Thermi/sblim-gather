@@ -265,8 +265,8 @@ static int responsible(const CMPISelectExp * filter, const CMPIObjectPath *op, S
       return 0;
     }
     if (condstring && cond) {
-      
-      int i, j;
+      size_t i;
+      int j;
       CMPICount scount = CMGetSubCondCountAndType(cond,NULL,NULL);
       char * condarr = CMGetCharPtr(condstring);
       if (_debug)

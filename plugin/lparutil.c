@@ -32,20 +32,21 @@ unsigned long long cpusum(int cputime, HypSystem *system)
   int i;
   unsigned long long sum = 0;
   
+  /* time stats are set to -1LL on error */
   for (i=0; i<system->hs_numcpu;i++) {
     switch (cputime) {
     case CPU_MGMTTIME:
-      if (system->hs_cpu[i].hp_mgmttime != -1) {
+      if (system->hs_cpu[i].hp_mgmttime != (unsigned long long) -1LL) {
 	sum += system->hs_cpu[i].hp_mgmttime;
       }
       break;
     case CPU_ONLINETIME:
-      if (system->hs_cpu[i].hp_onlinetime != -1) {
+      if (system->hs_cpu[i].hp_onlinetime != (unsigned long long) -1LL) {
 	sum += system->hs_cpu[i].hp_onlinetime;
       }
       break;
     case CPU_TIME:
-      if (system->hs_cpu[i].hp_cputime != -1) {
+      if (system->hs_cpu[i].hp_cputime != (unsigned long long) -1LL) {
 	sum += system->hs_cpu[i].hp_cputime;
       }
       break;

@@ -43,7 +43,7 @@ static int requests;
 static int _sigpipe_h_installed = 0;
 static int _sigpipe_h_received = 0;
 
-static void _sigpipe_h(int signal)
+static void _sigpipe_h(int __attribute__ ((unused)) signal)
 {
   _sigpipe_h_received++;
 }
@@ -250,7 +250,7 @@ int rcc_request(void *reqdata, size_t reqdatalen)
     }
   }
 
-  if (sentlen == reqlen) { 
+  if ((size_t) sentlen == reqlen) { 
     M_TRACE(MTRACE_DETAILED,MTRACE_COMM,
 	    ("rcc_request on socket %d for %s succeeded, count=%d",
 	     srvhdl,inet_ntoa(srvaddr.sin_addr),requests++));

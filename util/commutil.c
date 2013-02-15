@@ -17,6 +17,7 @@
  */
 
 
+#include <stdlib.h>
 #include <commutil.h>
 #include "gather-config.h"
 
@@ -48,13 +49,19 @@ float htonf(float v)
   return v;
 #else
   unsigned char *bp = (unsigned char *)&v;
-  unsigned char array[sizeof(float)];
-  int           i;
+  unsigned char *array;
+  unsigned       i;
+
+  array = malloc(sizeof(float));
 
   for (i=0; i<sizeof(float);i++) {
     array[i] = bp[sizeof(float)-1-i];
   }
-  return (*(float *)array);
+
+  v = (*(float *) array);
+  free(array);
+
+  return v;
 #endif 
 }
 

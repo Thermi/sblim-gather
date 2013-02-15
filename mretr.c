@@ -237,7 +237,7 @@ static int startRetrievers(MR_Control *mc)
 {
   pthread_t  thread;
   pthread_attr_t  threadattr;
-  int i;
+  size_t i;
  
   /* start up the maximum nuber of retrievers */
   if (pthread_mutex_lock(&(mc->mutex))==0) {

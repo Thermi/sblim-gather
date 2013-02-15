@@ -156,7 +156,7 @@ int LocalMetricAdd (MetricValue *mv)
 	*mvList++ = (void*)ch; /* set COMMHEAP for later automatic release */
 	_MetricRetrieveNoLock(ch,mv->mvId,LocalReposHeader[idx].mrh_reslist+ridx,1,
 			      mvList,num,0,mv->mvTimeStamp,2);
-	while (num > 0 && cblist && cblist->mrc_callback) {
+	while (*num > 0 && cblist && cblist->mrc_callback) {
 	  cblist->mrc_callback(*mvList,*num);
 	  cblist = cblist->mrc_next;
 	}
@@ -341,7 +341,7 @@ int LocalMetricRegisterCallback (MetricCallback *mcb, int mid, int state)
 
 static int locateIndex(int mid)
 {
-  int idx=0;
+  size_t idx=0;
   while (idx < LocalReposNumIds) {
     if (LocalReposHeader[idx].mrh_id == mid)
       return idx;
@@ -373,7 +373,7 @@ static int EXPIRATION_INTERVAL=0; /* 2 * PRUNE_INTERVAL */
 
 int LocalMetricShutdown()
 {
-  int              i,j;
+  size_t i,j;
   MReposValue      *v, *bv;
   
   if (MWriteLock(&LocalRepLock)==0) {
@@ -409,7 +409,7 @@ static int pruneRepository()
 {
   static time_t    nextPrune=0;
   size_t           numPruned=0;
-  int              i,j;
+  size_t i,j;
   MReposValue      *v, *bv;
   char             cfgbuf[200];
   time_t           now=time(NULL);
@@ -537,7 +537,7 @@ static int _LocalMetricResources(int midx, LocalResourceId ** resources,
    * only fully qualified or fully unqualified searches allowed (temporary)
    */
   int ridx;
-  int i;
+  size_t i;
   int num;
 
   *resources = NULL;

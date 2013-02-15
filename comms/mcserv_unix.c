@@ -36,7 +36,7 @@
 static int _sigpipe_h_installed = 0;
 static int _sigpipe_h_received = 0;
 
-static void _sigpipe_h(int signal)
+static void _sigpipe_h(int __attribute__ ((unused)) signal)
 {
   _sigpipe_h_received++; 
 }
@@ -158,9 +158,9 @@ int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
   };
   struct pollfd pf;
   int           srvhandle=-1;
-  int           readlen=0;
+  ssize_t       readlen=0;
   size_t        recvlen=0;
-  int           maxlen=0;
+  size_t        maxlen=0;
 
   if (hdr && commhandle != -1 && reqdata && reqdatalen) {
     srvhandle = hdr->mc_handle;
@@ -182,7 +182,7 @@ int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
 	    break;
 	  }
 	  recvlen += readlen;
-	  if (iov[0].iov_len < readlen) {
+	  if (iov[0].iov_len < (size_t) readlen) {
 	    readlen -= iov[0].iov_len;
 	    iov[0].iov_len=0; 
 	    iov[1].iov_len-=readlen;
@@ -227,8 +227,8 @@ int mcs_getrequest(MC_REQHDR *hdr, void *reqdata, size_t *reqdatalen)
 
 int mcs_sendresponse(MC_REQHDR *hdr, void *respdata, size_t respdatalen)
 {
-  int    sentlen=0;
-  int    writelen=0;
+  ssize_t sentlen=0;
+  ssize_t writelen=0;
   int    startblock=0;
   struct iovec iov[3] = {
     {hdr,sizeof(MC_REQHDR)},
@@ -250,8 +250,8 @@ int mcs_sendresponse(MC_REQHDR *hdr, void *respdata, size_t respdatalen)
       writelen = writev(hdr->mc_handle,iov+startblock,3-startblock);
       sentlen += writelen;
     } while (writelen > 0 && 
-	     sentlen < (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR)));
-    if (sentlen == (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR))) {
+	     (size_t) sentlen < (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR)));
+    if ((size_t) sentlen == (respdatalen+sizeof(size_t)+sizeof(MC_REQHDR))) {
       return 0;
     } else {
       m_log(M_ERROR,M_QUIET,

@@ -145,10 +145,12 @@ int metricRetrCEC( int mid, MetricReturner mret )
 	    utime_a = cpusum(CPU_TIME,systemdata_old->hs_sys+i);
 	    ktime_a = cpusum(CPU_MGMTTIME,systemdata_old->hs_sys+i);
 	    /* check if an LPAR has been deactivated since the last sample and add adjustment ticks if necessary */
-	    if (utime_a != -1LL && (utime == -1LL || utime_a > utime)) {
+	    if (utime_a != (unsigned long long) -1LL &&
+                (utime == (unsigned long long) -1LL || utime_a > utime)) {
 	      usertime_adj += (utime_a - utime);
 	    }
-	    if (ktime_a != -1LL && (ktime == -1LL || ktime_a > ktime)) {
+	    if (ktime_a != (unsigned long long) -1LL &&
+                (ktime == (unsigned long long) -1LL || ktime_a > ktime)) {
 	      kerneltime_adj += (ktime_a - ktime);
 	    }
 	  }

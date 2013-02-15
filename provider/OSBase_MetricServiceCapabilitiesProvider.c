@@ -29,7 +29,7 @@ const CMPIBroker * _broker;
 
 static char * _CLASSNAME = "Linux_MetricServiceCapabilities";
 static char * _INSTANCEID = "SBLIM:MetricServiceCapabilities";
-static char * _FILENAME = "OSBase_MetricServiceCapabilitiesProvider.c";
+/* static char * _FILENAME = "OSBase_MetricServiceCapabilitiesProvider.c"; */
 
 static void check_keys(const CMPIObjectPath * op, CMPIStatus * rc)
 {

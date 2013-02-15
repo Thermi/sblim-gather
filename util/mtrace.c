@@ -83,8 +83,8 @@ char * _m_format_trace(const char *fmt,...) {
    return msg;
 }
 
-static int _f_trace(char * buf, size_t len, int level, unsigned component,
-		    const char * filename, int lineno, const char * msg) 
+static int _f_trace(char * buf, size_t len, int __attribute__ ((unused)) level, 
+                    unsigned component, const char * filename, int lineno, const char * msg) 
 {
   struct tm        cttm;
   struct timeval   tv;
@@ -135,8 +135,9 @@ void _m_trace(int level, unsigned component, const char * filename,
   }
 }
 
-void m_trace(int level, unsigned component, const char * filename, 
-	     int lineno, const char * fmt, ...)
+void m_trace(int level, unsigned __attribute__ ((unused)) component,
+             const char __attribute__ ((unused)) * filename, 
+	     int __attribute__ ((unused)) lineno, const char * fmt, ...)
 {
   FILE   * ferr = NULL;
   va_list  ap;

@@ -68,7 +68,7 @@ void RPR_InitRegistry()
  */
 void RPR_FinishRegistry()
 {
-  int i;
+  size_t i;
   MWriteLock(&RregLock);
   for (i=0;i<PR_NumEntries;i++)
     if (PR_Entries[i].mceName)
@@ -85,8 +85,8 @@ void RPR_FinishRegistry()
  */
 int RPR_IdForString(const char *pluginname, const char * name)
 {
-  int i,id;
-  size_t len;
+  int id;
+  size_t i, len;
   char fullname[300];
   /* this is called quite often - make it efficient */
   len = strlen(pluginname);

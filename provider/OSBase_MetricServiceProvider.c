@@ -49,7 +49,7 @@ static struct keypair keys[4];
 
 static const char * _CLASSNAME = "Linux_MetricService";
 static const char * _NAME = "SBLIM Metric Data Gatherer";
-static const char * _FILENAME = "OSBase_MetricServiceProvider.c";
+/* static const char * _FILENAME = "OSBase_MetricServiceProvider.c"; */
 
 static void init_keys()
 {

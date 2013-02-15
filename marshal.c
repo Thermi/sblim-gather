@@ -50,7 +50,7 @@ int unmarshal_string(char **str, const char *mbuf, off_t *offset,
     if (*str || required) {
       *str = (char*)mbuf + *offset;
       *offset += strlen(*str) + 1;
-      if (*offset > mbuflen) {
+      if ((size_t) *offset > mbuflen) {
 	/* length error */
 	return -1;
       }
@@ -84,7 +84,7 @@ int unmarshal_data(void **data, size_t datalen, const char *mbuf,
   if (data && mbuf && offset) {  
     *data = (char*)mbuf + *offset;
     *offset += datalen;
-    if (*offset > mbuflen) {
+    if ((size_t) *offset > mbuflen) {
       /* length error */
       return -1;
     }
@@ -211,7 +211,7 @@ int marshal_reposplugindefinition(const RepositoryPluginDefinition *rdef,
 				  size_t num, char *mbuf,
 				  off_t * offset, size_t mbuflen)
 {
-  int i;
+  size_t i;
   if (rdef && mbuf && offset) {
     if (marshal_data(rdef,num*sizeof(RepositoryPluginDefinition),
 		     mbuf,offset,mbuflen) == 0) {
@@ -231,7 +231,7 @@ int unmarshal_reposplugindefinition(RepositoryPluginDefinition **rdef,
 				    size_t num, char *mbuf,
 				    off_t * offset, size_t mbuflen)
 {
-  int i;
+  size_t i;
   if (rdef && mbuf && offset) {
     if (unmarshal_data((void**)rdef,num*sizeof(RepositoryPluginDefinition),
 		       mbuf,offset,mbuflen) == 0) {

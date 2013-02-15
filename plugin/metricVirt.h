@@ -43,9 +43,9 @@ struct vdisk_type {
 };
 
 struct node_statistics_type {
-	int num_active_domains;
-	int num_inactive_domains;
-	unsigned int total_domains;
+	size_t num_active_domains;
+	size_t num_inactive_domains;
+	size_t total_domains;
 	unsigned long long total_memory;
 	unsigned long long free_memory;
 } node_statistics;

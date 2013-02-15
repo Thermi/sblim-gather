@@ -54,7 +54,7 @@ static pthread_mutex_t connect_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int _sigpipe_h_installed = 0;
 static int _sigpipe_h_received = 0;
 
-static void _sigpipe_h(int signal)
+static void _sigpipe_h(int __attribute__ ((unused)) signal)
 {
   _sigpipe_h_received++; 
 }
@@ -163,7 +163,7 @@ int rcs_term()
 
 int rcs_accept(int *clthdl)
 {
-  struct linger optval = {1};
+  struct linger optval = {1, 0};
   socklen_t optlen = sizeof(optval);
 
   M_TRACE(MTRACE_FLOW,MTRACE_COMM,("rcs_accept() called"));

@@ -161,7 +161,7 @@ int reposplugin_add(const char *pluginname)
 {
   RepositoryPlugin *rp;
   int status = -1;
-  int i;
+  size_t i;
   if (initialized && pluginname) {
     if (pl_find(pluginname) != NULL) {
         /* plugin is already loaded, treat as success */
@@ -202,7 +202,7 @@ int reposplugin_add(const char *pluginname)
 int reposplugin_remove(const char *pluginname)
 {
   RepositoryPlugin *rp;
-  int i;
+  size_t i;
   int status = -1;
   if (pluginname) {
     rp = pl_find(pluginname);
@@ -226,7 +226,7 @@ int reposplugin_list(const char *pluginname,
 		     COMMHEAP ch)
 {
   RepositoryPlugin *rp;
-  int i=-1;
+  size_t i = 0;
   if (pluginname && rdef) {
     rp = pl_find(pluginname);
     if (rp) {
@@ -244,9 +244,10 @@ int reposplugin_list(const char *pluginname,
 	(*rdef)[i].rdName=rp->rpMetricCalcDefs[i].mcName;
 	(*rdef)[i].rdUnits=rp->rpMetricCalcDefs[i].mcUnits;
       }
+      return i;
     }
   }
-  return i;
+  return -1;
 }
 
 int reposresource_list(const char * metricid,

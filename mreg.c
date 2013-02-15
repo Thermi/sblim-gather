@@ -68,7 +68,7 @@ void MPR_InitRegistry()
  */
 void MPR_FinishRegistry()
 {
-  int i;
+  size_t i;
   MWriteLock(&MRegLock);
   for (i=0;i<MR_NumEntries;i++)
     if (MR_Entries[i].meName)
@@ -85,7 +85,8 @@ void MPR_FinishRegistry()
  */
 int MPR_IdForString(const char *pluginname, const char * name)
 {
-  int i,id;
+  size_t i;
+  int id;
   char fullname[300];
   sprintf(fullname,"%s:%s",pluginname,name);
   MReadLock(&MRegLock);

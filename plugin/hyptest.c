@@ -87,13 +87,13 @@ static void print_processor(HypProcessor * hp)
 	 hp->hp_vtype == HYPFS_PHYSICAL ? "Physical" : "Logical",
 	 hp->hp_id);
   printf("%sType Info: %s\n",prefix, hp->hp_info);
-  if (hp->hp_mgmttime != -1LL) {
+  if (hp->hp_mgmttime != (unsigned long long) -1LL) {
     printf("%sManagement Time: %llu\n",prefix,hp->hp_mgmttime);
   }
-  if (hp->hp_cputime != -1LL) {
+  if (hp->hp_cputime != (unsigned long long) -1LL) {
     printf("%sCPU Time: %llu\n",prefix,hp->hp_cputime);
   }
-  if (hp->hp_onlinetime != -1LL) {
+  if (hp->hp_onlinetime != (unsigned long long) -1LL) {
     printf("%sOnline Time: %llu\n",prefix,hp->hp_onlinetime);
   }
   printf("%s",prefix);

@@ -190,7 +190,7 @@ int metricplugin_loadall()
 int metricplugin_add(const char *pluginname)
 {
   MetricPlugin *mp;
-  int i;
+  size_t i;
   int status = -1;
   if (metriclist && pluginname && pl_find(pluginname)==NULL) {
     mp = malloc(sizeof(MetricPlugin));
@@ -241,7 +241,7 @@ int metricplugin_add(const char *pluginname)
 int metricplugin_remove(const char *pluginname)
 {
   MetricPlugin *mp;
-  int i;
+  size_t i;
   int status = -1;
   if (metriclist && pluginname) {
     mp = pl_find(pluginname);
@@ -267,7 +267,7 @@ int metricplugin_list(const char *pluginname, PluginDefinition **pdef,
 		      COMMHEAP ch)
 {
   MetricPlugin *mp;
-  int i=-1;
+  size_t i;
   if (metriclist && pluginname && pdef) {
     mp = pl_find(pluginname);
     if (mp) {
@@ -277,9 +277,10 @@ int metricplugin_list(const char *pluginname, PluginDefinition **pdef,
 	(*pdef)[i].pdId=mp->mpMetricDefs[i].mdId;
 	(*pdef)[i].pdName=mp->mpMetricDefs[i].mdName;
       }
+      return i;
     }
   }
-  return i;
+  return -1;
 }
 
 int metricpluginname_list(char ***pluginname, 

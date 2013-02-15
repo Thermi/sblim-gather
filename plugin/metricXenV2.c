@@ -143,16 +143,13 @@ int _DefinedMetrics(MetricRegisterId * mr,
 int _StartStopMetrics(int starting)
 {
 
-    int i;
 #ifdef DEBUG
     fprintf(stderr, "--- %s(%i) : %s metric processing\n",
 	    __FILE__, __LINE__, starting ? "Starting" : "Stopping");
 #endif
 
     // initialize string array with zero, so strings can be free'd
-    // for (i = 0; i < 2; i++) {
 	memset((char *) &domain_statistics.domain_name[0],
 	       0, MAX_DOMAINS * sizeof(char *));
-    // }
     return 0;
 }

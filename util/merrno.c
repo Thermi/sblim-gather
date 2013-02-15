@@ -28,13 +28,6 @@ static pthread_key_t  m_errno_key;
 static pthread_key_t  m_errnostr_key;
 static pthread_once_t m_errno_once = PTHREAD_ONCE_INIT;
 
-static void m_errno_term(void *m_errno)
-{
-  if (m_errno) {
-    free(m_errno);
-  }
-}
-
 static void m_errno_init()
 {
   pthread_key_create(&m_errno_key,free);
