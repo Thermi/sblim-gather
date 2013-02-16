@@ -1,6 +1,41 @@
+2013-02-14  Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+
+	* NEWS, comms/mcclt_unix.c, comms/mcserv_unix.c, comms/rcclt_ip.c,
+	comms/rcserv_ip.c, gather.c, marshal.c, mreg.c, mreposl.c, mretr.c,
+	plugin/hyptest.c, plugin/lparutil.c, plugin/metricKvm.c,
+	plugin/metricProcessor.c, plugin/metricStorage.c,
+	plugin/metricVirt.c, plugin/metricVirt.h, plugin/metricXenV2.c,
+	plugin/metriczCEC.c, provider/OSBase_MetricIndicationProvider.c,
+	provider/OSBase_MetricLifeCycleProvider.c,
+	provider/OSBase_MetricServiceCapabilitiesProvider.c,
+	provider/OSBase_MetricServiceProvider.c,
+	provider/OSBase_MetricUtil.c, repos.c, rreg.c, util/commutil.c,
+	util/merrno.c, util/mtrace.c:
+
+	Fixed #2023: clean up compile warnings
+
+2013-02-07  Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+
+	* NEWS:
+
+	steal time feature will be part of 2.2.8 release not 2.2.7
+
+2013-02-07  Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+
+	* Makefile.am, NEWS:
+
+	Fixed 3196679: remove sysfs dependency when not building z plugins
+
+2013-02-07  Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+
+	* Makefile.am, NEWS, configure.ac, provider/Makefile.am:
+
+	Fixed 3603719: Clean up configuration toolchain and fix DSO linking
+
+
 2013-02-06  Michael Chase-Salerno <bratac@linux.vnet.ibm.com>
 
-	* plugin/repositoryOperatingSystem.c:
+	* ChangeLog, NEWS, plugin/repositoryOperatingSystem.c:
 
 	2284848 CPU utilization should account for steal-time
 
