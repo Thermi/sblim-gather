@@ -5,6 +5,7 @@ Bugs fixed:
 - 3603719 Clean up configuration toolchain and fix DSO linking
 - 3196679 remove sysfs dependency when not building z plugins		
 - #2023 clean up compile warnings 
+- #2045 Metric assoc providers don't honor result class 
 
 Features added:
 - 2284848 CPU utilization should account for steal-time

@@ -175,7 +175,7 @@ static CMPIStatus Associators(CMPIAssociationMI * mi,
 							  const char * resultRole,
 							  const char ** properties)
 {
-	CMPIEnumeration * assoc;
+	CMPIEnumeration * assoc = NULL;
 	CMPIObjectPath * cop;
 	CMPIInstance * inst;
 	CMPIData data;
@@ -191,20 +191,22 @@ static CMPIStatus Associators(CMPIAssociationMI * mi,
 							  CMGetCharPtr(CMGetNameSpace(op, NULL)),
 							  _RIGHTREF,
 							  NULL);
-							  
-		assoc = CBEnumInstances(_broker, ctx, cop, properties, &rc);
+		if (CMClassPathIsA(_broker, cop, resultClass, &rc)) {
+			assoc = CBEnumInstances(_broker, ctx, cop, properties, &rc);
+		}
 	} else if (CMClassPathIsA(_broker, op, _RIGHTREF, NULL)) {
 		cop = CMNewObjectPath(_broker,
 							  CMGetCharPtr(CMGetNameSpace(op, NULL)),
 							  _LEFTREF,
 							  NULL);
-							  
-		assoc = CBEnumInstances(_broker, ctx, cop, properties, &rc);
+		if (CMClassPathIsA(_broker, cop, resultClass, &rc)) {
+			assoc = CBEnumInstances(_broker, ctx, cop, properties, &rc);
+		}
 	} else {
 		return rc;
 	}
 	
-	if (CMHasNext(assoc, &rc)) {
+	if (assoc && CMHasNext(assoc, &rc)) {
 		while(CMHasNext(assoc, &rc)) {
 			data = CMGetNext(assoc, NULL);
 			CMReturnInstance(rslt, data.value.inst);
@@ -226,7 +228,7 @@ static CMPIStatus AssociatorNames(CMPIAssociationMI * mi,
 								   const char * role,
 								   const char * resultRole)
 {
-	CMPIEnumeration * assoc;
+	CMPIEnumeration * assoc = NULL;
 	CMPIObjectPath * cop;
 	CMPIInstance * inst;
 	CMPIData data;
@@ -242,20 +244,22 @@ static CMPIStatus AssociatorNames(CMPIAssociationMI * mi,
 							  CMGetCharPtr(CMGetNameSpace(op, NULL)),
 							  _RIGHTREF,
 							  NULL);
-							  
-		assoc = CBEnumInstanceNames(_broker, ctx, cop, &rc);
+		if (CMClassPathIsA(_broker, cop, resultClass, &rc)) {
+			assoc = CBEnumInstanceNames(_broker, ctx, cop, &rc);
+		}
 	} else if (CMClassPathIsA(_broker, op, _RIGHTREF, NULL)) {
 		cop = CMNewObjectPath(_broker,
 							  CMGetCharPtr(CMGetNameSpace(op, NULL)),
 							  _LEFTREF,
 							  NULL);
-							  
-		assoc = CBEnumInstanceNames(_broker, ctx, cop, &rc);
+		if (CMClassPathIsA(_broker, cop, resultClass, &rc)) {
+			assoc = CBEnumInstanceNames(_broker, ctx, cop, &rc);
+		}
 	} else {
 		return rc;
 	}
 	
-	if (CMHasNext(assoc, &rc)) {
+	if (assoc && CMHasNext(assoc, &rc)) {
 		while (CMHasNext(assoc, &rc)) {
 			data = CMGetNext(assoc, NULL);
 			CMReturnObjectPath(rslt, data.value.ref);
