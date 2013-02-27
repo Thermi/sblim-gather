@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+static const char * ns = "root/virt";
 
 CMPIObjectPath *COP4VALID(CMPIBroker * broker, const char *id,
 			  const char *systemid)
@@ -31,7 +32,7 @@ CMPIObjectPath *COP4VALID(CMPIBroker * broker, const char *id,
     /* we construct the operating system id according to the OSBase
        rules */
     CMPIObjectPath *cop =
-	CMNewObjectPath(broker, NULL, "Xen_ComputerSystem",
+	CMNewObjectPath(broker, ns, "Xen_ComputerSystem",
 			NULL);
     if (cop) {
 	CMAddKey(cop, "Name", id, CMPI_chars);

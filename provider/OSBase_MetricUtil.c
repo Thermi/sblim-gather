@@ -1127,9 +1127,11 @@ void computeResourceNamespace(const CMPIObjectPath *rescop,
 			      const CMPIObjectPath *mcop,
 			      const char *systemid)
 {
-  char * namespace = CMGetCharPtr(CMGetNameSpace(mcop,NULL));
-  if (namespace) {
-    CMSetNameSpace((CMPIObjectPath*)rescop,namespace);
+  char * localnsp = CMGetCharPtr(CMGetNameSpace(mcop,NULL));
+  char * resnsp = CMGetCharPtr(CMGetNameSpace(rescop,NULL));
+
+  if (!resnsp && localnsp) {
+    CMSetNameSpace((CMPIObjectPath*)rescop,localnsp);
     CMSetHostname((CMPIObjectPath*)rescop,systemid);
   }
 }

@@ -6,6 +6,7 @@ Bugs fixed:
 - 3196679 remove sysfs dependency when not building z plugins		
 - #2023 clean up compile warnings 
 - #2045 Metric assoc providers don't honor result class 
+- #1650 libvirt metric associations need to be to root/virt 
 
 Features added:
 - 2284848 CPU utilization should account for steal-time
