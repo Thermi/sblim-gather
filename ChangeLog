@@ -1,3 +1,19 @@
+2013-02-26  Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+
+	* NEWS, plugin/cimplugKvm.c, plugin/cimplugXen.c,
+	provider/OSBase_MetricUtil.c:
+
+	Fixed #1650: libvirt metric associations need to be to root/virt
+
+2013-02-25  Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+
+	* NEWS, provider/OSBase_MetricElementCapabilitiesProvider.c,
+	provider/OSBase_MetricElementConformsToProfileProvider.c,
+	provider/OSBase_MetricHostedServiceProvider.c,
+	provider/OSBase_MetricServiceAffectsElementProvider.c:
+
+	Fixed #2045: Metric assoc providers don't honor result class
+
 2013-02-14  Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
 	* NEWS, comms/mcclt_unix.c, comms/mcserv_unix.c, comms/rcclt_ip.c,
