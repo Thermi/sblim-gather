@@ -1,3 +1,6 @@
+Bugs fixed:
+- #2633 local FS metris calculated inconsitently 
+
 Changes in Version 2.2.8
 ========================
 

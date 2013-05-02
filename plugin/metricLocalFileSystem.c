@@ -243,7 +243,7 @@ int metricRetrAvSpacePerc( int mid,
       memset(fs, 0, sizeof (struct statfs) );
       if (statfs(ptr_dir, fs) == 0) {
 	if( fs->f_blocks != 0 ) {
-	  size = (float)fs->f_bfree * 100 / 
+	  size = (float)fs->f_bavail * 100 / 
 	    (float)fs->f_blocks;
 	}
       }
