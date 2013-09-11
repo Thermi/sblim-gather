@@ -2004,6 +2004,7 @@ unsigned long long os_getCPUStealTime( char * data ) {
     char * end = NULL;
     char   time[128];
     unsigned long long val = 0;
+    int len_end = 0;
 
     if( (hlp = strchr(data, ':')) != NULL ) {
         hlp++;
@@ -2021,7 +2022,9 @@ unsigned long long os_getCPUStealTime( char * data ) {
         hlp++;
         end = strchr(hlp, ':');
         memset(time,0,sizeof(time));
-        strncpy(time, hlp, (strlen(hlp)-strlen(end)) );
+        if(end!=NULL)
+		len_end = strlen(end);
+        strncpy(time, hlp, (strlen(hlp)-len_end));
         val = strtoll(time,(char**)NULL,10)*10;
     }
 
