@@ -1,6 +1,7 @@
 Bugs fixed:
 - #2633 local FS metris calculated inconsitently 
 - #2664 no guest counter in /proc/stat on older kernels 
+- #2722 compile fails when -Werror=format-security flag is used
 
 Changes in Version 2.2.8
 ========================

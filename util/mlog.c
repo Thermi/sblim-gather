@@ -52,10 +52,10 @@ void m_log(int priority, int errout, const char *fmt, ...)
   va_start(ap,fmt);
   
   vsnprintf(buf,4096,fmt,ap);
-  syslog(priosysl,buf);
+  syslog(priosysl,"%s",buf);
 
   if (errout) {
-    fprintf(stderr,buf);
+    fprintf(stderr,"%s",buf);
   }
   va_end(ap);
 }

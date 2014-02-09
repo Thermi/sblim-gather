@@ -1,3 +1,10 @@
+2014-02-09  Dave Heller <hellerda@us.ibm.com>
+
+	* NEWS, comms/rcctest.c, gatherctl.c, reposctl.c, util/mlog.c
+
+	Fixed #2722: compile fails when -Werror=format-security flag is used
+	(patch by Vitezslav Crhonek)
+
 2013-02-26  Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
 	* NEWS, plugin/cimplugKvm.c, plugin/cimplugXen.c,

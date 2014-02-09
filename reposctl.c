@@ -271,7 +271,7 @@ static void printhelp()
 {
   int i;
   for (i=0;commands[i];i++)
-    printf(commands[i]);
+    printf("%s",commands[i]);
 }
 
 static void printvalue(ValueRequest *vr)
@@ -317,7 +317,7 @@ static void printvalue(ValueRequest *vr)
       printf("%f",*(double*)vr->vsValues[i].viValue);
       break;
     case MD_STRING:
-      printf(vr->vsValues[i].viValue);
+      printf("%s",vr->vsValues[i].viValue);
       break;
     default:
       printf("datatype %0x not supported",vr->vsDataType);

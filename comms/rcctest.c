@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
   if (argc == 1) {
     gethostname((char*)&hostname,sizeof(hostname));
   } else {
-    sprintf(hostname,argv[1]);
+    sprintf(hostname,"%s",argv[1]);
   }
   printf("Contacting %s\n",hostname);
   if (rcc_init(hostname,&port) < 0 ) {

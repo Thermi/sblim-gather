@@ -124,7 +124,7 @@ EXTRA_DIST+=$(doc_DATA)
 
 # Generally useful flags
 AM_CPPFLAGS = -I $(srcdir)/util -I $(srcdir)/comms @ARCHDEF@
-AM_CFLAGS = -Wall
+AM_CFLAGS = -Wall -Werror=format-security
 
 PLUG_FLAGS = -no-undefined -module -avoid-version
 

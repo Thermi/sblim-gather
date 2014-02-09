@@ -146,5 +146,5 @@ static void printhelp()
 {
   int i;
   for (i=0;commands[i];i++)
-    printf(commands[i]);
+    printf("%s",commands[i]);
 }
