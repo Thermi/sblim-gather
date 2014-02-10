@@ -1,3 +1,9 @@
+2014-02-10  Dave Heller <hellerda@us.ibm.com>
+
+	* NEWS, mreposl.c
+
+	Fixed #2723: repository reported error for GI on interval metric
+
 2014-02-09  Dave Heller <hellerda@us.ibm.com>
 
 	* NEWS, comms/rcctest.c, gatherctl.c, reposctl.c, util/mlog.c

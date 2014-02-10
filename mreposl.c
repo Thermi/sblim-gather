@@ -211,7 +211,8 @@ static int _MetricRetrieveNoLock (COMMHEAP ch, int mid, LocalResourceId *resourc
     syslen = strlen(resource[k].lrid_system) + 1;
     first=NULL;
     mv[k]=NULL;
-    while(mrv && from <= mrv->mrv_value->mvTimeStamp) {
+    while (mrv && (from <= mrv->mrv_value->mvTimeStamp
+        || (maxnum == 2 && num[k] == 1))) { /* [bugs:#2723] */
       if (to >= mrv->mrv_value->mvTimeStamp) {
 	/* mark */
 	if (num[k] < maxnum) {
