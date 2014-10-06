@@ -34,6 +34,8 @@
 
 #define CHECKBUFFER(comm,buffer,sz,len) ((comm)->gc_datalen+sizeof(GATHERCOMM)+(sz)<=len)
 
+char *hiccup;
+
 int main(int argc, char * argv[])
 {
   int           quit=0;
@@ -59,6 +61,15 @@ int main(int argc, char * argv[])
       m_log(M_ERROR,M_SHOW,"Couldn't daemonize: %s - exiting\n",
 	    strerror(errno));
       exit(-1);
+    }
+  }
+
+  /* For testing [bugs:#2739] */
+  if (argc == 2 && !strncasecmp(argv[1],"hiccup=",7)) {
+    if (argv[1][7]) {
+      hiccup = strdup(argv[1] + 7);
+      fprintf(stderr,"--> %s(%i) : Hiccup on metric \"%s\"\n",
+          __FILE__,__LINE__,hiccup);
     }
   }
 

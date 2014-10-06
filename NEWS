@@ -3,6 +3,7 @@ Bugs fixed:
 - #2664 no guest counter in /proc/stat on older kernels 
 - #2722 compile fails when -Werror=format-security flag is used
 - #2723 repository reported error for GI on interval metric
+- #2739 reposd SIGFPE during calculation of interval metric
 
 Changes in Version 2.2.8
 ========================

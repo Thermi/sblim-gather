@@ -608,8 +608,9 @@ size_t metricCalcPageInRate( MetricValue *mv,
 	  __FILE__,__LINE__);
 #endif
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=2) ) {
-    total = (*(unsigned long long*)mv[0].mvData - *(unsigned long long*)mv[mnum-1].mvData) / 
-            (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
+    total = (unsigned long long) (ntohll(*(unsigned long long*) mv[0].mvData)
+        - ntohll(*(unsigned long long*) mv[mnum - 1].mvData))
+        / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
     memcpy(v, &total, sizeof(unsigned long long));
     return sizeof(unsigned long long);
   }
@@ -655,8 +656,9 @@ size_t metricCalcPageOutRate( MetricValue *mv,
 	  __FILE__,__LINE__);
 #endif
   if ( mv && (vlen>=sizeof(unsigned long long)) && (mnum>=2) ) {
-    total = (*(unsigned long long*)mv[0].mvData - *(unsigned long long*)mv[mnum-1].mvData) / 
-            (mv[0].mvTimeStamp - mv[mnum-1].mvTimeStamp);
+    total = (unsigned long long) (ntohll(*(unsigned long long*) mv[0].mvData)
+        - ntohll(*(unsigned long long*) mv[mnum - 1].mvData))
+        / (mv[0].mvTimeStamp - mv[mnum - 1].mvTimeStamp);
     memcpy(v, &total, sizeof(unsigned long long));
     return sizeof(unsigned long long);
   }

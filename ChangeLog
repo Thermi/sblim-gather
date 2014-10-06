@@ -1,3 +1,9 @@
+2014-10-06  Dave Heller <hellerda@us.ibm.com>
+
+	* NEWS, gather.c, gatherd.c, plugin/repositoryUnixProcess.c, repos.c
+
+	Fixed #2739: reposd SIGFPE during calculation of interval metric
+
 2014-02-10  Dave Heller <hellerda@us.ibm.com>
 
 	* NEWS, mreposl.c

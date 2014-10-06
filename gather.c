@@ -375,5 +375,12 @@ static void gather_sample(int id)
   md=MPR_GetMetric(id);
   if (md && md->mproc) {
     md->mproc(id,MetricRepository->mrep_add);
+    /* For testing [bugs:#2739] */
+    extern char *hiccup;
+    if (hiccup && !strcmp(md->mdName, hiccup)) {
+      fprintf(stderr,"--> %s(%i) : gather_sample() adding duplicate value for \"%s\"\n",
+           __FILE__,__LINE__,md->mdName);
+      md->mproc(id,MetricRepository->mrep_add); // hack to add dup value to the repo
+    }
   }
 }

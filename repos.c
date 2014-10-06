@@ -23,6 +23,7 @@
 #include "repos.h"
 #include "rreg.h"
 #include "rplugmgr.h"
+#include "mlog.h"
 #include "mrepos.h"
 #include "mtrace.h"
 #include <reposcfg.h>
@@ -382,6 +383,14 @@ int reposvalue_get(ValueRequest *vs, COMMHEAP ch)
 	      ch_alloc(ch,vs->vsValues[actnum].viValueLen);
 	    vs->vsValues[actnum].viResource=ch_alloc(ch,reslen);	    
 	    memcpy(vs->vsValues[actnum].viResource, mv[j][numv[j]-1].mvResource,reslen);
+	    /* Workround for [bugs:#2739]: check for duplicate timestamp, don't crash */
+	    if (mv[j][0].mvTimeStamp == mv[j][1].mvTimeStamp) {
+	      m_log(M_ERROR,M_SHOW,"Hit repeated value on calculation of %s (mid=%d)\n", mc->mcName, mv[j][0].mvId);
+	      m_log(M_ERROR,M_SHOW,"0: sys=%s res=%s value=%lu at %lu\n",mv[j][0].mvSystemId, mv[j][0].mvResource, ntohll(*(unsigned long long*)mv[j][0].mvData), mv[j][0].mvTimeStamp);
+	      m_log(M_ERROR,M_SHOW,"1: sys=%s res=%s value=%lu at %lu\n",mv[j][1].mvSystemId, mv[j][1].mvResource, ntohll(*(unsigned long long*)mv[j][1].mvData), mv[j][1].mvTimeStamp);
+	      memset(vs->vsValues[actnum].viValue, 0, sizeof(unsigned long long));
+	      vs->vsValues[actnum].viValueLen = sizeof(unsigned long long);
+	    } else // do the calculation as normal
 	    if (mc->mcCalc(mv[j],
 			   numv[j],
 			   vs->vsValues[actnum].viValue,
