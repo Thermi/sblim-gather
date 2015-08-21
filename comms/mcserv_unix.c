@@ -25,6 +25,7 @@
 #include <sys/un.h>
 #include <sys/file.h>
 #include <sys/poll.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -50,6 +51,7 @@ int mcs_init(const char *commid)
 {
   struct sockaddr_un sa;
   struct sigaction sigact;
+  struct stat buf;
 
   if (commhandle==-1) {
     commhandle=socket(PF_UNIX,SOCK_STREAM,0);
@@ -58,6 +60,15 @@ int mcs_init(const char *commid)
 	    "mcs_init: could not create socket, error string %s\n",
 	    strerror(errno));
       return -1;
+    }
+    if (stat(GATHER_RUNDIR, &buf) || !(buf.st_mode & S_IFDIR)) {
+      if (mkdir(GATHER_RUNDIR, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)) {
+        m_log(M_ERROR,M_SHOW,
+              "mcs_init: could not create run directory %s: %s\n",
+              GATHER_RUNDIR,
+              strerror(errno));
+        return -1;
+      }
     }
     if (fdlockfile == -1) {
       if (snprintf(lockname,PATH_MAX+2,MC_LOCKFILE,commid) > 

@@ -1,3 +1,6 @@
+No longer maintaining Changlog for v2.2.10 and forward, use 'git log' instead.
+
+
 2014-10-06  Dave Heller <hellerda@us.ibm.com>
 
 	* NEWS, gather.c, gatherd.c, plugin/repositoryUnixProcess.c, repos.c
