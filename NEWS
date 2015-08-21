@@ -3,6 +3,7 @@ Changes in Version 2.2.10
 
 Bugs fixed:
 - #2744 gatherer should create run directory if it does not exist
+- #2749 buffer size exceeded on file read in metric plugin
 
 Features added:
 

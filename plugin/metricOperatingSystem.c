@@ -362,7 +362,7 @@ int metricRetrCPUTime( int mid,
 		       MetricReturner mret ) {
   MetricValue * mv  = NULL;
   FILE * fhd        = NULL;
-  char   buf[30000];
+  char   buf[60000];
   char * ptr        = NULL;
   char * end        = NULL;
   char * hlp        = NULL;
@@ -698,7 +698,7 @@ int metricRetrContextSwitchCounter( int mid,
 				    MetricReturner mret ) { 
   MetricValue * mv  = NULL; 
   FILE        * fhd = NULL;
-  char          buf[30000];
+  char          buf[60000];
   char        * ptr = NULL;
   size_t bytes_read = 0;
   unsigned long long ctxt = 0;
@@ -751,7 +751,7 @@ int metricRetrHardwareInterruptCounter( int mid,
 					MetricReturner mret ) { 
   MetricValue * mv  = NULL; 
   FILE        * fhd = NULL;
-  char          buf[30000];
+  char          buf[60000];
   char        * ptr = NULL;
   size_t bytes_read = 0;
   unsigned long long intr = 0;
